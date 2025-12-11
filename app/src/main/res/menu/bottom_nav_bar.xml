@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <item android:title="Users"
+        android:id="@+id/nav_first"
+        android:icon="@drawable/outline_24fps_select_24" />
+    <item android:title="xxx"
+        android:id="@+id/nav_second"
+        android:icon="@drawable/outline_airport_shuttle_24"/>
+    <item android:title="aaa"
+        android:id="@+id/nav_third"
+        android:icon="@drawable/outline_android_wifi_3_bar_24"/>
+</menu>
