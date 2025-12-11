@@ -94,6 +94,7 @@ public class HomePage extends Fragment {
         SER.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //debug
                 System.out.println("point");
                 //                View dialogView = getLayoutInflater().inflate(R.layout.sign_in, null);
 //                userRepository.getList(new UserRepository.UsersCallback<List<User>>() {
