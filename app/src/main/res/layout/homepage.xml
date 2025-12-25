@@ -37,19 +37,19 @@
         android:text="Sign up" />
 
     <Button
-        android:id="@+id/CR"
+        android:id="@+id/CreateRoom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Create Room" />
 
     <Button
-        android:id="@+id/CER"
+        android:id="@+id/CommunityEscapeRoom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Community Escape Room " />
 
     <Button
-        android:id="@+id/MyER"
+        android:id="@+id/MyEscapeRoom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
