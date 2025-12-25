@@ -1,57 +1,87 @@
 package com.example.escape_rooms;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.navigation.NavigationBarView;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
+
+    public static final String EXTRA_LEVEL = "com.example.escape_rooms.LEVEL";
+
+    private RecyclerView questionsRecyclerView;
+    private QuestionsAdapter questionsAdapter;
+    private Questions questionsData;
+    private Button btnSubmitAnswers;
+    private int currentLevel = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-       setContentView(R.layout.activity_main);
-        initNavigationBar(savedInstanceState);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+        setContentView(R.layout.activity_main);
 
+        // 1. Determine the current level from the intent
+        currentLevel = getIntent().getIntExtra(EXTRA_LEVEL, 1);
+
+        // 2. Initialize views
+        questionsRecyclerView = findViewById(R.id.questions_recycler_view);
+        btnSubmitAnswers = findViewById(R.id.btn_submit_answers);
+
+        // 3. Prepare data for the current level
+        questionsData = new Questions(currentLevel);
+
+        // 4. Setup RecyclerView
+        questionsAdapter = new QuestionsAdapter(
+                this,
+                questionsData.getQuestionsList(),
+                questionsData.getQuestionsToAnswers()
+        );
+        questionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        questionsRecyclerView.setAdapter(questionsAdapter);
+
+        // 5. Set the click listener for the submit button
+        btnSubmitAnswers.setOnClickListener(v -> verifyAnswers());
     }
-    private void initNavigationBar(Bundle savedInstanceState) {
-        BottomNavigationView bottomNavBar = findViewById(R.id.bottom_navigation);
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, new HomePage()).commit();
-        bottomNavBar.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-               Fragment selectedFragment= null;
-                if(menuItem.getItemId()==R.id.nav_first)
-                    selectedFragment=new HomePage();
-                else if(menuItem.getItemId()==R.id.nav_second)
-                    selectedFragment=new SignIn();
-                else if(menuItem.getItemId()==R.id.nav_third)
-                    selectedFragment=new ThirdFragment();
-                if(selectedFragment!=null)
-                    getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,selectedFragment).commit();
-                return true;
 
+    private void verifyAnswers() {
+        HashMap<String, String> selectedAnswers = questionsAdapter.getSelectedAnswers();
+        HashMap<String, String> correctAnswers = questionsData.getCorrectAnswers();
+
+        if (selectedAnswers.size() != questionsData.getQuestionsList().size()) {
+            Toast.makeText(this, "Please answer all questions.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        boolean allCorrect = true;
+        for (Map.Entry<String, String> entry : correctAnswers.entrySet()) {
+            String question = entry.getKey();
+            String correctAnswer = entry.getValue();
+            String selectedAnswer = selectedAnswers.get(question);
+
+            if (selectedAnswer == null || !selectedAnswer.equals(correctAnswer)) {
+                allCorrect = false;
+                break;
             }
-        });
+        }
+
+        if (allCorrect) {
+            Toast.makeText(this, "Success! Loading next room...", Toast.LENGTH_LONG).show();
+            // --- Navigate to the next identical room ---
+            Intent intent = new Intent(MainActivity.this, MainActivity.class);
+            // Pass the next level number to the new activity
+            intent.putExtra(EXTRA_LEVEL, currentLevel + 1);
+            startActivity(intent);
+            // Finish the current activity so the user can't go back to it
+            finish();
+        } else {
+            Toast.makeText(this, "Some answers are incorrect. Please try again.", Toast.LENGTH_LONG).show();
+        }
     }
 }
-
-
-
-
