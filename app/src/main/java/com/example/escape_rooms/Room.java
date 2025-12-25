@@ -30,6 +30,8 @@ public class Room {
         this.rating = rating;
     }
     public String getDifficulty() { return difficulty; }
+    public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
+    public void setId(int Id) { this.Id = Id; }
 
     public Room getNewRoom(ArrayList<Room> List){
         Room room=new Room(null,0,0);
@@ -37,6 +39,7 @@ public class Room {
         int randomnumber = rand.nextInt(List.size());
         return(getRoom(List,List.get(randomnumber).getId()));
     }
+
 }
 
 

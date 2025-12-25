@@ -8,7 +8,7 @@
     android:orientation="vertical"
     tools:context=".LogIn">
 
-    <TextView
+    <EditText
         android:id="@+id/inputPassword"
         android:layout_width="185dp"
         android:layout_height="43dp"
@@ -18,7 +18,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
+    <EditText
         android:id="@+id/inputUsername"
         android:layout_width="185dp"
         android:layout_height="54dp"

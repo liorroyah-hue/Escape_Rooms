@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/ic_launcher_background"
-    tools:context=".HomePage">
+    tools:context="com.example.escape_rooms.HomePage">
 
     <FrameLayout
         android:id="@+id/fragment_container"

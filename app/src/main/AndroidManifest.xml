@@ -17,9 +17,6 @@
             android:name=".Corridor"
             android:exported="false" />
         <activity
-            android:name=".UserRepository"
-            android:exported="false" />
-        <activity
             android:name=".LogIn"
             android:exported="false" />
         <activity
