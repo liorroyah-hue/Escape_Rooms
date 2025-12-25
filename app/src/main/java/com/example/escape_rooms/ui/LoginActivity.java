@@ -1,4 +1,4 @@
-package com.example.escape_rooms;
+package com.example.escape_rooms.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,6 +8,10 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.escape_rooms.R;
+import com.example.escape_rooms.User;
+import com.example.escape_rooms.UserRepository;
 
 import java.util.List;
 

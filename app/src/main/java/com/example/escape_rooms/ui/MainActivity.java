@@ -1,4 +1,4 @@
-package com.example.escape_rooms;
+package com.example.escape_rooms.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,6 +8,10 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.escape_rooms.Questions;
+import com.example.escape_rooms.QuestionsAdapter;
+import com.example.escape_rooms.R;
 
 import java.util.HashMap;
 import java.util.Map;

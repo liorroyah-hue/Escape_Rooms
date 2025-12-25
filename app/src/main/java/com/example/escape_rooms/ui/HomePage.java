@@ -1,4 +1,4 @@
-package com.example.escape_rooms;
+package com.example.escape_rooms.ui;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,6 +10,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import com.example.escape_rooms.R;
 
 public class HomePage extends Fragment {
 
