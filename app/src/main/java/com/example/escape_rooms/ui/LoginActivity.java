@@ -22,7 +22,6 @@ import java.util.List;
 public class LoginActivity extends AppCompatActivity {
 
     private EditText usernameEditText, passwordEditText;
-    private Button loginButton;
     private UserRepository userRepository;
 
     @Override
@@ -41,7 +40,7 @@ public class LoginActivity extends AppCompatActivity {
         userRepository = new UserRepository();
         usernameEditText = findViewById(R.id.inputUsername);
         passwordEditText = findViewById(R.id.inputPassword);
-        loginButton = findViewById(R.id.buttonLogin);
+        Button loginButton = findViewById(R.id.buttonLogin);
 
         loginButton.setOnClickListener(v -> {
             String username = usernameEditText.getText().toString();
