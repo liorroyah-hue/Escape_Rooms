@@ -30,49 +30,47 @@ public class Questions {
 
         switch (level) {
             case 1:
-                addQuestion("what is the color of the sky", "blue", new ArrayList<String>() {{ add("red"); add("green"); add("blue"); add("white"); }});
-                addQuestion("if you throw a child of a building that is 1000 meters tall in a velocity of 20 meters per seconds how long does his flight lasts?", "12 seconds", new ArrayList<String>() {{ add("10 seconds"); add("12 seconds"); add("14 seconds"); add("16 seconds"); }});
+                addQuestion("What is the color of the sky?", "Blue", new ArrayList<String>() {{ add("Red"); add("Green"); add("Blue"); add("White"); }});
+                addQuestion("Which gas do humans need to breathe?", "Oxygen", new ArrayList<String>() {{ add("Carbon Dioxide"); add("Nitrogen"); add("Oxygen"); add("Helium"); }});
                 break;
             case 2:
                 addQuestion("What is the capital of France?", "Paris", new ArrayList<String>() {{ add("London"); add("Berlin"); add("Paris"); add("Madrid"); }});
                 addQuestion("Which planet is known as the Red Planet?", "Mars", new ArrayList<String>() {{ add("Earth"); add("Mars"); add("Jupiter"); add("Venus"); }});
                 break;
             case 3:
-                addQuestion("Level 3 Question 1", "Answer A", new ArrayList<String>() {{ add("Answer A"); add("Answer B"); }});
-                addQuestion("Level 3 Question 2", "Answer C", new ArrayList<String>() {{ add("Answer C"); add("Answer D"); }});
+                addQuestion("How many continents are there on Earth?", "7", new ArrayList<String>() {{ add("5"); add("6"); add("7"); add("8"); }});
+                addQuestion("What is the largest ocean in the world?", "Pacific", new ArrayList<String>() {{ add("Atlantic"); add("Indian"); add("Pacific"); add("Arctic"); }});
                 break;
             case 4:
-                addQuestion("Level 4 Question 1", "B", new ArrayList<String>() {{ add("A"); add("B"); }});
-                addQuestion("Level 4 Question 2", "D", new ArrayList<String>() {{ add("C"); add("D"); }});
+                addQuestion("What is the square root of 64?", "8", new ArrayList<String>() {{ add("6"); add("7"); add("8"); add("9"); }});
+                addQuestion("Which element has the chemical symbol 'O'?", "Oxygen", new ArrayList<String>() {{ add("Gold"); add("Oxygen"); add("Silver"); add("Iron"); }});
                 break;
             case 5:
-                addQuestion("Level 5 Question 1", "Right", new ArrayList<String>() {{ add("Right"); add("Wrong"); }});
-                addQuestion("Level 5 Question 2", "True", new ArrayList<String>() {{ add("True"); add("False"); }});
+                addQuestion("Who wrote 'Romeo and Juliet'?", "Shakespeare", new ArrayList<String>() {{ add("Dickens"); add("Shakespeare"); add("Twain"); add("Hemingway"); }});
+                addQuestion("What is the fastest land animal?", "Cheetah", new ArrayList<String>() {{ add("Lion"); add("Cheetah"); add("Horse"); add("Leopard"); }});
                 break;
             case 6:
-                addQuestion("Level 6 Q1", "A1", new ArrayList<String>() {{ add("A1"); add("A2"); }});
-                addQuestion("Level 6 Q2", "B2", new ArrayList<String>() {{ add("B1"); add("B2"); }});
+                addQuestion("In which year did World War II end?", "1945", new ArrayList<String>() {{ add("1940"); add("1945"); add("1950"); add("1939"); }});
+                addQuestion("What is the capital city of Japan?", "Tokyo", new ArrayList<String>() {{ add("Seoul"); add("Beijing"); add("Tokyo"); add("Bangkok"); }});
                 break;
             case 7:
-                addQuestion("Level 7 Q1", "1", new ArrayList<String>() {{ add("1"); add("2"); }});
-                addQuestion("Level 7 Q2", "4", new ArrayList<String>() {{ add("3"); add("4"); }});
+                addQuestion("How many colors are in a rainbow?", "7", new ArrayList<String>() {{ add("5"); add("6"); add("7"); add("8"); }});
+                addQuestion("Which is the largest planet in our solar system?", "Jupiter", new ArrayList<String>() {{ add("Saturn"); add("Earth"); add("Jupiter"); add("Neptune"); }});
                 break;
             case 8:
-                addQuestion("Level 8 Q1", "Yes", new ArrayList<String>() {{ add("Yes"); add("No"); }});
-                addQuestion("Level 8 Q2", "Maybe", new ArrayList<String>() {{ add("Maybe"); add("So"); }});
+                addQuestion("What is the hardest natural substance on Earth?", "Diamond", new ArrayList<String>() {{ add("Gold"); add("Iron"); add("Diamond"); add("Granite"); }});
+                addQuestion("Which country is home to the Kangaroo?", "Australia", new ArrayList<String>() {{ add("India"); add("Brazil"); add("Australia"); add("South Africa"); }});
                 break;
             case 9:
-                addQuestion("Level 9 Q1", "First", new ArrayList<String>() {{ add("First"); add("Second"); }});
-                addQuestion("Level 9 Q2", "Fourth", new ArrayList<String>() {{ add("Third"); add("Fourth"); }});
+                addQuestion("What is the currency of the United Kingdom?", "Pound Sterling", new ArrayList<String>() {{ add("Euro"); add("Dollar"); add("Pound Sterling"); add("Yen"); }});
+                addQuestion("Which organ pumps blood throughout the body?", "Heart", new ArrayList<String>() {{ add("Brain"); add("Lungs"); add("Heart"); add("Liver"); }});
                 break;
             case 10:
-                addQuestion("Level 10 Question 1", "End", new ArrayList<String>() {{ add("Start"); add("End"); }});
-                addQuestion("Level 10 Question 2", "Finish", new ArrayList<String>() {{ add("Begin"); add("Finish"); }});
+                addQuestion("What is the largest desert in the world?", "Sahara", new ArrayList<String>() {{ add("Gobi"); add("Sahara"); add("Arctic"); add("Kalahari"); }});
+                addQuestion("Which famous scientist developed the theory of relativity?", "Einstein", new ArrayList<String>() {{ add("Newton"); add("Einstein"); add("Galileo"); add("Tesla"); }});
                 break;
             default:
-                // If the level is higher than 10, or something else, you could end the game or loop back.
-                // For now, let's just show a final message.
-                addQuestion("You have completed all the rooms!", "", new ArrayList<>());
+                addQuestion("You have completed all the rooms!", "Win", new ArrayList<String>() {{ add("Win"); }});
                 break;
         }
     }
