@@ -1,0 +1,1 @@
+[![Android CI](https://github.com/liorroyah-hue/Escape_Rooms/actions/workflows/android.yml/badge.svg)](https://github.com/liorroyah-hue/Escape_Rooms/actions/workflows/android.yml)
