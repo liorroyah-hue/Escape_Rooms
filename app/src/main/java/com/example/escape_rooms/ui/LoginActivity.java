@@ -3,8 +3,10 @@ package com.example.escape_rooms.ui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -22,6 +24,7 @@ import java.util.List;
 public class LoginActivity extends AppCompatActivity {
 
     private EditText usernameEditText, passwordEditText;
+    private TextView textStatus;
     private UserRepository userRepository;
 
     @Override
@@ -40,7 +43,11 @@ public class LoginActivity extends AppCompatActivity {
         userRepository = new UserRepository();
         usernameEditText = findViewById(R.id.inputUsername);
         passwordEditText = findViewById(R.id.inputPassword);
+        textStatus = findViewById(R.id.textStatus);
         Button loginButton = findViewById(R.id.buttonLogin);
+
+        // Initially hidden
+        textStatus.setVisibility(View.GONE);
 
         loginButton.setOnClickListener(v -> {
             String username = usernameEditText.getText().toString();
@@ -64,11 +71,19 @@ public class LoginActivity extends AppCompatActivity {
                 boolean finalLoginSuccess = loginSuccess;
                 runOnUiThread(() -> {
                     if (finalLoginSuccess) {
+                        // Show the text view upon success
+                        textStatus.setVisibility(View.VISIBLE);
+                        
                         Toast.makeText(LoginActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                        startActivity(intent);
-                        finish(); // Finish LoginActivity so user can't go back
+                        
+                        // Small delay to allow user to see the "Secure Connection" status before transition
+                        textStatus.postDelayed(() -> {
+                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            startActivity(intent);
+                            finish();
+                        }, 1000);
                     } else {
+                        textStatus.setVisibility(View.GONE);
                         Toast.makeText(LoginActivity.this, "Login error: Invalid username or password", Toast.LENGTH_LONG).show();
                     }
                 });
@@ -77,7 +92,10 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onError(Exception e) {
                 Log.e("LoginActivity", "Error fetching users", e);
-                runOnUiThread(() -> Toast.makeText(LoginActivity.this, "Login error: Could not connect to server", Toast.LENGTH_LONG).show());
+                runOnUiThread(() -> {
+                    textStatus.setVisibility(View.GONE);
+                    Toast.makeText(LoginActivity.this, "Login error: Could not connect to server", Toast.LENGTH_LONG).show();
+                });
             }
         });
     }
