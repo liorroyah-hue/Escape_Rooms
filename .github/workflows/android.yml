@@ -25,7 +25,7 @@ jobs:
       run: chmod +x gradlew
 
     - name: Build and Test with Gradle
-      run: ./gradlew testDebugUnitTest assembleDebug --no-daemon --parallel --build-cache
+      run: ./gradlew testDebugUnitTest assembleDebug --no-daemon --parallel --build-cache --configuration-cache
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
