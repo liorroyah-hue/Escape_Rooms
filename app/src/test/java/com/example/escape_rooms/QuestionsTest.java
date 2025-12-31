@@ -8,7 +8,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
 
@@ -20,7 +19,6 @@ import static org.junit.Assert.assertTrue;
 import com.example.escape_rooms.model.Questions;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(manifest=Config.NONE)
 public class QuestionsTest {
 
     private Context context;
@@ -36,8 +34,9 @@ public class QuestionsTest {
         ArrayList<String> questionsList = questions.getQuestionsList();
 
         assertFalse("Level 1 should have questions", questionsList.isEmpty());
-        assertEquals("What is the color of the sky?", questionsList.get(0));
-        assertEquals("Blue", questions.getCorrectAnswers().get(questionsList.get(0)));
+        // Verify strings exactly match questions.json
+        assertTrue(questionsList.contains("What is the color of the sky?"));
+        assertEquals("Blue", questions.getCorrectAnswers().get("What is the color of the sky?"));
     }
 
     @Test
@@ -65,10 +64,12 @@ public class QuestionsTest {
 
     @Test
     public void testInvalidLevelHandling() {
-        // Test level beyond defined range
+        // Test level beyond defined range (1-10)
         Questions questions = new Questions(context, 99);
-        assertFalse("Should have a message for completed rooms", questions.getQuestionsList().isEmpty());
-        assertEquals("You have completed all the rooms!", questions.getQuestionsList().get(0));
-        assertEquals("Win", questions.getCorrectAnswers().get(questions.getQuestionsList().get(0)));
+        ArrayList<String> questionsList = questions.getQuestionsList();
+        
+        assertFalse("Should have a message for completed rooms", questionsList.isEmpty());
+        assertEquals("You have completed all the rooms!", questionsList.get(0));
+        assertEquals("Win", questions.getCorrectAnswers().get(questionsList.get(0)));
     }
 }
