@@ -43,7 +43,7 @@ public class PlayerResultsActivity extends AppCompatActivity {
                 totalMillis += duration;
 
                 // Room Name on Left : Time on Right
-                addResultRow(container, "Room " + level + ": ", formatTime(duration));
+                addResultRow(container, "Room " + level + ":  ", formatTime(duration));
             }
         }
 

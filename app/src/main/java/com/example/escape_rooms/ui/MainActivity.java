@@ -9,8 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.escape_rooms.Questions;
-import com.example.escape_rooms.QuestionsAdapter;
+import com.example.escape_rooms.model.Questions;
 import com.example.escape_rooms.R;
 
 import java.util.HashMap;
@@ -28,7 +27,6 @@ public class MainActivity extends AppCompatActivity {
     private int currentLevel = 1;
 
     private static final int NUMBER_OF_LEVELS = 10;
-
 
     // Tracking time
     private long startTime;
@@ -51,7 +49,8 @@ public class MainActivity extends AppCompatActivity {
         questionsRecyclerView = findViewById(R.id.questions_recycler_view);
         btnSubmitAnswers = findViewById(R.id.btn_submit_answers);
 
-        questionsData = new Questions(currentLevel);
+        // Updated constructor call to pass context for JSON loading
+        questionsData = new Questions(this, currentLevel);
 
         questionsAdapter = new QuestionsAdapter(
                 this,

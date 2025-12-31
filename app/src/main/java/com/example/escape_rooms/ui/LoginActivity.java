@@ -2,7 +2,6 @@ package com.example.escape_rooms.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -14,24 +13,25 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.escape_rooms.R;
-import com.example.escape_rooms.User;
-import com.example.escape_rooms.UserRepository;
-
-import java.util.List;
+import com.example.escape_rooms.viewmodel.LoginViewModel;
 
 public class LoginActivity extends AppCompatActivity {
 
     private EditText usernameEditText, passwordEditText;
     private TextView textStatus;
-    private UserRepository userRepository;
+    private LoginViewModel loginViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_log_in);
+
+        // Setup ViewModel
+        loginViewModel = new ViewModelProvider(this).get(LoginViewModel.class);
 
         // Apply window insets for EdgeToEdge
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
@@ -40,63 +40,44 @@ public class LoginActivity extends AppCompatActivity {
             return insets;
         });
 
-        userRepository = new UserRepository();
         usernameEditText = findViewById(R.id.inputUsername);
         passwordEditText = findViewById(R.id.inputPassword);
         textStatus = findViewById(R.id.textStatus);
         Button loginButton = findViewById(R.id.buttonLogin);
 
-        // Initially hidden
         textStatus.setVisibility(View.GONE);
+
+        // Observe ViewModel states
+        observeViewModel();
 
         loginButton.setOnClickListener(v -> {
             String username = usernameEditText.getText().toString();
             String password = passwordEditText.getText().toString();
-            verifyUserLogin(username, password);
+            loginViewModel.login(username, password);
         });
     }
 
-    private void verifyUserLogin(String username, String password) {
-        userRepository.getAllUsers(new UserRepository.UsersCallback<List<User>>() {
-            @Override
-            public void onSuccess(List<User> userList) {
-                boolean loginSuccess = false;
-                for (User user : userList) {
-                    if (user.getUsername().equals(username) && user.getPassword().equals(password)) {
-                        loginSuccess = true;
-                        break;
-                    }
-                }
-
-                boolean finalLoginSuccess = loginSuccess;
-                runOnUiThread(() -> {
-                    if (finalLoginSuccess) {
-                        // Show the text view upon success
-                        textStatus.setVisibility(View.VISIBLE);
-                        
-                        Toast.makeText(LoginActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
-                        
-                        // Small delay to allow user to see the "Secure Connection" status before transition
-                        textStatus.postDelayed(() -> {
-                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                            startActivity(intent);
-                            finish();
-                        }, 1000);
-                    } else {
-                        textStatus.setVisibility(View.GONE);
-                        Toast.makeText(LoginActivity.this, "Login error: Invalid username or password", Toast.LENGTH_LONG).show();
-                    }
-                });
+    private void observeViewModel() {
+        loginViewModel.getLoginResult().observe(this, success -> {
+            if (success) {
+                textStatus.setVisibility(View.VISIBLE);
+                Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show();
+                
+                textStatus.postDelayed(() -> {
+                    Intent intent = new Intent(this, MainActivity.class);
+                    startActivity(intent);
+                    finish();
+                }, 1000);
             }
+        });
 
-            @Override
-            public void onError(Exception e) {
-                Log.e("LoginActivity", "Error fetching users", e);
-                runOnUiThread(() -> {
-                    textStatus.setVisibility(View.GONE);
-                    Toast.makeText(LoginActivity.this, "Login error: Could not connect to server", Toast.LENGTH_LONG).show();
-                });
-            }
+        loginViewModel.getErrorMessage().observe(this, error -> {
+            textStatus.setVisibility(View.GONE);
+            Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+        });
+
+        loginViewModel.getIsLoading().observe(this, loading -> {
+            // Optional: Show a progress bar here
         });
     }
 }
