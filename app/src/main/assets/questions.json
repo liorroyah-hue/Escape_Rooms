@@ -1,0 +1,152 @@
+[
+  {
+    "level": 1,
+    "questions": [
+      {
+        "question": "What is the color of the sky?",
+        "correctAnswer": "Blue",
+        "answers": ["Red", "Green", "Blue", "White"]
+      },
+      {
+        "question": "Which gas do humans need to breathe?",
+        "correctAnswer": "Oxygen",
+        "answers": ["Carbon Dioxide", "Nitrogen", "Oxygen", "Helium"]
+      }
+    ]
+  },
+  {
+    "level": 2,
+    "questions": [
+      {
+        "question": "What is the capital of France?",
+        "correctAnswer": "Paris",
+        "answers": ["London", "Berlin", "Paris", "Madrid"]
+      },
+      {
+        "question": "Which planet is known as the Red Planet?",
+        "correctAnswer": "Mars",
+        "answers": ["Earth", "Mars", "Jupiter", "Venus"]
+      }
+    ]
+  },
+  {
+    "level": 3,
+    "questions": [
+      {
+        "question": "How many continents are there on Earth?",
+        "correctAnswer": "7",
+        "answers": ["5", "6", "7", "8"]
+      },
+      {
+        "question": "What is the largest ocean in the world?",
+        "correctAnswer": "Pacific",
+        "answers": ["Atlantic", "Indian", "Pacific", "Arctic"]
+      }
+    ]
+  },
+  {
+    "level": 4,
+    "questions": [
+      {
+        "question": "What is the square root of 64?",
+        "correctAnswer": "8",
+        "answers": ["6", "7", "8", "9"]
+      },
+      {
+        "question": "Which element has the chemical symbol 'O'?",
+        "correctAnswer": "Oxygen",
+        "answers": ["Gold", "Oxygen", "Silver", "Iron"]
+      }
+    ]
+  },
+  {
+    "level": 5,
+    "questions": [
+      {
+        "question": "Who wrote 'Romeo and Juliet'?",
+        "correctAnswer": "Shakespeare",
+        "answers": ["Dickens", "Shakespeare", "Twain", "Hemingway"]
+      },
+      {
+        "question": "What is the fastest land animal?",
+        "correctAnswer": "Cheetah",
+        "answers": ["Lion", "Cheetah", "Horse", "Leopard"]
+      }
+    ]
+  },
+  {
+    "level": 6,
+    "questions": [
+      {
+        "question": "In which year did World War II end?",
+        "correctAnswer": "1945",
+        "answers": ["1940", "1945", "1950", "1939"]
+      },
+      {
+        "question": "What is the capital city of Japan?",
+        "correctAnswer": "Tokyo",
+        "answers": ["Seoul", "Beijing", "Tokyo", "Bangkok"]
+      }
+    ]
+  },
+  {
+    "level": 7,
+    "questions": [
+      {
+        "question": "How many colors are in a rainbow?",
+        "correctAnswer": "7",
+        "answers": ["5", "6", "7", "8"]
+      },
+      {
+        "question": "Which is the largest planet in our solar system?",
+        "correctAnswer": "Jupiter",
+        "answers": ["Saturn", "Earth", "Jupiter", "Neptune"]
+      }
+    ]
+  },
+  {
+    "level": 8,
+    "questions": [
+      {
+        "question": "What is the hardest natural substance on Earth?",
+        "correctAnswer": "Diamond",
+        "answers": ["Gold", "Iron", "Diamond", "Granite"]
+      },
+      {
+        "question": "Which country is home to the Kangaroo?",
+        "correctAnswer": "Australia",
+        "answers": ["India", "Brazil", "Australia", "South Africa"]
+      }
+    ]
+  },
+  {
+    "level": 9,
+    "questions": [
+      {
+        "question": "What is the currency of the United Kingdom?",
+        "correctAnswer": "Pound Sterling",
+        "answers": ["Euro", "Dollar", "Pound Sterling", "Yen"]
+      },
+      {
+        "question": "Which organ pumps blood throughout the body?",
+        "correctAnswer": "Heart",
+        "answers": ["Brain", "Lungs", "Heart", "Liver"]
+      }
+    ]
+  },
+  {
+    "level": 10,
+    "questions": [
+      {
+        "question": "What is the largest desert in the world?",
+        "correctAnswer": "Sahara",
+        "answers": ["Gobi", "Sahara", "Arctic", "Kalahari"]
+      },
+      {
+        "question": "Which famous scientist developed the theory of relativity?",
+        "correctAnswer": "Einstein",
+        "answers": ["Newton", "Einstein", "Galileo", "Tesla"]
+      }
+    ]
+  }
+]
