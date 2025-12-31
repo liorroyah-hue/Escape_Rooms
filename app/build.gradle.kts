@@ -37,7 +37,7 @@ android {
         unitTests {
             isIncludeAndroidResources = true
             all {
-                // Cast to Test task to access parallel execution properties
+                // Configure parallel test execution
                 val testTask = this as? org.gradle.api.tasks.testing.Test
                 testTask?.apply {
                     maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
@@ -67,6 +67,7 @@ dependencies {
     testImplementation(libs.mockito.core)
     testImplementation(libs.androidx.core.testing)
     testImplementation(libs.espresso.core)
+    testImplementation(libs.ext.junit) // Added for Robolectric integration tests
     
     // Instrumented Testing
     androidTestImplementation(libs.ext.junit)
