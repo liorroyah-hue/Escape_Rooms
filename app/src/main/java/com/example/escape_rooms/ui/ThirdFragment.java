@@ -1,4 +1,4 @@
-package com.example.escape_rooms;
+package com.example.escape_rooms.ui;
 
 import android.os.Bundle;
 
@@ -7,6 +7,8 @@ import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import com.example.escape_rooms.R;
 
 public class ThirdFragment extends Fragment {
 

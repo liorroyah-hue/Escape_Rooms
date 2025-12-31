@@ -1,9 +1,6 @@
-package com.example.escape_rooms;
-
-import static kotlin.random.RandomKt.nextInt;
+package com.example.escape_rooms.model;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 public class Room {
