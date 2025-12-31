@@ -32,6 +32,10 @@
             android:name=".ui.Corridor"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.PlayerResultsActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>
