@@ -19,6 +19,7 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
 
     public static final String EXTRA_LEVEL = "com.example.escape_rooms.LEVEL";
+    public static final String EXTRA_TIMINGS = "com.example.escape_rooms.TIMINGS";
 
     private RecyclerView questionsRecyclerView;
     private QuestionsAdapter questionsAdapter;
@@ -26,22 +27,32 @@ public class MainActivity extends AppCompatActivity {
     private Button btnSubmitAnswers;
     private int currentLevel = 1;
 
+    private static final int NUMBER_OF_LEVELS = 10;
+
+
+    // Tracking time
+    private long startTime;
+    private HashMap<Integer, Long> levelTimings;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 1. Determine the current level from the intent
         currentLevel = getIntent().getIntExtra(EXTRA_LEVEL, 1);
+        levelTimings = (HashMap<Integer, Long>) getIntent().getSerializableExtra(EXTRA_TIMINGS);
+        if (levelTimings == null) {
+            levelTimings = new HashMap<>();
+        }
 
-        // 2. Initialize views
+        // Start timer for this room
+        startTime = System.currentTimeMillis();
+
         questionsRecyclerView = findViewById(R.id.questions_recycler_view);
         btnSubmitAnswers = findViewById(R.id.btn_submit_answers);
 
-        // 3. Prepare data for the current level
         questionsData = new Questions(currentLevel);
 
-        // 4. Setup RecyclerView
         questionsAdapter = new QuestionsAdapter(
                 this,
                 questionsData.getQuestionsList(),
@@ -50,7 +61,6 @@ public class MainActivity extends AppCompatActivity {
         questionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         questionsRecyclerView.setAdapter(questionsAdapter);
 
-        // 5. Set the click listener for the submit button
         btnSubmitAnswers.setOnClickListener(v -> verifyAnswers());
     }
 
@@ -76,16 +86,26 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (allCorrect) {
-            Toast.makeText(this, "Success! Loading next room...", Toast.LENGTH_LONG).show();
-            // --- Navigate to the next identical room ---
-            Intent intent = new Intent(MainActivity.this, MainActivity.class);
-            // Pass the next level number to the new activity
-            intent.putExtra(EXTRA_LEVEL, currentLevel + 1);
-            startActivity(intent);
-            // Finish the current activity so the user can't go back to it
-            finish();
+            // Calculate time spent in this room
+            long timeSpent = System.currentTimeMillis() - startTime;
+            levelTimings.put(currentLevel, timeSpent);
+
+            if (currentLevel < NUMBER_OF_LEVELS) {
+                Toast.makeText(this, "Room " + currentLevel + " Cleared!", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                intent.putExtra(EXTRA_LEVEL, currentLevel + 1);
+                intent.putExtra(EXTRA_TIMINGS, levelTimings);
+                startActivity(intent);
+                finish();
+            } else {
+                // Game Finished
+                Intent intent = new Intent(MainActivity.this, PlayerResultsActivity.class);
+                intent.putExtra(EXTRA_TIMINGS, levelTimings);
+                startActivity(intent);
+                finish();
+            }
         } else {
-            Toast.makeText(this, "Some answers are incorrect. Please try again.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Incorrect. The clock is ticking!", Toast.LENGTH_SHORT).show();
         }
     }
 }
