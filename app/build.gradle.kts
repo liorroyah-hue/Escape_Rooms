@@ -32,6 +32,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    testOptions {
+        unitTests {
+            // This is required for Robolectric to access assets/resources
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 // New way to set jvmTarget for Kotlin 2.0+
@@ -42,7 +49,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 }
 
 dependencies {
-
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)

@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
 
@@ -19,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 import com.example.escape_rooms.model.Questions;
 
 @RunWith(RobolectricTestRunner.class)
+@Config(manifest=Config.NONE)
 public class QuestionsTest {
 
     private Context context;
@@ -65,6 +67,7 @@ public class QuestionsTest {
     public void testInvalidLevelHandling() {
         // Test level beyond defined range
         Questions questions = new Questions(context, 99);
+        assertFalse("Should have a message for completed rooms", questions.getQuestionsList().isEmpty());
         assertEquals("You have completed all the rooms!", questions.getQuestionsList().get(0));
         assertEquals("Win", questions.getCorrectAnswers().get(questions.getQuestionsList().get(0)));
     }
