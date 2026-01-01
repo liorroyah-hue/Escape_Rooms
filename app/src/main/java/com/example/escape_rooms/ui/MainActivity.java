@@ -6,14 +6,14 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.escape_rooms.model.Questions;
 import com.example.escape_rooms.R;
+import com.example.escape_rooms.viewmodel.GameViewModel;
 
 import java.util.HashMap;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,90 +22,69 @@ public class MainActivity extends AppCompatActivity {
 
     private RecyclerView questionsRecyclerView;
     private QuestionsAdapter questionsAdapter;
-    private Questions questionsData;
     private Button btnSubmitAnswers;
-    private int currentLevel = 1;
-
-    private static final int NUMBER_OF_LEVELS = 10;
-
-    // Tracking time
-    private long startTime;
-    private HashMap<Integer, Long> levelTimings;
+    private GameViewModel viewModel;
 
     @Override
-    @SuppressWarnings("unchecked")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        currentLevel = getIntent().getIntExtra(EXTRA_LEVEL, 1);
-        levelTimings = (HashMap<Integer, Long>) getIntent().getSerializableExtra(EXTRA_TIMINGS);
-        if (levelTimings == null) {
-            levelTimings = new HashMap<>();
-        }
+        viewModel = new ViewModelProvider(this).get(GameViewModel.class);
 
-        // Start timer for this room
-        startTime = System.currentTimeMillis();
-
+        // Initialize views
         questionsRecyclerView = findViewById(R.id.questions_recycler_view);
         btnSubmitAnswers = findViewById(R.id.btn_submit_answers);
-
-        // Updated constructor call to pass context for JSON loading
-        questionsData = new Questions(this, currentLevel);
-
-        questionsAdapter = new QuestionsAdapter(
-                this,
-                questionsData.getQuestionsList(),
-                questionsData.getQuestionsToAnswers()
-        );
         questionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        questionsRecyclerView.setAdapter(questionsAdapter);
 
-        btnSubmitAnswers.setOnClickListener(v -> verifyAnswers());
+        // Get initial data from Intent
+        int level = getIntent().getIntExtra(EXTRA_LEVEL, 1);
+        @SuppressWarnings("unchecked")
+        HashMap<Integer, Long> timings = (HashMap<Integer, Long>) getIntent().getSerializableExtra(EXTRA_TIMINGS);
+        
+        viewModel.initLevel(level, timings);
+
+        observeViewModel();
+
+        btnSubmitAnswers.setOnClickListener(v -> {
+            if (questionsAdapter != null) {
+                viewModel.verifyAndSubmit(questionsAdapter.getSelectedAnswers());
+            }
+        });
     }
 
-    private void verifyAnswers() {
-        HashMap<String, String> selectedAnswers = questionsAdapter.getSelectedAnswers();
-        HashMap<String, String> correctAnswers = questionsData.getCorrectAnswers();
+    private void observeViewModel() {
+        viewModel.getCurrentQuestions().observe(this, questions -> {
+            questionsAdapter = new QuestionsAdapter(
+                    this,
+                    questions.getQuestionsList(),
+                    questions.getQuestionsToAnswers()
+            );
+            questionsRecyclerView.setAdapter(questionsAdapter);
+        });
 
-        if (selectedAnswers.size() != questionsData.getQuestionsList().size()) {
-            Toast.makeText(this, R.string.msg_answer_all, Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        boolean allCorrect = true;
-        for (Map.Entry<String, String> entry : correctAnswers.entrySet()) {
-            String question = entry.getKey();
-            String correctAnswer = entry.getValue();
-            String selectedAnswer = selectedAnswers.get(question);
-
-            if (selectedAnswer == null || !selectedAnswer.equals(correctAnswer)) {
-                allCorrect = false;
-                break;
+        viewModel.getToastMessage().observe(this, messageKey -> {
+            int resId = 0;
+            if ("msg_answer_all".equals(messageKey)) resId = R.string.msg_answer_all;
+            else if ("msg_incorrect".equals(messageKey)) resId = R.string.msg_incorrect;
+            
+            if (resId != 0) {
+                Toast.makeText(this, resId, Toast.LENGTH_SHORT).show();
             }
-        }
+        });
 
-        if (allCorrect) {
-            // Calculate time spent in this room
-            long timeSpent = System.currentTimeMillis() - startTime;
-            levelTimings.put(currentLevel, timeSpent);
-
-            if (currentLevel < NUMBER_OF_LEVELS) {
-                Toast.makeText(this, getString(R.string.msg_room_cleared, currentLevel), Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(MainActivity.this, MainActivity.class);
-                intent.putExtra(EXTRA_LEVEL, currentLevel + 1);
-                intent.putExtra(EXTRA_TIMINGS, levelTimings);
-                startActivity(intent);
-                finish();
+        viewModel.getNavigationEvent().observe(this, event -> {
+            Intent intent;
+            if (event.target == GameViewModel.NavigationTarget.NEXT_LEVEL) {
+                Toast.makeText(this, getString(R.string.msg_room_cleared, event.nextLevel - 1), Toast.LENGTH_SHORT).show();
+                intent = new Intent(this, MainActivity.class);
+                intent.putExtra(EXTRA_LEVEL, event.nextLevel);
             } else {
-                // Game Finished
-                Intent intent = new Intent(MainActivity.this, PlayerResultsActivity.class);
-                intent.putExtra(EXTRA_TIMINGS, levelTimings);
-                startActivity(intent);
-                finish();
+                intent = new Intent(this, PlayerResultsActivity.class);
             }
-        } else {
-            Toast.makeText(this, R.string.msg_incorrect, Toast.LENGTH_SHORT).show();
-        }
+            intent.putExtra(EXTRA_TIMINGS, event.timings);
+            startActivity(intent);
+            finish();
+        });
     }
 }
