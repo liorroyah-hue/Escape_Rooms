@@ -1,3 +1,39 @@
 <resources>
-    <string name="app_name">Escape_Rooms</string>
+    <string name="app_name">חדרי בריחה</string>
+    
+    <!-- Login Screen -->
+    <string name="login_title">גישה למערכת</string>
+    <string name="hint_username">מזהה / שם משתמש</string>
+    <string name="hint_password">קוד גישה</string>
+    <string name="btn_login">אתחול סשן</string>
+    <string name="status_secure">חיבור מאובטח נוצר</string>
+    <string name="login_success">התחברות הצליחה!</string>
+    <string name="login_error">שגיאת התחברות: שם משתמש או סיסמה שגויים</string>
+    <string name="connection_error">שגיאת חיבור: לא ניתן להתחבר לשרת</string>
+
+    <!-- Home Page -->
+    <string name="home_title">מרכז פיקוד</string>
+    <string name="btn_original_room">חדר בריחה מקורי</string>
+    <string name="btn_community_rooms">חדרי קהילה</string>
+    <string name="btn_create_room">יצירת חדר</string>
+    <string name="btn_signup">הרשמה</string>
+
+    <!-- Game Screen -->
+    <string name="btn_submit">שלח תשובות</string>
+    <string name="msg_answer_all">אנא ענה על כל השאלות.</string>
+    <string name="msg_room_cleared">חדר %1$d הושלם!</string>
+    <string name="msg_incorrect">טעות. השעון מתקתק!</string>
+
+    <!-- Results Screen -->
+    <string name="results_title">תחקיר משימה</string>
+    <string name="label_room">חדר %1$d:</string>
+    <string name="label_total_time">זמן כולל: %1$s</string>
+    <string name="btn_proceed_rating">המשך לדירוג</string>
+    <string name="btn_back_home">חזרה למרכז הפיקוד</string>
+
+    <!-- Rating Screen -->
+    <string name="rating_title">דרג את החוויה</string>
+    <string name="rating_desc">המשוב שלך עוזר לשפר את המגזר</string>
+    <string name="btn_confirm_rating">אשר דירוג</string>
+    <string name="msg_rating_saved">דירוג נשמר: %1$d</string>
 </resources>
