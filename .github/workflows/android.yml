@@ -41,8 +41,6 @@ jobs:
         run: ./gradlew testDebugUnitTest --no-daemon --parallel --build-cache --configuration-cache
 
   instrumented-tests:
-    # Switched to macos-latest (arm64) as macos-13 is retired.
-    # macOS Silicon runners are faster and more stable for modern Android testing.
     runs-on: macos-latest
     steps:
       - name: Checkout Code
@@ -58,17 +56,15 @@ jobs:
       - name: Run Instrumented Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          api-level: 31
           target: google_apis
           arch: arm64-v8a
           force-avd-creation: true
-          # Optimized emulator options for arm64 on macOS runners
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          # Simplified options for ARM64 stability on GitHub Actions
+          emulator-options: -no-window -no-snapshot-save -noaudio -no-boot-anim -no-metrics -camera-back none
           disable-animations: true
           script: |
-            # Ensure ADB is ready
-            adb wait-for-device
-            # Disable animations for test stability
+            # Disable animations via shell for Espresso stability
             adb shell settings put global window_animation_scale 0.0
             adb shell settings put global transition_animation_scale 0.0
             adb shell settings put global animator_duration_scale 0.0
