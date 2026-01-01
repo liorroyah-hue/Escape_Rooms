@@ -5,7 +5,7 @@
     <string name="login_title">גישה למערכת</string>
     <string name="hint_username">מזהה / שם משתמש</string>
     <string name="hint_password">קוד גישה</string>
-    <string name="btn_login">אתחול סשן</string>
+    <string name="btn_login">התחברות</string>
     <string name="status_secure">חיבור מאובטח נוצר</string>
     <string name="login_success">התחברות הצליחה!</string>
     <string name="login_error">שגיאת התחברות: שם משתמש או סיסמה שגויים</string>
