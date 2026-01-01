@@ -34,15 +34,15 @@ public class QuestionsTest {
         ArrayList<String> questionsList = questions.getQuestionsList();
 
         assertFalse("Level 1 should have questions", questionsList.isEmpty());
-        // Verify strings exactly match questions.json
-        assertTrue(questionsList.contains("What is the color of the sky?"));
-        assertEquals("Blue", questions.getCorrectAnswers().get("What is the color of the sky?"));
+        // Verify strings match Hebrew questions.json
+        assertTrue("Should contain sky color question", questionsList.contains("מהו צבע השמיים?"));
+        assertEquals("כחול", questions.getCorrectAnswers().get("מהו צבע השמיים?"));
     }
 
     @Test
     public void testLevelThreeQuestions() {
         Questions questions = new Questions(context, 3);
-        String question = "How many continents are there on Earth?";
+        String question = "כמה יבשות יש על כדור הארץ?";
 
         assertTrue("Level 3 should contain continent question", questions.getQuestionsList().contains(question));
         ArrayList<String> answers = questions.getQuestionsToAnswers().get(question);
@@ -56,10 +56,10 @@ public class QuestionsTest {
     @Test
     public void testLevelTenQuestions() {
         Questions questions = new Questions(context, 10);
-        String question = "What is the largest desert in the world?";
+        String question = "מהו המדבר הגדול ביותר בעולם?";
 
         assertTrue(questions.getQuestionsList().contains(question));
-        assertEquals("Sahara", questions.getCorrectAnswers().get(question));
+        assertEquals("סהרה", questions.getCorrectAnswers().get(question));
     }
 
     @Test
