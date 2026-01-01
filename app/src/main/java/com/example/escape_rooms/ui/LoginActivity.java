@@ -21,7 +21,7 @@ import com.example.escape_rooms.viewmodel.LoginViewModel;
 public class LoginActivity extends AppCompatActivity {
 
     private EditText usernameEditText, passwordEditText;
-    private TextView textStatus;
+    private TextView textStatus, textSignUpLink;
     private LoginViewModel loginViewModel;
 
     @Override
@@ -43,6 +43,7 @@ public class LoginActivity extends AppCompatActivity {
         usernameEditText = findViewById(R.id.inputUsername);
         passwordEditText = findViewById(R.id.inputPassword);
         textStatus = findViewById(R.id.textStatus);
+        textSignUpLink = findViewById(R.id.textSignUpLink);
         Button loginButton = findViewById(R.id.buttonLogin);
 
         textStatus.setVisibility(View.GONE);
@@ -54,6 +55,11 @@ public class LoginActivity extends AppCompatActivity {
             String username = usernameEditText.getText().toString();
             String password = passwordEditText.getText().toString();
             loginViewModel.login(username, password);
+        });
+
+        textSignUpLink.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
+            startActivity(intent);
         });
     }
 
