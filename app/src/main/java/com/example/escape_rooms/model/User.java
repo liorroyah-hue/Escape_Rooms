@@ -1,8 +1,15 @@
 package com.example.escape_rooms.model;
 
+import com.google.gson.annotations.SerializedName;
+
 public class User {
-    private Integer id; // Use Integer to allow null
+    @SerializedName("user id")
+    private Integer id; 
+    
+    @SerializedName("username")
     private String username;
+    
+    @SerializedName("password")
     private String password;
 
     // Constructor for fetching (with ID)
@@ -16,6 +23,7 @@ public class User {
     public User(String username, String password) {
         this.username = username;
         this.password = password;
+        this.id = null; // Ensure ID is null so it's omitted from JSON
     }
 
     public Integer getId() { return id; }
