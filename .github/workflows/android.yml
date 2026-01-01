@@ -41,7 +41,8 @@ jobs:
         run: ./gradlew testDebugUnitTest --no-daemon --parallel --build-cache --configuration-cache
 
   instrumented-tests:
-    runs-on: macos-latest
+    # Switched to macos-13 (Intel) for better stability with x86_64 images
+    runs-on: macos-13
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -56,15 +57,18 @@ jobs:
       - name: Run Instrumented Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 33
+          api-level: 31
           target: google_apis
-          arch: arm64-v8a
+          arch: x86_64
           force-avd-creation: true
-          # Optimized options for macOS CI stability
+          # Optimized emulator options for x86_64 on Intel runners
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           disable-animations: true
           script: |
-            # Disable animations via shell for Espresso stability
+            # Explicitly start and wait for ADB
+            adb start-server
+            adb wait-for-device
+            # Standard animation disabling for Espresso stability
             adb shell settings put global window_animation_scale 0.0
             adb shell settings put global transition_animation_scale 0.0
             adb shell settings put global animator_duration_scale 0.0
