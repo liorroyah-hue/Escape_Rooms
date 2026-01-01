@@ -16,7 +16,8 @@ public class UserTest {
 
     @Test
     public void testUserConstructor() {
-        assertEquals(1, user.getId());
+        // Explicitly cast to Integer to resolve ambiguity with Integer return type
+        assertEquals(Integer.valueOf(1), user.getId());
         assertEquals("testUser", user.getUsername());
         assertEquals("password123", user.getPassword());
     }
@@ -27,7 +28,7 @@ public class UserTest {
         user.setUsername("newAdmin");
         user.setPassword("secret456");
 
-        assertEquals(5, user.getId());
+        assertEquals(Integer.valueOf(5), user.getId());
         assertEquals("newAdmin", user.getUsername());
         assertEquals("secret456", user.getPassword());
     }
