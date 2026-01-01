@@ -3,14 +3,14 @@
     "level": 1,
     "questions": [
       {
-        "question": "What is the color of the sky?",
-        "correctAnswer": "Blue",
-        "answers": ["Red", "Green", "Blue", "White"]
+        "question": "מהו צבע השמיים?",
+        "correctAnswer": "כחול",
+        "answers": ["אדום", "ירוק", "כחול", "לבן"]
       },
       {
-        "question": "Which gas do humans need to breathe?",
-        "correctAnswer": "Oxygen",
-        "answers": ["Carbon Dioxide", "Nitrogen", "Oxygen", "Helium"]
+        "question": "איזה גז בני אדם צריכים כדי לנשום?",
+        "correctAnswer": "חמצן",
+        "answers": ["פחמן דו חמצני", "חנקן", "חמצן", "הליום"]
       }
     ]
   },
@@ -18,14 +18,14 @@
     "level": 2,
     "questions": [
       {
-        "question": "What is the capital of France?",
-        "correctAnswer": "Paris",
-        "answers": ["London", "Berlin", "Paris", "Madrid"]
+        "question": "מהי בירת צרפת?",
+        "correctAnswer": "פריז",
+        "answers": ["לונדון", "ברלין", "פריז", "מדריד"]
       },
       {
-        "question": "Which planet is known as the Red Planet?",
-        "correctAnswer": "Mars",
-        "answers": ["Earth", "Mars", "Jupiter", "Venus"]
+        "question": "איזה כוכב לכת ידוע בתור הכוכב האדום?",
+        "correctAnswer": "מאדים",
+        "answers": ["כדור הארץ", "מאדים", "צדק", "נוגה"]
       }
     ]
   },
@@ -33,14 +33,14 @@
     "level": 3,
     "questions": [
       {
-        "question": "How many continents are there on Earth?",
+        "question": "כמה יבשות יש על כדור הארץ?",
         "correctAnswer": "7",
         "answers": ["5", "6", "7", "8"]
       },
       {
-        "question": "What is the largest ocean in the world?",
-        "correctAnswer": "Pacific",
-        "answers": ["Atlantic", "Indian", "Pacific", "Arctic"]
+        "question": "מהו האוקיינוס הגדול ביותר בעולם?",
+        "correctAnswer": "השקט",
+        "answers": ["האטלנטי", "ההודי", "השקט", "הארקטי"]
       }
     ]
   },
@@ -48,14 +48,14 @@
     "level": 4,
     "questions": [
       {
-        "question": "What is the square root of 64?",
+        "question": "מהו השורש הריבועי של 64?",
         "correctAnswer": "8",
         "answers": ["6", "7", "8", "9"]
       },
       {
-        "question": "Which element has the chemical symbol 'O'?",
-        "correctAnswer": "Oxygen",
-        "answers": ["Gold", "Oxygen", "Silver", "Iron"]
+        "question": "איזה יסוד מסומל באות 'O'?",
+        "correctAnswer": "חמצן",
+        "answers": ["זהב", "חמצן", "כסף", "ברזל"]
       }
     ]
   },
@@ -63,14 +63,14 @@
     "level": 5,
     "questions": [
       {
-        "question": "Who wrote 'Romeo and Juliet'?",
-        "correctAnswer": "Shakespeare",
-        "answers": ["Dickens", "Shakespeare", "Twain", "Hemingway"]
+        "question": "מי כתב את 'רומיאו ויוליה'?",
+        "correctAnswer": "שייקספיר",
+        "answers": ["דיקנס", "שייקספיר", "טווין", "המינגוויי"]
       },
       {
-        "question": "What is the fastest land animal?",
-        "correctAnswer": "Cheetah",
-        "answers": ["Lion", "Cheetah", "Horse", "Leopard"]
+        "question": "מהי החיה היבשתית המהירה ביותר?",
+        "correctAnswer": "צ'יטה",
+        "answers": ["אריה", "צ'יטה", "סוס", "נמר"]
       }
     ]
   },
@@ -78,14 +78,14 @@
     "level": 6,
     "questions": [
       {
-        "question": "In which year did World War II end?",
+        "question": "באיזו שנה הסתיימה מלחמת העולם השנייה?",
         "correctAnswer": "1945",
         "answers": ["1940", "1945", "1950", "1939"]
       },
       {
-        "question": "What is the capital city of Japan?",
-        "correctAnswer": "Tokyo",
-        "answers": ["Seoul", "Beijing", "Tokyo", "Bangkok"]
+        "question": "מהי עיר הבירה של יפן?",
+        "correctAnswer": "טוקיו",
+        "answers": ["סיאול", "בייג'ינג", "טוקיו", "בנגקוק"]
       }
     ]
   },
@@ -93,14 +93,14 @@
     "level": 7,
     "questions": [
       {
-        "question": "How many colors are in a rainbow?",
+        "question": "כמה צבעים יש בקשת?",
         "correctAnswer": "7",
         "answers": ["5", "6", "7", "8"]
       },
       {
-        "question": "Which is the largest planet in our solar system?",
-        "correctAnswer": "Jupiter",
-        "answers": ["Saturn", "Earth", "Jupiter", "Neptune"]
+        "question": "מהו כוכב הלכת הגדול ביותר במערכת השמש שלנו?",
+        "correctAnswer": "צדק",
+        "answers": ["שבתאי", "כדור הארץ", "צדק", "נפטון"]
       }
     ]
   },
@@ -108,14 +108,14 @@
     "level": 8,
     "questions": [
       {
-        "question": "What is the hardest natural substance on Earth?",
-        "correctAnswer": "Diamond",
-        "answers": ["Gold", "Iron", "Diamond", "Granite"]
+        "question": "מהו החומר הטבעי הקשה ביותר על כדור הארץ?",
+        "correctAnswer": "יהלום",
+        "answers": ["זהב", "ברזל", "יהלום", "גרניט"]
       },
       {
-        "question": "Which country is home to the Kangaroo?",
-        "correctAnswer": "Australia",
-        "answers": ["India", "Brazil", "Australia", "South Africa"]
+        "question": "איזו מדינה היא ביתו של הקנגורו?",
+        "correctAnswer": "אוסטרליה",
+        "answers": ["הודו", "ברזיל", "אוסטרליה", "דרום אפריקה"]
       }
     ]
   },
@@ -123,14 +123,14 @@
     "level": 9,
     "questions": [
       {
-        "question": "What is the currency of the United Kingdom?",
-        "correctAnswer": "Pound Sterling",
-        "answers": ["Euro", "Dollar", "Pound Sterling", "Yen"]
+        "question": "מהו המטבע של בריטניה?",
+        "correctAnswer": "לירה שטרלינג",
+        "answers": ["אירו", "דולר", "לירה שטרלינג", "יין"]
       },
       {
-        "question": "Which organ pumps blood throughout the body?",
-        "correctAnswer": "Heart",
-        "answers": ["Brain", "Lungs", "Heart", "Liver"]
+        "question": "איזה איבר מזרים דם לכל חלקי הגוף?",
+        "correctAnswer": "לב",
+        "answers": ["מוח", "ריאות", "לב", "כבד"]
       }
     ]
   },
@@ -138,14 +138,14 @@
     "level": 10,
     "questions": [
       {
-        "question": "What is the largest desert in the world?",
-        "correctAnswer": "Sahara",
-        "answers": ["Gobi", "Sahara", "Arctic", "Kalahari"]
+        "question": "מהו המדבר הגדול ביותר בעולם?",
+        "correctAnswer": "סהרה",
+        "answers": ["גובי", "סהרה", "הארקטי", "קלהארי"]
       },
       {
-        "question": "Which famous scientist developed the theory of relativity?",
-        "correctAnswer": "Einstein",
-        "answers": ["Newton", "Einstein", "Galileo", "Tesla"]
+        "question": "איזה מדען מפורסם פיתח את תורת היחסות?",
+        "correctAnswer": "איינשטיין",
+        "answers": ["ניוטון", "איינשטיין", "גלילאו", "טסלה"]
       }
     ]
   }
