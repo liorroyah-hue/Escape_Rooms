@@ -25,8 +25,8 @@ public class SignUpViewModel extends ViewModel {
         }
 
         isLoading.setValue(true);
-        // Using a dummy ID 0, Supabase should handle auto-increment or we'd handle it differently
-        User newUser = new User(0, username, password);
+        // Create user WITHOUT id field so Supabase can auto-generate it
+        User newUser = new User(username, password);
         
         userRepository.addUser(newUser, new UserRepository.UsersCallback<User>() {
             @Override
