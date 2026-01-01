@@ -19,7 +19,7 @@
     <string name="btn_signup">הרשמה</string>
 
     <!-- Game Screen -->
-    <string name="btn_submit">שלח תשובות</string>
+    <string name="btn_submit">אמת תשובות ופרוץ חדר</string>
     <string name="msg_answer_all">אנא ענה על כל השאלות.</string>
     <string name="msg_room_cleared">חדר %1$d הושלם!</string>
     <string name="msg_incorrect">טעות. השעון מתקתק!</string>
