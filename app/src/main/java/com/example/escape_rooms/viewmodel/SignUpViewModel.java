@@ -7,6 +7,8 @@ import androidx.lifecycle.ViewModel;
 import com.example.escape_rooms.model.User;
 import com.example.escape_rooms.repository.UserRepository;
 
+import org.json.JSONObject;
+
 public class SignUpViewModel extends ViewModel {
     private final UserRepository userRepository = new UserRepository();
     
@@ -38,7 +40,28 @@ public class SignUpViewModel extends ViewModel {
             @Override
             public void onError(Exception e) {
                 isLoading.postValue(false);
-                errorMessage.postValue("Registration failed: " + e.getMessage());
+                String rawError = e.getMessage();
+                
+                if (rawError != null && rawError.contains("Server Error: ")) {
+                    try {
+                        // Extract the JSON part
+                        String jsonStr = rawError.replace("Server Error: ", "");
+                        JSONObject json = new JSONObject(jsonStr);
+                        
+                        String message = json.optString("message", "");
+                        String details = json.optString("details", "");
+                        
+                        if (message.contains("duplicate key value violates unique constraint")) {
+                            errorMessage.postValue("Registration failed: This account already exists (ID conflict).");
+                        } else {
+                            errorMessage.postValue("Server Error: " + message + (details.isEmpty() ? "" : " - " + details));
+                        }
+                    } catch (Exception ex) {
+                        errorMessage.postValue("Registration failed: " + rawError);
+                    }
+                } else {
+                    errorMessage.postValue("Registration failed: " + rawError);
+                }
             }
         });
     }
