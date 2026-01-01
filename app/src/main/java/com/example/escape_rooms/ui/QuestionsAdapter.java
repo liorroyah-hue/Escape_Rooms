@@ -51,6 +51,8 @@ public class QuestionsAdapter extends RecyclerView.Adapter<QuestionsAdapter.Ques
                 RadioButton radioButton = new RadioButton(context);
                 radioButton.setText(answer);
                 radioButton.setTextSize(16);
+                radioButton.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+                radioButton.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
                 holder.answersRadioGroup.addView(radioButton);
             }
         }
