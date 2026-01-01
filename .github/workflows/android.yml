@@ -56,16 +56,14 @@ jobs:
       - name: Run Instrumented Tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          api-level: 33
           target: google_apis
           arch: arm64-v8a
-          force-avd-creation: false
-          # Returned to -no-window for CI stability. Headed mode is not supported on CI runners.
-          emulator-options: -no-window -no-snapshot-save -noaudio -no-boot-anim -camera-back none
+          force-avd-creation: true
+          # Optimized options for macOS CI stability
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           disable-animations: true
           script: |
-            # Ensure ADB is connected and device is ready
-            adb wait-for-device
             # Disable animations via shell for Espresso stability
             adb shell settings put global window_animation_scale 0.0
             adb shell settings put global transition_animation_scale 0.0
