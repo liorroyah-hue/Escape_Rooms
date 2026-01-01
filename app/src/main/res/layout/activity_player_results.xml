@@ -12,7 +12,7 @@
         android:id="@+id/tv_results_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="MISSION DEBRIEF"
+        android:text="@string/results_title"
         android:textColor="@color/room_primary"
         android:textSize="32sp"
         android:textStyle="bold"
@@ -38,8 +38,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:divider="@color/room_primary"
-            android:showDividers="middle">
+            tools:listitem="@layout/item_player_result">
             
             <!-- Result rows will be added here dynamically -->
             
@@ -50,7 +49,7 @@
         android:id="@+id/tv_total_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TOTAL TIME: 00:00"
+        tools:text="זמן כולל: 05:45"
         android:textColor="@color/room_accent"
         android:textSize="20sp"
         android:textStyle="bold"
@@ -64,7 +63,7 @@
         style="@style/Widget.EscapeRooms.Button"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:text="RETURN TO COMMAND CENTER"
+        android:text="@string/btn_proceed_rating"
         app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
