@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingVertical="8dp">
+
+    <!-- Room Label anchored to the Right -->
+    <TextView
+        android:id="@+id/tv_room_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_secondary"
+        android:textSize="18sp"
+        tools:text="חדר 1: "
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Time Value anchored to the Left of the Room Label -->
+    <TextView
+        android:id="@+id/tv_time_value"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="8dp"
+        android:textColor="@color/room_accent"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        tools:text="00:15"
+        app:layout_constraintBottom_toBottomOf="@id/tv_room_label"
+        app:layout_constraintRight_toLeftOf="@id/tv_room_label"
+        app:layout_constraintTop_toTopOf="@id/tv_room_label" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

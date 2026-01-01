@@ -1,9 +1,26 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Base application theme. -->
-    <style name="Base.Theme.Escape_Rooms" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <style name="Base.Theme.Escape_Rooms" parent="Theme.Material3.Dark.NoActionBar">
+        <!-- Customize your dark theme here. -->
+        <item name="colorPrimary">@color/room_primary</item>
+        <item name="colorSecondary">@color/room_secondary</item>
+        <item name="android:windowBackground">@color/room_dark_bg</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="colorSurface">@color/room_surface</item>
     </style>
 
     <style name="Theme.Escape_Rooms" parent="Base.Theme.Escape_Rooms" />
+
+    <!-- Custom Button Style -->
+    <style name="Widget.EscapeRooms.Button" parent="Widget.Material3.Button">
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.1</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.EscapeRooms.SmallComponent</item>
+    </style>
+
+    <style name="ShapeAppearance.EscapeRooms.SmallComponent" parent="ShapeAppearance.Material3.SmallComponent">
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSize">8dp</item>
+    </style>
 </resources>

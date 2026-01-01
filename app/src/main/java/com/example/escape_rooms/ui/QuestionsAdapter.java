@@ -1,4 +1,4 @@
-package com.example.escape_rooms;
+package com.example.escape_rooms.ui;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,6 +10,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.escape_rooms.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,6 +51,8 @@ public class QuestionsAdapter extends RecyclerView.Adapter<QuestionsAdapter.Ques
                 RadioButton radioButton = new RadioButton(context);
                 radioButton.setText(answer);
                 radioButton.setTextSize(16);
+                radioButton.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
+                radioButton.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
                 holder.answersRadioGroup.addView(radioButton);
             }
         }

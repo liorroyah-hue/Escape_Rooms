@@ -1,59 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@drawable/ic_launcher_background"
-    tools:context="com.example.escape_rooms.HomePage">
-
-    <FrameLayout
-        android:id="@+id/fragment_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-
-    </FrameLayout>
+    android:background="@color/room_dark_bg"
+    android:padding="16dp"
+    tools:context="com.example.escape_rooms.ui.HomePage">
 
     <TextView
         android:id="@+id/tv_title_main"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Welcome" />
+        android:layout_marginTop="32dp"
+        android:letterSpacing="0.1"
+        android:text="COMMAND CENTER"
+        android:textColor="@color/room_primary"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/LER"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Log in" />
+    <View
+        android:id="@+id/titleDivider"
+        android:layout_width="100dp"
+        android:layout_height="2dp"
+        android:layout_marginTop="8dp"
+        android:background="@color/room_accent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_title_main" />
 
-    <Button
-        android:id="@+id/SER"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Sign up" />
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="32dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/titleDivider">
 
-    <Button
-        android:id="@+id/CreateRoom"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Create Room" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-    <Button
-        android:id="@+id/CommunityEscapeRoom"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Community Escape Room " />
+            <Button
+                android:id="@+id/MyEscapeRoom"
+                style="@style/Widget.EscapeRooms.Button"
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:layout_marginBottom="16dp"
+                android:text="Original Escape Room"
+                app:icon="@android:drawable/ic_media_play" />
 
-    <Button
-        android:id="@+id/MyEscapeRoom"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="Original Escape Room" />
+            <Button
+                android:id="@+id/CommunityEscapeRoom"
+                style="@style/Widget.EscapeRooms.Button"
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:layout_marginBottom="16dp"
+                android:backgroundTint="@color/room_surface"
+                android:text="Community Rooms"
+                android:textColor="@color/room_accent"
+                app:icon="@android:drawable/ic_menu_search"
+                app:strokeColor="@color/room_accent"
+                app:strokeWidth="1dp" />
 
-</LinearLayout>
+            <Button
+                android:id="@+id/CreateRoom"
+                style="@style/Widget.EscapeRooms.Button"
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:layout_marginBottom="16dp"
+                android:text="Create Room"
+                app:icon="@android:drawable/ic_input_add" />
 
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginVertical="16dp"
+                android:alpha="0.2"
+                android:background="@color/text_secondary" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/LER"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Log in"
+                    android:textColor="@color/text_secondary" />
+
+                <Button
+                    android:id="@+id/SER"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Sign up"
+                    android:textColor="@color/text_secondary" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
