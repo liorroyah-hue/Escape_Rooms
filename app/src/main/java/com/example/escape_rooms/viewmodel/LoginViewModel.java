@@ -21,6 +21,16 @@ public class LoginViewModel extends ViewModel {
     public LiveData<Boolean> getIsLoading() { return isLoading; }
 
     public void login(String username, String password) {
+        // --- Input Validation ---
+        if (username == null || username.trim().isEmpty()) {
+            errorMessage.setValue("Please enter your username");
+            return;
+        }
+        if (password == null || password.isEmpty()) {
+            errorMessage.setValue("Please enter your password");
+            return;
+        }
+
         isLoading.setValue(true);
         userRepository.getAllUsers(new UserRepository.UsersCallback<List<User>>() {
             @Override
@@ -28,7 +38,8 @@ public class LoginViewModel extends ViewModel {
                 isLoading.postValue(false);
                 boolean success = false;
                 for (User user : userList) {
-                    if (user.getUsername().equals(username) && user.getPassword().equals(password)) {
+                    if (user.getUsername().equalsIgnoreCase(username.trim()) && 
+                        user.getPassword().equals(password)) {
                         success = true;
                         break;
                     }
