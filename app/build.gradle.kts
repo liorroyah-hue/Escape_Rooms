@@ -55,6 +55,8 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 }
 
 dependencies {
+    implementation("com.squareup.okhttp3:okhttp:5.3.2")
+    implementation("com.google.code.gson:gson:2.13.2")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -74,7 +76,4 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.espresso.contrib) // Added for RecyclerView interaction
-    
-    implementation("com.squareup.okhttp3:okhttp:5.3.2")
-    implementation("com.google.code.gson:gson:2.13.2")
 }

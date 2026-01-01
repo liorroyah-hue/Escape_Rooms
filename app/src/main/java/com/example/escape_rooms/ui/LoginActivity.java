@@ -71,6 +71,7 @@ public class LoginActivity extends AppCompatActivity {
                 
                 textStatus.postDelayed(() -> {
                     Intent intent = new Intent(this, MainActivity.class);
+                    intent.putExtra(MainActivity.EXTRA_LEVEL, 1);
                     startActivity(intent);
                     finish();
                 }, 1000);

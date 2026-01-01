@@ -1,15 +1,18 @@
 package com.example.escape_rooms.viewmodel;
 
 import android.app.Application;
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.escape_rooms.model.Question;
 import com.example.escape_rooms.model.Questions;
 import com.example.escape_rooms.repository.QuestionRepository;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class GameViewModel extends AndroidViewModel {
@@ -25,7 +28,7 @@ public class GameViewModel extends AndroidViewModel {
 
     public GameViewModel(@NonNull Application application) {
         super(application);
-        this.repository = new QuestionRepository(application);
+        this.repository = new QuestionRepository();
     }
 
     public LiveData<Questions> getCurrentQuestions() { return currentQuestions; }
@@ -42,7 +45,22 @@ public class GameViewModel extends AndroidViewModel {
 
     private void loadLevel() {
         startTime = System.currentTimeMillis();
-        currentQuestions.setValue(repository.getQuestionsForLevel(currentLevel));
+        repository.getQuestionsForLevel(currentLevel, new QuestionRepository.QuestionsCallback() {
+            @Override
+            public void onSuccess(List<Question> questions) {
+                if (questions == null || questions.isEmpty()) {
+                    toastMessage.postValue("No questions found for level " + currentLevel + ". Check your Supabase table.");
+                } else {
+                    currentQuestions.postValue(new Questions(questions));
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e("GameViewModel", "Failed to load questions", e);
+                toastMessage.postValue("Failed to load questions. Please check your connection.");
+            }
+        });
     }
 
     public void verifyAndSubmit(Map<String, String> selectedAnswers) {
