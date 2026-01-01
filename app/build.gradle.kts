@@ -36,12 +36,23 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            isReturnDefaultValues = true
+            
             all {
-                // Configure parallel test execution
                 val testTask = this as? org.gradle.api.tasks.testing.Test
                 testTask?.apply {
-                    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
-                    forkEvery = 100
+                    maxParallelForks = 1 
+                    
+                    // Fix for Mockito 5 + JDK 21 + Robolectric
+                    jvmArgs(
+                        "-XX:+EnableDynamicAgentLoading",
+                        "-Dmockito.mock.maker=subclass"
+                    )
+                    
+                    testLogging {
+                        showStandardStreams = true
+                        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+                    }
                 }
             }
         }
@@ -75,5 +86,5 @@ dependencies {
     // Instrumented Testing
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    androidTestImplementation(libs.espresso.contrib) // Added for RecyclerView interaction
+    androidTestImplementation(libs.espresso.contrib)
 }

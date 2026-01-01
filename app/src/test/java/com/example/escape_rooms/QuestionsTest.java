@@ -1,75 +1,88 @@
 package com.example.escape_rooms;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-
-import java.util.ArrayList;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
+import com.example.escape_rooms.model.Question;
 import com.example.escape_rooms.model.Questions;
 
-@RunWith(RobolectricTestRunner.class)
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 public class QuestionsTest {
 
-    private Context context;
-
-    @Before
-    public void setUp() {
-        context = ApplicationProvider.getApplicationContext();
-    }
-
     @Test
-    public void testLevelOneQuestions() {
-        Questions questions = new Questions(context, 1);
-        ArrayList<String> questionsList = questions.getQuestionsList();
+    public void testQuestionsProcessing() {
+        // Create sample questions
+        Question q1 = new Question();
+        q1.setQuestion("מהו צבע השמיים?");
+        q1.setCorrectAnswer("כחול");
+        q1.setAnswers(Arrays.asList("אדום", "ירוק", "כחול", "לבן"));
 
-        assertFalse("Level 1 should have questions", questionsList.isEmpty());
-        // Verify strings match Hebrew questions.json
-        assertTrue("Should contain sky color question", questionsList.contains("מהו צבע השמיים?"));
+        Question q2 = new Question();
+        q2.setQuestion("איזה גז בני אדם צריכים כדי לנשום?");
+        q2.setCorrectAnswer("חמצן");
+        q2.setAnswers(Arrays.asList("פחמן דו חמצני", "חנקן", "חמצן", "הליום"));
+
+        List<Question> questionList = Arrays.asList(q1, q2);
+
+        // Process them through the Questions model
+        Questions questions = new Questions(questionList);
+
+        // Assertions
+        assertEquals(2, questions.getQuestionsList().size());
+        assertTrue(questions.getQuestionsList().contains("מהו צבע השמיים?"));
         assertEquals("כחול", questions.getCorrectAnswers().get("מהו צבע השמיים?"));
+        assertEquals(4, questions.getQuestionsToAnswers().get("מהו צבע השמיים?").size());
     }
 
     @Test
-    public void testLevelThreeQuestions() {
-        Questions questions = new Questions(context, 3);
-        String question = "כמה יבשות יש על כדור הארץ?";
-
-        assertTrue("Level 3 should contain continent question", questions.getQuestionsList().contains(question));
-        ArrayList<String> answers = questions.getQuestionsToAnswers().get(question);
-
-        assertNotNull(answers);
-        assertEquals(4, answers.size());
-        assertTrue(answers.contains("7"));
-        assertEquals("7", questions.getCorrectAnswers().get(question));
+    public void testEmptyQuestionsFallback() {
+        Questions questions = new Questions(new ArrayList<>());
+        assertEquals(1, questions.getQuestionsList().size());
+        assertEquals("You have completed all the rooms!", questions.getQuestionsList().get(0));
     }
 
     @Test
-    public void testLevelTenQuestions() {
-        Questions questions = new Questions(context, 10);
-        String question = "מהו המדבר הגדול ביותר בעולם?";
-
-        assertTrue(questions.getQuestionsList().contains(question));
-        assertEquals("סהרה", questions.getCorrectAnswers().get(question));
+    public void testNullQuestionsListFallback() {
+        // Test behavior when null is passed instead of a list
+        Questions questions = new Questions(null);
+        assertEquals(1, questions.getQuestionsList().size());
+        assertEquals("You have completed all the rooms!", questions.getQuestionsList().get(0));
     }
 
     @Test
-    public void testInvalidLevelHandling() {
-        // Test level beyond defined range (1-10)
-        Questions questions = new Questions(context, 99);
-        ArrayList<String> questionsList = questions.getQuestionsList();
-        
-        assertFalse("Should have a message for completed rooms", questionsList.isEmpty());
-        assertEquals("You have completed all the rooms!", questionsList.get(0));
-        assertEquals("Win", questions.getCorrectAnswers().get(questionsList.get(0)));
+    public void testMalformedQuestionsSkipped() {
+        // Create a list with one valid and one malformed question (missing fields)
+        Question valid = new Question();
+        valid.setQuestion("Valid Question?");
+        valid.setCorrectAnswer("Yes");
+        valid.setAnswers(Arrays.asList("Yes", "No"));
+
+        Question malformed = new Question();
+        malformed.setQuestion(null); // Missing text
+
+        List<Question> list = Arrays.asList(valid, malformed, null);
+
+        Questions questions = new Questions(list);
+
+        // Only the valid one should be processed
+        assertEquals(1, questions.getQuestionsList().size());
+        assertEquals("Valid Question?", questions.getQuestionsList().get(0));
+    }
+
+    @Test
+    public void testCorrectAnswerMapping() {
+        Question q = new Question();
+        q.setQuestion("Q1");
+        q.setCorrectAnswer("A1");
+        q.setAnswers(Arrays.asList("A1", "A2"));
+
+        Questions questions = new Questions(Arrays.asList(q));
+
+        assertEquals("A1", questions.getCorrectAnswers().get("Q1"));
     }
 }

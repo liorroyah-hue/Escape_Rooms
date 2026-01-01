@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.escape_rooms.R;
+import com.example.escape_rooms.repository.QuestionRepository;
 import com.example.escape_rooms.viewmodel.GameViewModel;
 
 import java.util.HashMap;
@@ -30,7 +31,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        viewModel = new ViewModelProvider(this).get(GameViewModel.class);
+        // FIX: Use getInstance() so that integration tests can inject a mock repository
+        GameViewModel.Factory factory = new GameViewModel.Factory(getApplication(), QuestionRepository.getInstance());
+        viewModel = new ViewModelProvider(this, factory).get(GameViewModel.class);
 
         // Initialize views
         questionsRecyclerView = findViewById(R.id.questions_recycler_view);
@@ -63,18 +66,13 @@ public class MainActivity extends AppCompatActivity {
             questionsRecyclerView.setAdapter(questionsAdapter);
         });
 
-        viewModel.getToastMessage().observe(this, message -> {
-            if (message == null) return;
-            
-            // Try to resolve as a resource key first
-            int resId = getResources().getIdentifier(message, "string", getPackageName());
+        viewModel.getToastMessage().observe(this, messageKey -> {
+            int resId = 0;
+            if ("msg_answer_all".equals(messageKey)) resId = R.string.msg_answer_all;
+            else if ("msg_incorrect".equals(messageKey)) resId = R.string.msg_incorrect;
             
             if (resId != 0) {
-                // It's a resource key
-                Toast.makeText(this, resId, Toast.LENGTH_LONG).show();
-            } else {
-                // It's a raw string
-                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+                Toast.makeText(this, resId, Toast.LENGTH_SHORT).show();
             }
         });
 
