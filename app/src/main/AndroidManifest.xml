@@ -23,6 +23,10 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.SignUpActivity"
+            android:exported="false" />
+
         <!-- This activity shows the rooms, but only after login -->
         <activity
             android:name=".ui.MainActivity"
