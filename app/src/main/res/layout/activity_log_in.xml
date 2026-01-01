@@ -81,7 +81,7 @@
         android:id="@+id/textSignUpLink"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="New recruit? Register here"
+        android:text="@string/signup_link"
         android:textColor="@color/room_accent"
         android:textSize="14sp"
         android:layout_marginTop="24dp"

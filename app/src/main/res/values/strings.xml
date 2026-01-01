@@ -10,6 +10,7 @@
     <string name="login_success">התחברות הצליחה!</string>
     <string name="login_error">שגיאת התחברות: שם משתמש או סיסמה שגויים</string>
     <string name="connection_error">שגיאת חיבור: לא ניתן להתחבר לשרת</string>
+    <string name="signup_link">שחקן חדש? הירשם כאן</string>
 
     <!-- Home Page -->
     <string name="home_title">מרכז פיקוד</string>
