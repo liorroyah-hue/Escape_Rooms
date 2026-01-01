@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private HashMap<Integer, Long> levelTimings;
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -68,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         HashMap<String, String> correctAnswers = questionsData.getCorrectAnswers();
 
         if (selectedAnswers.size() != questionsData.getQuestionsList().size()) {
-            Toast.makeText(this, "Please answer all questions.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.msg_answer_all, Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -90,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
             levelTimings.put(currentLevel, timeSpent);
 
             if (currentLevel < NUMBER_OF_LEVELS) {
-                Toast.makeText(this, "Room " + currentLevel + " Cleared!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.msg_room_cleared, currentLevel), Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(MainActivity.this, MainActivity.class);
                 intent.putExtra(EXTRA_LEVEL, currentLevel + 1);
                 intent.putExtra(EXTRA_TIMINGS, levelTimings);
@@ -104,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
                 finish();
             }
         } else {
-            Toast.makeText(this, "Incorrect. The clock is ticking!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.msg_incorrect, Toast.LENGTH_SHORT).show();
         }
     }
 }
