@@ -67,11 +67,13 @@ dependencies {
     testImplementation(libs.mockito.core)
     testImplementation(libs.androidx.core.testing)
     testImplementation(libs.espresso.core)
-    testImplementation(libs.ext.junit) // Added for Robolectric integration tests
+    testImplementation(libs.espresso.contrib)
+    testImplementation(libs.ext.junit)
     
     // Instrumented Testing
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(libs.espresso.contrib) // Added for RecyclerView interaction
     
     implementation("com.squareup.okhttp3:okhttp:5.3.2")
     implementation("com.google.code.gson:gson:2.13.2")
