@@ -1,7 +1,6 @@
 package com.example.escape_rooms;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.example.escape_rooms.ui.LoginActivity;
 
@@ -9,7 +8,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
@@ -34,7 +32,9 @@ public class LoginIntegrationTest {
 
     @Test
     public void loginScreen_initialState() {
-        onView(withText("SYSTEM ACCESS")).check(matches(isDisplayed()));
+        // Updated to use the correct Hebrew title or Resource ID
+        onView(withId(R.id.textTitle)).check(matches(withText(R.string.login_title)));
+        onView(withId(R.id.textTitle)).check(matches(isDisplayed()));
         onView(withId(R.id.textStatus)).check(matches(not(isDisplayed())));
     }
 
