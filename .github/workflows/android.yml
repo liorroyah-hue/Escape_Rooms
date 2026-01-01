@@ -2,7 +2,7 @@ name: Android CI
 
 on:
   push:
-    branches: [ "main", "amiels_escape_rooms" ]
+    liorbranches: [ "main", "amiels_escape_rooms","escape_rooms_lior" ]
   pull_request:
     branches: [ "main", "amiels_escape_rooms" ]
   workflow_dispatch:

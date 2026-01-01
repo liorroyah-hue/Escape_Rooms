@@ -3,7 +3,7 @@ package com.example.escape_rooms.model;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
+//TODO translate questions
 public class Questions {
     private final HashMap<String, ArrayList<String>> questionsToAnswers = new HashMap<>();
     private final ArrayList<String> questionsList = new ArrayList<>();
