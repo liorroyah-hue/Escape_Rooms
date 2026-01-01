@@ -2,11 +2,13 @@ package com.example.escape_rooms.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -19,6 +21,7 @@ import java.util.List;
 
 public class PlayerResultsActivity extends AppCompatActivity {
 
+    private static final String TAG = "PlayerResultsActivity";
     public static final String EXTRA_TIMINGS = "com.example.escape_rooms.TIMINGS";
 
     @Override
@@ -28,45 +31,50 @@ public class PlayerResultsActivity extends AppCompatActivity {
 
         LinearLayout container = findViewById(R.id.results_container);
         TextView tvTotalTime = findViewById(R.id.tv_total_time);
-        Button btnBackHome = findViewById(R.id.btn_back_home);
+        Button btnContinue = findViewById(R.id.btn_back_home);
 
-        HashMap<Integer, Long> timings = (HashMap<Integer, Long>) getIntent().getSerializableExtra(EXTRA_TIMINGS);
+        try {
+            @SuppressWarnings("unchecked")
+            HashMap<Integer, Long> timings = (HashMap<Integer, Long>) getIntent().getSerializableExtra(EXTRA_TIMINGS);
 
-        long totalMillis = 0;
-        if (timings != null) {
-            // Sort levels in ascending order (Room 1 -> Room 10)
-            List<Integer> sortedLevels = new ArrayList<>(timings.keySet());
-            Collections.sort(sortedLevels);
+            long totalMillis = 0;
+            if (timings != null) {
+                List<Integer> sortedLevels = new ArrayList<>(timings.keySet());
+                Collections.sort(sortedLevels);
 
-            for (int level : sortedLevels) {
-                long duration = timings.get(level);
-                totalMillis += duration;
-
-                // Room Name on Left : Time on Right
-                addResultRow(container, "Room " + level + ":  ", formatTime(duration));
+                for (int level : sortedLevels) {
+                    Long duration = timings.get(level);
+                    if (duration != null) {
+                        totalMillis += duration;
+                        // Dynamically format room label in Hebrew
+                        String roomLabel = getString(R.string.label_room, level);
+                        addResultRow(container, roomLabel + "  ", formatTime(duration));
+                    }
+                }
             }
-        }
 
-        tvTotalTime.setText("TOTAL TIME: " + formatTime(totalMillis));
+            // Dynamically format total time in Hebrew
+            tvTotalTime.setText(getString(R.string.label_total_time, formatTime(totalMillis)));
 
-        btnBackHome.setOnClickListener(v -> {
-            Intent intent = new Intent(PlayerResultsActivity.this, HomePage.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startActivity(intent);
+            btnContinue.setOnClickListener(v -> {
+                Intent intent = new Intent(PlayerResultsActivity.this, Corridor.class);
+                startActivity(intent);
+                finish();
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading results", e);
+            Toast.makeText(this, getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, HomePage.class));
             finish();
-        });
+        }
     }
 
     private void addResultRow(LinearLayout container, String roomLabel, String timeValue) {
-        // Inflate the ConstraintLayout based row
         View row = LayoutInflater.from(this).inflate(R.layout.item_player_result, container, false);
-
         TextView tvLabel = row.findViewById(R.id.tv_room_label);
         TextView tvValue = row.findViewById(R.id.tv_time_value);
-
         tvLabel.setText(roomLabel);
         tvValue.setText(timeValue);
-
         container.addView(row);
     }
 
