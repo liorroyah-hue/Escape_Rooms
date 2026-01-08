@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">חדרי בריחה</string>
-    
+
     <!-- Login Screen -->
     <string name="login_title">גישה למערכת</string>
     <string name="hint_username">מזהה / שם משתמש</string>
@@ -37,4 +37,17 @@
     <string name="rating_desc">המשוב שלך עוזר לשפר את המגזר</string>
     <string name="btn_confirm_rating">אשר דירוג</string>
     <string name="msg_rating_saved">דירוג נשמר: %1$d</string>
+    <string name="start_game">התחל לשחק</string>
+    <string name="choose_the_game_configuration">בחר את המשחק</string>
+
+    <!-- Game Configuration -->
+    <string name="category_geography">מדעי הגאוגרפיה</string>
+    <string name="category_history">היסטוריה</string>
+    <string name="category_famous">מפורסמים</string>
+    <string name="category_sports">ספורט</string>
+    <string name="select_category_prompt">אנא בחר קטגוריה</string>
+    <string name="creation_option_existing">השתמש במשחק קיים</string>
+    <string name="creation_option_ai">צור משחק בעזרת AI</string>
+    <string name="select_creation_type_prompt">אנא בחר סוג יצירה</string>
+
 </resources>
