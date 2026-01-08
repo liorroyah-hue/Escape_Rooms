@@ -1,29 +1,44 @@
 package com.example.escape_rooms.model;
 
+import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-//TODO translate questions
+
 public class Questions {
     private final HashMap<String, ArrayList<String>> questionsToAnswers = new HashMap<>();
     private final ArrayList<String> questionsList = new ArrayList<>();
     private final HashMap<String, String> correctAnswers = new HashMap<>();
 
     /**
-     * Constructor that processes a list of Question objects.
-     * @param questions The list of Question objects to process.
+     * Constructor for Supabase questions.
      */
     public Questions(List<Question> questions) {
         if (questions != null && !questions.isEmpty()) {
             for (Question q : questions) {
-                // Add a null check to prevent crashes if a question is malformed
                 if (q != null && q.getQuestion() != null && q.getCorrectAnswer() != null && q.getAnswers() != null) {
                     addQuestion(q.getQuestion(), q.getCorrectAnswer(), new ArrayList<>(q.getAnswers()));
                 }
             }
         }
-        
-        // If, after processing, no valid questions were added, show the default message.
+        if (questionsList.isEmpty()) {
+            addQuestion("You have completed all the rooms!", "Win", new ArrayList<String>() {{ add("Win"); }});
+        }
+    }
+
+    /**
+     * Constructor for AI-generated questions.
+     */
+    public Questions(ChoosingGameViewModel.QuizData quizData) {
+        if (quizData != null && quizData.getQuestions() != null && !quizData.getQuestions().isEmpty()) {
+            for (int i = 0; i < quizData.getQuestions().size(); i++) {
+                String question = quizData.getQuestions().get(i);
+                String correctAnswer = quizData.getCorrectAnswers().get(i);
+                List<String> answers = quizData.getAnswers().get(i);
+                addQuestion(question, correctAnswer, new ArrayList<>(answers));
+            }
+        }
         if (questionsList.isEmpty()) {
             addQuestion("You have completed all the rooms!", "Win", new ArrayList<String>() {{ add("Win"); }});
         }
@@ -35,7 +50,7 @@ public class Questions {
         correctAnswers.put(question, correctAnswer);
     }
 
-    // Getter methods
+    // Getters
     public ArrayList<String> getQuestionsList() {
         return questionsList;
     }

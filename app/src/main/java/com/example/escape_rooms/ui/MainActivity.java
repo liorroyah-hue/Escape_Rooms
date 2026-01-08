@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.escape_rooms.R;
+import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 import com.example.escape_rooms.viewmodel.GameViewModel;
 
 import java.util.HashMap;
@@ -38,11 +39,18 @@ public class MainActivity extends AppCompatActivity {
         questionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         // Get initial data from Intent
-        int level = getIntent().getIntExtra(EXTRA_LEVEL, 1);
+        Intent intent = getIntent();
+        String creationType = intent.getStringExtra("CREATION_TYPE");
         @SuppressWarnings("unchecked")
-        HashMap<Integer, Long> timings = (HashMap<Integer, Long>) getIntent().getSerializableExtra(EXTRA_TIMINGS);
-        
-        viewModel.initLevel(level, timings);
+        HashMap<Integer, Long> timings = (HashMap<Integer, Long>) intent.getSerializableExtra(EXTRA_TIMINGS);
+
+        if (getString(R.string.creation_option_ai).equals(creationType)) {
+            ChoosingGameViewModel.QuizData quizData = (ChoosingGameViewModel.QuizData) intent.getSerializableExtra("AI_GAME_DATA");
+            viewModel.initAiGame(quizData, timings);
+        } else {
+            int level = intent.getIntExtra(EXTRA_LEVEL, 1);
+            viewModel.initLevel(level, timings);
+        }
 
         observeViewModel();
 

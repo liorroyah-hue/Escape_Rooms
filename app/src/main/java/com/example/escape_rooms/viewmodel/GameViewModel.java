@@ -43,6 +43,15 @@ public class GameViewModel extends AndroidViewModel {
         loadLevel();
     }
 
+    public void initAiGame(ChoosingGameViewModel.QuizData quizData, HashMap<Integer, Long> timings) {
+        this.currentLevel = 1; // AI games are always level 1 for now
+        if (timings != null) {
+            this.levelTimings = timings;
+        }
+        startTime = System.currentTimeMillis();
+        currentQuestions.setValue(new Questions(quizData));
+    }
+
     private void loadLevel() {
         startTime = System.currentTimeMillis();
         repository.getQuestionsForLevel(currentLevel, new QuestionRepository.QuestionsCallback() {
