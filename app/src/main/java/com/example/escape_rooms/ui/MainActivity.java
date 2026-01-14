@@ -4,7 +4,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,16 +36,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Standard MVVM practice: Use Factory to provide dependencies
         GameViewModel.Factory factory = new GameViewModel.Factory(getApplication(), QuestionRepository.getInstance());
         viewModel = new ViewModelProvider(this, factory).get(GameViewModel.class);
 
-        // Initialize views
         questionsRecyclerView = findViewById(R.id.questions_recycler_view);
         btnSubmitAnswers = findViewById(R.id.btn_submit_answers);
         questionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Get initial data from Intent
         int level = getIntent().getIntExtra(EXTRA_LEVEL, 1);
         @SuppressWarnings("unchecked")
         HashMap<Integer, Long> timings = (HashMap<Integer, Long>) getIntent().getSerializableExtra(EXTRA_TIMINGS);
@@ -75,14 +74,14 @@ public class MainActivity extends AppCompatActivity {
             else if ("msg_incorrect".equals(messageKey)) resId = R.string.msg_incorrect;
             
             if (resId != 0) {
-                Toast.makeText(this, resId, Toast.LENGTH_SHORT).show();
+                showCustomToast(getString(resId), false);
             }
         });
 
         viewModel.getNavigationEvent().observe(this, event -> {
             Intent intent;
             if (event.target == GameViewModel.NavigationTarget.NEXT_LEVEL) {
-                showCustomToast(getString(R.string.msg_room_cleared, event.nextLevel - 1));
+                showCustomToast(getString(R.string.msg_room_cleared, event.nextLevel - 1), true);
                 intent = new Intent(this, MainActivity.class);
                 intent.putExtra(EXTRA_LEVEL, event.nextLevel);
             } else {
@@ -94,12 +93,22 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void showCustomToast(String message) {
+    private void showCustomToast(String message, boolean isSuccess) {
         LayoutInflater inflater = getLayoutInflater();
-        View layout = inflater.inflate(R.layout.layout_custom_toast, findViewById(R.id.custom_toast_container));
+        
+        // Pass null as root to avoid container view being incorrectly used for ID resolution
+        View layout = inflater.inflate(R.layout.layout_custom_toast, (ViewGroup) findViewById(R.id.custom_toast_container), false);
 
         TextView text = layout.findViewById(R.id.toast_text);
+        ImageView icon = layout.findViewById(R.id.toast_icon);
+        
         text.setText(message);
+        
+        if (isSuccess) {
+            icon.setImageResource(R.drawable.ic_escape_lock_open);
+        } else {
+            icon.setImageResource(R.drawable.ic_escape_lock_closed);
+        }
 
         Toast toast = new Toast(getApplicationContext());
         toast.setDuration(Toast.LENGTH_SHORT);
