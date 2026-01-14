@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">חדרי בריחה</string>
+    <string name="app_name">חדר בריחה</string>
     
     <!-- Login Screen -->
     <string name="login_title">גישה למערכת</string>
@@ -37,4 +37,5 @@
     <string name="rating_desc">המשוב שלך עוזר לשפר את המגזר</string>
     <string name="btn_confirm_rating">אשר דירוג</string>
     <string name="msg_rating_saved">דירוג נשמר: %1$d</string>
+    <string name="unlocked">Unlocked</string>
 </resources>
