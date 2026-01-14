@@ -2,7 +2,12 @@ package com.example.escape_rooms.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.escape_rooms.R;
+import com.example.escape_rooms.repository.QuestionRepository;
 import com.example.escape_rooms.viewmodel.GameViewModel;
 
 import java.util.HashMap;
@@ -30,14 +36,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        viewModel = new ViewModelProvider(this).get(GameViewModel.class);
+        GameViewModel.Factory factory = new GameViewModel.Factory(getApplication(), QuestionRepository.getInstance());
+        viewModel = new ViewModelProvider(this, factory).get(GameViewModel.class);
 
-        // Initialize views
         questionsRecyclerView = findViewById(R.id.questions_recycler_view);
         btnSubmitAnswers = findViewById(R.id.btn_submit_answers);
         questionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Get initial data from Intent
         int level = getIntent().getIntExtra(EXTRA_LEVEL, 1);
         @SuppressWarnings("unchecked")
         HashMap<Integer, Long> timings = (HashMap<Integer, Long>) getIntent().getSerializableExtra(EXTRA_TIMINGS);
@@ -63,25 +68,20 @@ public class MainActivity extends AppCompatActivity {
             questionsRecyclerView.setAdapter(questionsAdapter);
         });
 
-        viewModel.getToastMessage().observe(this, message -> {
-            if (message == null) return;
-            
-            // Try to resolve as a resource key first
-            int resId = getResources().getIdentifier(message, "string", getPackageName());
+        viewModel.getToastMessage().observe(this, messageKey -> {
+            int resId = 0;
+            if ("msg_answer_all".equals(messageKey)) resId = R.string.msg_answer_all;
+            else if ("msg_incorrect".equals(messageKey)) resId = R.string.msg_incorrect;
             
             if (resId != 0) {
-                // It's a resource key
-                Toast.makeText(this, resId, Toast.LENGTH_LONG).show();
-            } else {
-                // It's a raw string
-                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+                showCustomToast(getString(resId), false);
             }
         });
 
         viewModel.getNavigationEvent().observe(this, event -> {
             Intent intent;
             if (event.target == GameViewModel.NavigationTarget.NEXT_LEVEL) {
-                Toast.makeText(this, getString(R.string.msg_room_cleared, event.nextLevel - 1), Toast.LENGTH_SHORT).show();
+                showCustomToast(getString(R.string.msg_room_cleared, event.nextLevel - 1), true);
                 intent = new Intent(this, MainActivity.class);
                 intent.putExtra(EXTRA_LEVEL, event.nextLevel);
             } else {
@@ -91,5 +91,28 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+    }
+
+    private void showCustomToast(String message, boolean isSuccess) {
+        LayoutInflater inflater = getLayoutInflater();
+        
+        // Pass null as root to avoid container view being incorrectly used for ID resolution
+        View layout = inflater.inflate(R.layout.layout_custom_toast, (ViewGroup) findViewById(R.id.custom_toast_container), false);
+
+        TextView text = layout.findViewById(R.id.toast_text);
+        ImageView icon = layout.findViewById(R.id.toast_icon);
+        
+        text.setText(message);
+        
+        if (isSuccess) {
+            icon.setImageResource(R.drawable.ic_escape_lock_open);
+        } else {
+            icon.setImageResource(R.drawable.ic_escape_lock_closed);
+        }
+
+        Toast toast = new Toast(getApplicationContext());
+        toast.setDuration(Toast.LENGTH_SHORT);
+        toast.setView(layout);
+        toast.show();
     }
 }

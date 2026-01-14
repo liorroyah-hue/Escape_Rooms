@@ -28,17 +28,25 @@ public class Question {
         return question;
     }
 
+    public void setQuestion(String question) {
+        this.question=question;
+    }
+
     public String getCorrectAnswer() {
         return correctAnswer;
     }
+
+    public void setCorrectAnswer(String correctAnswer) {
+        this.correctAnswer = correctAnswer;
+    }
+
+
+
 
     public List<String> getAnswers() {
         return answers;
     }
 
-    // Unused setters can be removed for cleaner code
-    // public void setLevel(int level) { this.level = level; }
-    // public void setQuestion(String question) { this.question = question; }
-    // public void setCorrectAnswer(String correctAnswer) { this.correctAnswer = correctAnswer; }
-    // public void setAnswers(List<String> answers) { this.answers = answers; }
+    public void setLevel(int level) { this.level = level; }
+    public void setAnswers(List<String> answers) { this.answers = answers; }
 }
