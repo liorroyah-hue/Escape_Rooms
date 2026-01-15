@@ -88,24 +88,30 @@ public class MainActivity extends AppCompatActivity {
         });
 
         viewModel.getNavigationEvent().observe(this, event -> {
-            Intent intent;
             if (event.target == GameViewModel.NavigationTarget.NEXT_LEVEL) {
                 showCustomToast(getString(R.string.msg_room_cleared, event.nextLevel - 1), true);
-                intent = new Intent(this, MainActivity.class);
+                
+                // Navigate to DrawerActivity instead of directly to MainActivity
+                Intent intent = new Intent(this, DrawerActivity.class);
+                intent.putExtra("CREATION_TYPE", getIntent().getStringExtra("CREATION_TYPE"));
+                if (getIntent().hasExtra("AI_GAME_DATA")) {
+                    intent.putExtra("AI_GAME_DATA", getIntent().getSerializableExtra("AI_GAME_DATA"));
+                }
                 intent.putExtra(EXTRA_LEVEL, event.nextLevel);
+                intent.putExtra(EXTRA_TIMINGS, event.timings);
+                startActivity(intent);
+                finish();
             } else {
-                intent = new Intent(this, PlayerResultsActivity.class);
+                Intent intent = new Intent(this, PlayerResultsActivity.class);
+                intent.putExtra(EXTRA_TIMINGS, event.timings);
+                startActivity(intent);
+                finish();
             }
-            intent.putExtra(EXTRA_TIMINGS, event.timings);
-            startActivity(intent);
-            finish();
         });
     }
 
     private void showCustomToast(String message, boolean isSuccess) {
         LayoutInflater inflater = getLayoutInflater();
-
-        // Pass null as root to avoid container view being incorrectly used for ID resolution
         View layout = inflater.inflate(R.layout.layout_custom_toast, (ViewGroup) findViewById(R.id.custom_toast_container), false);
 
         TextView text = layout.findViewById(R.id.toast_text);
