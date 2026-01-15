@@ -27,12 +27,11 @@ public class RatingActivity extends AppCompatActivity {
         btnSubmit.setOnClickListener(v -> {
             float rating = ratingBar.getRating();
             if (rating > 0) {
-                // Corrected method call to submitRating
                 viewModel.submitRating(rating);
                 Toast.makeText(this, getString(R.string.msg_rating_saved, (int)rating), Toast.LENGTH_SHORT).show();
                 
-                // Mission complete - go back to home (Corridor)
-                Intent intent = new Intent(RatingActivity.this, Corridor.class);
+                // Navigate back to ChoosingGameVarient instead of Corridor
+                Intent intent = new Intent(RatingActivity.this, ChoosingGameVarient.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();
