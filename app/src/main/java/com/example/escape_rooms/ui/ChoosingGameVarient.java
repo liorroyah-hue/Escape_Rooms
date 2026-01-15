@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
@@ -94,7 +93,8 @@ public class ChoosingGameVarient extends AppCompatActivity {
                 }
                 viewModel.generateAiGame(selectedCategory);
             } else {
-                startProgressAnimation(3000, true);
+                // For existing game, fill all 10 segments at 2s per segment = 20 seconds
+                startProgressAnimation(20000, true);
             }
         });
     }
@@ -128,7 +128,7 @@ public class ChoosingGameVarient extends AppCompatActivity {
         startGameButton.setEnabled(false);
         resetProgress();
         
-        // Use float for smoother calculation of integer steps
+        // Duration is for the whole animation (0 to 10 segments)
         currentAnimator = ValueAnimator.ofFloat(0f, 10f);
         currentAnimator.setDuration(duration);
         currentAnimator.setInterpolator(new LinearInterpolator());
@@ -137,7 +137,8 @@ public class ChoosingGameVarient extends AppCompatActivity {
             int count = (int) Math.ceil(value);
             if (count < 1) count = 1;
             
-            // In AI mode, we wait at segment 9 until the API call finishes
+            // If waiting for AI (navigateOnEnd = false), we only fill up to 9 segments
+            // to leave the 10th for the "finish" snap.
             if (!navigateOnEnd && count >= 10) {
                 count = 9;
             }
@@ -176,8 +177,9 @@ public class ChoosingGameVarient extends AppCompatActivity {
     private void observeViewModel() {
         viewModel.getIsLoading().observe(this, isLoading -> {
             if (isLoading != null && isLoading) {
-                // For AI, start a slow animation that fills 9 segments
-                startProgressAnimation(15000, false);
+                // For AI, we want to advance every 2 seconds.
+                // We'll animate 9 segments (18 seconds) while waiting for the API.
+                startProgressAnimation(18000, false);
             }
         });
 
@@ -194,7 +196,7 @@ public class ChoosingGameVarient extends AppCompatActivity {
             if (quizData != null) {
                 if (currentAnimator != null) currentAnimator.cancel();
                 
-                // Gemini is done! Instantly fill all segments.
+                // Gemini call finished! Instantly fill all 10 segments.
                 updateProgressDisplay(10);
                 
                 progressFrame.postDelayed(() -> {
