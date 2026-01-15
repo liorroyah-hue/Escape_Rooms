@@ -84,9 +84,10 @@ public class ChoosingGameVarient extends AppCompatActivity {
                 }
                 viewModel.generateAiGame(selectedCategory);
             } else {
-                Intent intent = new Intent(this, MainActivity.class);
+                // Navigate to DrawerActivity instead of MainActivity
+                Intent intent = new Intent(this, DrawerActivity.class);
                 intent.putExtra("CREATION_TYPE", selectedCreationType);
-                intent.putExtra(MainActivity.EXTRA_LEVEL, 1); // Start at level 1
+                intent.putExtra(MainActivity.EXTRA_LEVEL, 1);
                 startActivity(intent);
             }
         });
@@ -106,7 +107,8 @@ public class ChoosingGameVarient extends AppCompatActivity {
 
         viewModel.getNavigateToGame().observe(this, quizData -> {
             if (quizData != null) {
-                Intent intent = new Intent(this, MainActivity.class);
+                // Navigate to DrawerActivity instead of MainActivity
+                Intent intent = new Intent(this, DrawerActivity.class);
                 intent.putExtra("CREATION_TYPE", getString(R.string.creation_option_ai));
                 intent.putExtra("AI_GAME_DATA", quizData);
                 startActivity(intent);
