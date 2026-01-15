@@ -6,6 +6,8 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.escape_rooms.model.Question;
 import com.example.escape_rooms.model.Questions;
@@ -26,9 +28,15 @@ public class GameViewModel extends AndroidViewModel {
     private HashMap<Integer, Long> levelTimings = new HashMap<>();
     private static final int MAX_LEVELS = 10;
 
+    // Standard constructor using the Singleton Repository
     public GameViewModel(@NonNull Application application) {
+        this(application, QuestionRepository.getInstance());
+    }
+
+    // Secondary constructor for testing / injection
+    public GameViewModel(@NonNull Application application, QuestionRepository repository) {
         super(application);
-        this.repository = new QuestionRepository();
+        this.repository = repository;
     }
 
     public LiveData<Questions> getCurrentQuestions() { return currentQuestions; }
@@ -58,7 +66,7 @@ public class GameViewModel extends AndroidViewModel {
             @Override
             public void onSuccess(List<Question> questions) {
                 if (questions == null || questions.isEmpty()) {
-                    toastMessage.postValue("No questions found for level " + currentLevel + ". Check your Supabase table.");
+                    toastMessage.postValue("No questions found for level " + currentLevel);
                 } else {
                     currentQuestions.postValue(new Questions(questions));
                 }
@@ -67,7 +75,7 @@ public class GameViewModel extends AndroidViewModel {
             @Override
             public void onError(Exception e) {
                 Log.e("GameViewModel", "Failed to load questions", e);
-                toastMessage.postValue("Failed to load questions. Please check your connection.");
+                toastMessage.postValue("Failed to load questions");
             }
         });
     }
@@ -115,6 +123,22 @@ public class GameViewModel extends AndroidViewModel {
             this.target = target;
             this.nextLevel = nextLevel;
             this.timings = timings;
+        }
+    }
+
+    public static class Factory implements ViewModelProvider.Factory {
+        private final Application application;
+        private final QuestionRepository repository;
+
+        public Factory(Application application, QuestionRepository repository) {
+            this.application = application;
+            this.repository = repository;
+        }
+
+        @NonNull
+        @Override
+        public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
+            return (T) new GameViewModel(application, repository);
         }
     }
 }

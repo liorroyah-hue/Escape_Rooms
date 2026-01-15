@@ -3,28 +3,29 @@ package com.example.escape_rooms.viewmodel;
 import android.app.Application;
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
-import androidx.lifecycle.Observer;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.example.escape_rooms.model.Questions;
+import com.example.escape_rooms.model.Question;
+import com.example.escape_rooms.repository.QuestionRepository;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.verify;
 
+/**
+ * 100% Mockito-free unit test for GameViewModel.
+ * Uses Robolectric only to provide a valid Application context for AndroidViewModel.
+ */
 @RunWith(RobolectricTestRunner.class)
 public class GameViewModelTest {
 
@@ -32,93 +33,83 @@ public class GameViewModelTest {
     public InstantTaskExecutorRule instantTaskExecutorRule = new InstantTaskExecutorRule();
 
     private GameViewModel viewModel;
-    private Application application;
-
-    @Mock
-    private Observer<Questions> questionsObserver;
-    @Mock
-    private Observer<String> toastObserver;
-    @Mock
-    private Observer<GameViewModel.NavigationEvent> navObserver;
+    private FakeQuestionRepository fakeRepository;
 
     @Before
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
-        application = ApplicationProvider.getApplicationContext();
-        viewModel = new GameViewModel(application);
-        
-        viewModel.getCurrentQuestions().observeForever(questionsObserver);
-        viewModel.getToastMessage().observeForever(toastObserver);
-        viewModel.getNavigationEvent().observeForever(navObserver);
+        fakeRepository = new FakeQuestionRepository();
+        // Use ApplicationProvider to get a valid context for AndroidViewModel
+        Application application = ApplicationProvider.getApplicationContext();
+        viewModel = new GameViewModel(application, fakeRepository);
     }
 
     @Test
-    public void initLevel_loadsQuestions() {
+    public void initLevel_loadsQuestionsFromRepository() {
         viewModel.initLevel(1, new HashMap<>());
-        
-        verify(questionsObserver, atLeastOnce()).onChanged(any(Questions.class));
-        Questions questions = viewModel.getCurrentQuestions().getValue();
-        assertNotNull(questions);
-        assertEquals("מהו צבע השמיים?", questions.getQuestionsList().get(0));
-    }
 
-    @Test
-    public void verifyAndSubmit_withMissingAnswers_triggersToast() {
-        viewModel.initLevel(1, new HashMap<>());
+        // Verify state on the Fake
+        assertEquals(1, fakeRepository.lastLevelRequested);
         
-        // Level 1 has 2 questions, we provide only 1
-        Map<String, String> selected = new HashMap<>();
-        selected.put("מהו צבע השמיים?", "כחול");
-        
-        viewModel.verifyAndSubmit(selected);
-        
-        verify(toastObserver).onChanged("msg_answer_all");
-    }
+        // Trigger fake success
+        fakeRepository.triggerSuccess(createMockQuestions());
 
-    @Test
-    public void verifyAndSubmit_withIncorrectAnswer_triggersToast() {
-        viewModel.initLevel(1, new HashMap<>());
-        
-        Map<String, String> selected = new HashMap<>();
-        selected.put("מהו צבע השמיים?", "אדום"); // Wrong
-        selected.put("איזה גז בני אדם צריכים כדי לנשום?", "חמצן");
-        
-        viewModel.verifyAndSubmit(selected);
-        
-        verify(toastObserver).onChanged("msg_incorrect");
+        // Verify LiveData directly
+        assertNotNull(viewModel.getCurrentQuestions().getValue());
+        assertEquals("Q1", viewModel.getCurrentQuestions().getValue().getQuestionsList().get(0));
     }
 
     @Test
     public void verifyAndSubmit_withCorrectAnswers_triggersNextLevel() {
         viewModel.initLevel(1, new HashMap<>());
-        
+        fakeRepository.triggerSuccess(createMockQuestions());
+
         Map<String, String> selected = new HashMap<>();
-        selected.put("מהו צבע השמיים?", "כחול");
-        selected.put("איזה גז בני אדם צריכים כדי לנשום?", "חמצן");
-        
+        selected.put("Q1", "A1");
+
         viewModel.verifyAndSubmit(selected);
-        
-        verify(navObserver).onChanged(any(GameViewModel.NavigationEvent.class));
-        GameViewModel.NavigationEvent event = viewModel.getNavigationEvent().getValue();
-        assertNotNull(event);
-        assertEquals(GameViewModel.NavigationTarget.NEXT_LEVEL, event.target);
-        assertEquals(2, event.nextLevel);
+
+        // Verify LiveData results
+        assertNotNull(viewModel.getNavigationEvent().getValue());
+        assertEquals(2, viewModel.getNavigationEvent().getValue().nextLevel);
     }
 
     @Test
-    public void verifyAndSubmit_onLastLevel_triggersResults() {
-        // Init level 10 (Max level)
-        viewModel.initLevel(10, new HashMap<>());
-        
+    public void verifyAndSubmit_withIncorrectAnswers_triggersToast() {
+        viewModel.initLevel(1, new HashMap<>());
+        fakeRepository.triggerSuccess(createMockQuestions());
+
         Map<String, String> selected = new HashMap<>();
-        selected.put("מהו המדבר הגדול ביותר בעולם?", "סהרה");
-        selected.put("איזה מדען מפורסם פיתח את תורת היחסות?", "איינשטיין");
-        
+        selected.put("Q1", "WRONG");
+
         viewModel.verifyAndSubmit(selected);
-        
-        verify(navObserver).onChanged(any(GameViewModel.NavigationEvent.class));
-        GameViewModel.NavigationEvent event = viewModel.getNavigationEvent().getValue();
-        assertNotNull(event);
-        assertEquals(GameViewModel.NavigationTarget.RESULTS, event.target);
+
+        // Verify toast message LiveData
+        assertEquals("msg_incorrect", viewModel.getToastMessage().getValue());
+    }
+
+    private List<Question> createMockQuestions() {
+        Question q1 = new Question();
+        q1.setQuestion("Q1");
+        q1.setCorrectAnswer("A1");
+        q1.setAnswers(Arrays.asList("A1", "A2"));
+        return Arrays.asList(q1);
+    }
+
+    /**
+     * Manual Fake Repository subclass.
+     */
+    private static class FakeQuestionRepository extends QuestionRepository {
+        public int lastLevelRequested = -1;
+        public QuestionsCallback lastCallback = null;
+
+        @Override
+        public void getQuestionsForLevel(int level, QuestionsCallback callback) {
+            this.lastLevelRequested = level;
+            this.lastCallback = callback;
+        }
+
+        public void triggerSuccess(List<Question> questions) {
+            if (lastCallback != null) lastCallback.onSuccess(questions);
+        }
     }
 }

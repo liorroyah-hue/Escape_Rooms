@@ -17,13 +17,20 @@ public class QuestionRepository {
     private final OkHttpClient client = new OkHttpClient();
     private final Gson gson = new Gson();
 
-    public interface QuestionsCallback {
-        void onSuccess(List<Question> questions);
-        void onError(Exception e);
+    private static QuestionRepository instance;
+
+    public static synchronized QuestionRepository getInstance() {
+        if (instance == null) {
+            instance = new QuestionRepository();
+        }
+        return instance;
+    }
+
+    public static synchronized void setTestInstance(QuestionRepository testInstance) {
+        instance = testInstance;
     }
 
     public void getQuestionsForLevel(int level, QuestionsCallback callback) {
-        // Fetch exactly 2 questions for the given level
         String url = UserRepository.SUPABASE_URL + "/rest/v1/questions?level=eq." + level + "&select=*&limit=2";
 
         Request request = new Request.Builder()
@@ -52,5 +59,10 @@ public class QuestionRepository {
                 }
             }
         });
+    }
+
+    public interface QuestionsCallback {
+        void onSuccess(List<Question> questions);
+        void onError(Exception e);
     }
 }
