@@ -46,6 +46,7 @@
     <string name="category_history">היסטוריה</string>
     <string name="category_famous">מפורסמים</string>
     <string name="category_sports">ספורט</string>
+    <string name="category_science">מדע</string>
     <string name="select_category_prompt">אנא בחר קטגוריה</string>
     <string name="creation_option_existing">השתמש במשחק קיים</string>
     <string name="creation_option_ai">צור משחק בעזרת AI</string>
