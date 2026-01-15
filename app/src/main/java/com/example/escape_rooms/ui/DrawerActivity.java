@@ -23,8 +23,8 @@ public class DrawerActivity extends AppCompatActivity {
 
         // Get the data passed from ChoosingGameVarient or MainActivity
         Intent incomingIntent = getIntent();
-        String creationType = incomingIntent.getStringExtra("CREATION_TYPE");
-        ChoosingGameViewModel.QuizData aiData = (ChoosingGameViewModel.QuizData) incomingIntent.getSerializableExtra("AI_GAME_DATA");
+        String creationType = incomingIntent.getStringExtra(MainActivity.EXTRA_CREATION_TYPE);
+        ChoosingGameViewModel.QuizData aiData = (ChoosingGameViewModel.QuizData) incomingIntent.getSerializableExtra(MainActivity.EXTRA_AI_GAME_DATA);
         int level = incomingIntent.getIntExtra(MainActivity.EXTRA_LEVEL, 1);
         HashMap<Integer, Long> timings = (HashMap<Integer, Long>) incomingIntent.getSerializableExtra(MainActivity.EXTRA_TIMINGS);
 
@@ -50,9 +50,9 @@ public class DrawerActivity extends AppCompatActivity {
             Intent intent = new Intent(DrawerActivity.this, MainActivity.class);
             
             // Forward all data to MainActivity
-            intent.putExtra("CREATION_TYPE", creationType);
+            intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, creationType);
             if (aiData != null) {
-                intent.putExtra("AI_GAME_DATA", aiData);
+                intent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, aiData);
             }
             intent.putExtra(MainActivity.EXTRA_LEVEL, level);
             intent.putExtra(MainActivity.EXTRA_TIMINGS, timings);

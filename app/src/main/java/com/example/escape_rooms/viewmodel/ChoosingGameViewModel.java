@@ -37,15 +37,19 @@ public class ChoosingGameViewModel extends ViewModel {
         isLoading.setValue(true);
         executor.execute(() -> {
             try {
-                // We'll generate 2 questions as per the previous requirement
-                String jsonResponse = geminiService.generateQandA(subject, 2);
+                // Generate all 20 questions (2 per level for 10 levels) at once
+                String jsonResponse = geminiService.generateQandA(subject, 20);
                 
-                // The response from Gemini might include markdown characters, so we clean it.
                 String cleanedJson = jsonResponse.replace("```json", "").replace("```", "").trim();
                 
                 Gson gson = new Gson();
                 QuizData quizData = gson.fromJson(cleanedJson, QuizData.class);
-                navigateToGame.postValue(quizData);
+                
+                if (quizData != null && quizData.questions != null && quizData.questions.size() >= 20) {
+                    navigateToGame.postValue(quizData);
+                } else {
+                    errorMessage.postValue("ה-AI לא הצליח לייצר מספיק שאלות. נסו שוב.");
+                }
 
             } catch (Exception e) {
                 errorMessage.postValue("שגיאה ביצירת המשחק: " + e.getMessage());
@@ -55,17 +59,12 @@ public class ChoosingGameViewModel extends ViewModel {
         });
     }
 
-    // Helper class for parsing the JSON from Gemini
     public static class QuizData implements Serializable {
         @SerializedName("questions")
-        private List<String> questions;
+        public List<String> questions;
         @SerializedName("answers")
-        private List<List<String>> answers;
+        public List<List<String>> answers;
         @SerializedName("correctAnswers")
-        private List<String> correctAnswers;
-
-        public List<String> getQuestions() { return questions; }
-        public List<List<String>> getAnswers() { return answers; }
-        public List<String> getCorrectAnswers() { return correctAnswers; }
+        public List<String> correctAnswers;
     }
 }

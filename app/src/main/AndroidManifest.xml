@@ -46,6 +46,10 @@
         <activity
             android:name=".ui.PlayerResultsActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".ui.RatingActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

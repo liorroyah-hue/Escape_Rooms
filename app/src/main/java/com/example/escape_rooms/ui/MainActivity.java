@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.escape_rooms.R;
 import com.example.escape_rooms.repository.QuestionRepository;
+import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 import com.example.escape_rooms.viewmodel.GameViewModel;
 
 import java.util.HashMap;
@@ -26,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String EXTRA_LEVEL = "com.example.escape_rooms.LEVEL";
     public static final String EXTRA_TIMINGS = "com.example.escape_rooms.TIMINGS";
     public static final String EXTRA_CREATION_TYPE = "CREATION_TYPE";
-    public static final String EXTRA_AI_SUBJECT = "SELECTED_CATEGORY";
+    public static final String EXTRA_AI_GAME_DATA = "AI_GAME_DATA";
 
     private RecyclerView questionsRecyclerView;
     private QuestionsAdapter questionsAdapter;
@@ -51,9 +52,9 @@ public class MainActivity extends AppCompatActivity {
         String creationType = intent.getStringExtra(EXTRA_CREATION_TYPE);
 
         if (getString(R.string.creation_option_ai).equals(creationType)) {
-            String subject = intent.getStringExtra(EXTRA_AI_SUBJECT);
+            ChoosingGameViewModel.QuizData quizData = (ChoosingGameViewModel.QuizData) intent.getSerializableExtra(EXTRA_AI_GAME_DATA);
             int level = intent.getIntExtra(EXTRA_LEVEL, 1);
-            viewModel.initAiGame(subject, level, timings);
+            viewModel.initAiGame(quizData, level, timings);
         } else {
             int level = intent.getIntExtra(EXTRA_LEVEL, 1);
             viewModel.initLevel(level, timings);
@@ -92,19 +93,25 @@ public class MainActivity extends AppCompatActivity {
             Intent intent;
             if (event.target == GameViewModel.NavigationTarget.NEXT_LEVEL) {
                 showCustomToast(getString(R.string.msg_room_cleared, event.nextLevel - 1), true);
-                // Go back to the corridor for the next level
-                intent = new Intent(this, Corridor.class);
+                
+                intent = new Intent(this, DrawerActivity.class);
                 intent.putExtra(EXTRA_LEVEL, event.nextLevel);
-                if (event.aiGameSubject != null) {
+                if (event.aiData != null) {
                     intent.putExtra(EXTRA_CREATION_TYPE, getString(R.string.creation_option_ai));
-                    intent.putExtra(EXTRA_AI_SUBJECT, event.aiGameSubject);
+                    intent.putExtra(EXTRA_AI_GAME_DATA, event.aiData);
+                } else {
+                    intent.putExtra(EXTRA_CREATION_TYPE, getString(R.string.creation_option_existing));
                 }
+                intent.putExtra(EXTRA_TIMINGS, event.timings);
+                startActivity(intent);
+                finish();
             } else {
+                // Navigate directly to PlayerResultsActivity after the final level
                 intent = new Intent(this, PlayerResultsActivity.class);
+                intent.putExtra(EXTRA_TIMINGS, event.timings);
+                startActivity(intent);
+                finish();
             }
-            intent.putExtra(EXTRA_TIMINGS, event.timings);
-            startActivity(intent);
-            finish();
         });
     }
 
@@ -118,9 +125,9 @@ public class MainActivity extends AppCompatActivity {
         text.setText(message);
         
         if (isSuccess) {
-            icon.setImageResource(R.drawable.ic_escape_lock_open);
+            icon.setImageResource(R.drawable.ic_lock_open);
         } else {
-            icon.setImageResource(R.drawable.ic_escape_lock_closed);
+            icon.setImageResource(R.drawable.ic_lock_closed);
         }
 
         Toast toast = new Toast(getApplicationContext());

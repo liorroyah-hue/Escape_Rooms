@@ -1,6 +1,6 @@
 package com.example.escape_rooms.model;
 
-import com.example.escape_rooms.viewmodel.GameViewModel;
+import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,12 +30,12 @@ public class Questions {
     /**
      * Constructor for AI-generated questions.
      */
-    public Questions(GameViewModel.QuizData quizData) {
-        if (quizData != null && quizData.getQuestions() != null && !quizData.getQuestions().isEmpty()) {
-            for (int i = 0; i < quizData.getQuestions().size(); i++) {
-                String question = quizData.getQuestions().get(i);
-                String correctAnswer = quizData.getCorrectAnswers().get(i);
-                List<String> answers = quizData.getAnswers().get(i);
+    public Questions(ChoosingGameViewModel.QuizData quizData) {
+        if (quizData != null && quizData.questions != null && !quizData.questions.isEmpty()) {
+            for (int i = 0; i < quizData.questions.size(); i++) {
+                String question = quizData.questions.get(i);
+                String correctAnswer = quizData.correctAnswers.get(i);
+                List<String> answers = quizData.answers.get(i);
                 addQuestion(question, correctAnswer, new ArrayList<>(answers));
             }
         }

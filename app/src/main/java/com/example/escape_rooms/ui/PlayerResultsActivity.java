@@ -31,7 +31,7 @@ public class PlayerResultsActivity extends AppCompatActivity {
 
         LinearLayout container = findViewById(R.id.results_container);
         TextView tvTotalTime = findViewById(R.id.tv_total_time);
-        Button btnContinue = findViewById(R.id.btn_back_home);
+        Button btnProceed = findViewById(R.id.btn_back_home);
 
         try {
             @SuppressWarnings("unchecked")
@@ -46,18 +46,17 @@ public class PlayerResultsActivity extends AppCompatActivity {
                     Long duration = timings.get(level);
                     if (duration != null) {
                         totalMillis += duration;
-                        // Dynamically format room label in Hebrew
                         String roomLabel = getString(R.string.label_room, level);
                         addResultRow(container, roomLabel + "  ", formatTime(duration));
                     }
                 }
             }
 
-            // Dynamically format total time in Hebrew
             tvTotalTime.setText(getString(R.string.label_total_time, formatTime(totalMillis)));
 
-            btnContinue.setOnClickListener(v -> {
-                Intent intent = new Intent(PlayerResultsActivity.this, Corridor.class);
+            // Navigate to RatingActivity when clicking the button
+            btnProceed.setOnClickListener(v -> {
+                Intent intent = new Intent(PlayerResultsActivity.this, RatingActivity.class);
                 startActivity(intent);
                 finish();
             });
