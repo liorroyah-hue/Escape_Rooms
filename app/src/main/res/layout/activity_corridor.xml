@@ -12,7 +12,7 @@
         android:id="@+id/door_image"
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android.contentDescription="@string/home_title"
+        android:contentDescription="@string/home_title"
         android:src="@drawable/ic_escape_lock_closed"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
