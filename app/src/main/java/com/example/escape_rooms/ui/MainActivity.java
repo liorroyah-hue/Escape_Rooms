@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.escape_rooms.R;
 import com.example.escape_rooms.repository.QuestionRepository;
-import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 import com.example.escape_rooms.viewmodel.GameViewModel;
 
 import java.util.HashMap;
@@ -26,6 +25,8 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String EXTRA_LEVEL = "com.example.escape_rooms.LEVEL";
     public static final String EXTRA_TIMINGS = "com.example.escape_rooms.TIMINGS";
+    public static final String EXTRA_CREATION_TYPE = "CREATION_TYPE";
+    public static final String EXTRA_AI_SUBJECT = "SELECTED_CATEGORY";
 
     private RecyclerView questionsRecyclerView;
     private QuestionsAdapter questionsAdapter;
@@ -44,15 +45,15 @@ public class MainActivity extends AppCompatActivity {
         btnSubmitAnswers = findViewById(R.id.btn_submit_answers);
         questionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Get initial data from Intent
         Intent intent = getIntent();
-        String creationType = intent.getStringExtra("CREATION_TYPE");
         @SuppressWarnings("unchecked")
         HashMap<Integer, Long> timings = (HashMap<Integer, Long>) intent.getSerializableExtra(EXTRA_TIMINGS);
+        String creationType = intent.getStringExtra(EXTRA_CREATION_TYPE);
 
         if (getString(R.string.creation_option_ai).equals(creationType)) {
-            ChoosingGameViewModel.QuizData quizData = (ChoosingGameViewModel.QuizData) intent.getSerializableExtra("AI_GAME_DATA");
-            viewModel.initAiGame(quizData, timings);
+            String subject = intent.getStringExtra(EXTRA_AI_SUBJECT);
+            int level = intent.getIntExtra(EXTRA_LEVEL, 1);
+            viewModel.initAiGame(subject, level, timings);
         } else {
             int level = intent.getIntExtra(EXTRA_LEVEL, 1);
             viewModel.initLevel(level, timings);
@@ -77,36 +78,33 @@ public class MainActivity extends AppCompatActivity {
             questionsRecyclerView.setAdapter(questionsAdapter);
         });
 
-        viewModel.getToastMessage().observe(this, messageKey -> {
-            int resId = 0;
-            if ("msg_answer_all".equals(messageKey)) resId = R.string.msg_answer_all;
-            else if ("msg_incorrect".equals(messageKey)) resId = R.string.msg_incorrect;
-            
+        viewModel.getToastMessage().observe(this, message -> {
+            if (message == null) return;
+            int resId = getResources().getIdentifier(message, "string", getPackageName());
             if (resId != 0) {
                 showCustomToast(getString(resId), false);
+            } else {
+                showCustomToast(message, false);
             }
         });
 
         viewModel.getNavigationEvent().observe(this, event -> {
+            Intent intent;
             if (event.target == GameViewModel.NavigationTarget.NEXT_LEVEL) {
                 showCustomToast(getString(R.string.msg_room_cleared, event.nextLevel - 1), true);
-                
-                // Navigate to DrawerActivity instead of directly to MainActivity
-                Intent intent = new Intent(this, DrawerActivity.class);
-                intent.putExtra("CREATION_TYPE", getIntent().getStringExtra("CREATION_TYPE"));
-                if (getIntent().hasExtra("AI_GAME_DATA")) {
-                    intent.putExtra("AI_GAME_DATA", getIntent().getSerializableExtra("AI_GAME_DATA"));
-                }
+                // Go back to the corridor for the next level
+                intent = new Intent(this, Corridor.class);
                 intent.putExtra(EXTRA_LEVEL, event.nextLevel);
-                intent.putExtra(EXTRA_TIMINGS, event.timings);
-                startActivity(intent);
-                finish();
+                if (event.aiGameSubject != null) {
+                    intent.putExtra(EXTRA_CREATION_TYPE, getString(R.string.creation_option_ai));
+                    intent.putExtra(EXTRA_AI_SUBJECT, event.aiGameSubject);
+                }
             } else {
-                Intent intent = new Intent(this, PlayerResultsActivity.class);
-                intent.putExtra(EXTRA_TIMINGS, event.timings);
-                startActivity(intent);
-                finish();
+                intent = new Intent(this, PlayerResultsActivity.class);
             }
+            intent.putExtra(EXTRA_TIMINGS, event.timings);
+            startActivity(intent);
+            finish();
         });
     }
 
@@ -116,13 +114,13 @@ public class MainActivity extends AppCompatActivity {
 
         TextView text = layout.findViewById(R.id.toast_text);
         ImageView icon = layout.findViewById(R.id.toast_icon);
-
+        
         text.setText(message);
-
+        
         if (isSuccess) {
-            icon.setImageResource(R.drawable.ic_lock_open);
+            icon.setImageResource(R.drawable.ic_escape_lock_open);
         } else {
-            icon.setImageResource(R.drawable.ic_lock_closed);
+            icon.setImageResource(R.drawable.ic_escape_lock_closed);
         }
 
         Toast toast = new Toast(getApplicationContext());

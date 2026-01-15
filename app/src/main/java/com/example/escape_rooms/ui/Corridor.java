@@ -2,24 +2,23 @@ package com.example.escape_rooms.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.RatingBar;
-import android.widget.Toast;
+import android.widget.ImageView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.example.escape_rooms.R;
-import com.example.escape_rooms.viewmodel.RatingViewModel;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class Corridor extends AppCompatActivity {
-    
-    private RatingBar ratingBar;
-    private RatingViewModel viewModel;
+
+    private ImageView doorImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,37 +26,42 @@ public class Corridor extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_corridor);
         
-        viewModel = new ViewModelProvider(this).get(RatingViewModel.class);
-        
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        ratingBar = findViewById(R.id.ratingBar);
-        Button btnFinishRating = findViewById(R.id.btn_finish_rating);
+        doorImage = findViewById(R.id.door_image);
 
-        observeViewModel();
+        // --- Random Image Selection ---
+        List<Integer> doorImages = new ArrayList<>();
+        // Add your custom drawable
+        doorImages.add(R.drawable.ic_escape_lock_closed);
+        // Add some other default Android icons for variety
+        doorImages.add(android.R.drawable.ic_dialog_map);
+        doorImages.add(android.R.drawable.ic_menu_search);
+        doorImages.add(android.R.drawable.ic_menu_help);
 
-        btnFinishRating.setOnClickListener(v -> {
-            float rating = ratingBar.getRating();
-            viewModel.submitRating(rating);
-        });
-    }
+        Random random = new Random();
+        int randomImageResId = doorImages.get(random.nextInt(doorImages.size()));
+        doorImage.setImageResource(randomImageResId);
+        // --- End Random Image Selection ---
 
-    private void observeViewModel() {
-        viewModel.getSavedRating().observe(this, rating -> {
-            Toast.makeText(this, "Rating saved: " + rating, Toast.LENGTH_SHORT).show();
-        });
+        // Get the original intent that started this activity
+        Intent originalIntent = getIntent();
 
-        viewModel.getNavigateBack().observe(this, shouldNavigate -> {
-            if (Boolean.TRUE.equals(shouldNavigate)) {
-                Intent intent = new Intent(this, HomePage.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-                finish();
+        doorImage.setOnClickListener(v -> {
+            // Create a new intent to start the main game activity
+            Intent gameIntent = new Intent(Corridor.this, MainActivity.class);
+            
+            // Copy all the extras from the original intent to the new one
+            if (originalIntent.getExtras() != null) {
+                gameIntent.putExtras(originalIntent.getExtras());
             }
+            
+            startActivity(gameIntent);
+            finish(); // Finish the corridor activity so you can't go back to it
         });
     }
 }
