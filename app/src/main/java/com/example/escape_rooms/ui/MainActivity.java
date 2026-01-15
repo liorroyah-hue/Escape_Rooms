@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.escape_rooms.R;
 import com.example.escape_rooms.repository.QuestionRepository;
+import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 import com.example.escape_rooms.viewmodel.GameViewModel;
 
 import java.util.HashMap;
@@ -43,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
         btnSubmitAnswers = findViewById(R.id.btn_submit_answers);
         questionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        int level = getIntent().getIntExtra(EXTRA_LEVEL, 1);
         // Get initial data from Intent
         Intent intent = getIntent();
         String creationType = intent.getStringExtra("CREATION_TYPE");
@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
         viewModel.getNavigationEvent().observe(this, event -> {
             Intent intent;
             if (event.target == GameViewModel.NavigationTarget.NEXT_LEVEL) {
-                Toast.makeText(this, getString(R.string.msg_room_cleared, event.nextLevel - 1), Toast.LENGTH_SHORT).show();
+                showCustomToast(getString(R.string.msg_room_cleared, event.nextLevel - 1), true);
                 intent = new Intent(this, MainActivity.class);
                 intent.putExtra(EXTRA_LEVEL, event.nextLevel);
             } else {
@@ -114,9 +114,9 @@ public class MainActivity extends AppCompatActivity {
         text.setText(message);
 
         if (isSuccess) {
-            icon.setImageResource(R.drawable.ic_escape_lock_open);
+            icon.setImageResource(R.drawable.ic_lock_open);
         } else {
-            icon.setImageResource(R.drawable.ic_escape_lock_closed);
+            icon.setImageResource(R.drawable.ic_lock_closed);
         }
 
         Toast toast = new Toast(getApplicationContext());

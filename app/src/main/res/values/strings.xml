@@ -39,6 +39,7 @@
     <string name="msg_rating_saved">דירוג נשמר: %1$d</string>
     <string name="start_game">התחל לשחק</string>
     <string name="choose_the_game_configuration">בחר את המשחק</string>
+    <string name="unlocked">הדלת נפתחה</string>
 
     <!-- Game Configuration -->
     <string name="category_geography">מדעי הגאוגרפיה</string>
