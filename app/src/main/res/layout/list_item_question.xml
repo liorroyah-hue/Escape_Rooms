@@ -10,40 +10,51 @@
     app:strokeColor="@color/room_primary"
     app:strokeWidth="1dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:padding="16dp">
 
         <TextView
             android:id="@+id/question_text"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textAlignment="viewStart"
             android:gravity="start"
             android:textSize="18sp"
             android:textColor="@color/room_accent"
             android:textStyle="bold"
-            android:letterSpacing="0.02" />
+            android:letterSpacing="0.02"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <View
-            android:layout_width="match_parent"
+            android:id="@+id/divider"
+            android:layout_width="0dp"
             android:layout_height="1dp"
             android:background="@color/room_primary"
             android:alpha="0.3"
-            android:layout_marginVertical="12dp" />
+            android:layout_marginTop="12dp"
+            app:layout_constraintTop_toBottomOf="@id/question_text"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <RadioGroup
             android:id="@+id/answers_radio_group"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:buttonTint="@color/room_primary">
+            android:layout_marginTop="12dp"
+            android:buttonTint="@color/room_primary"
+            app:layout_constraintTop_toBottomOf="@id/divider"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
 
             <!-- RadioButtons will be added here dynamically from the code -->
 
         </RadioGroup>
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>
