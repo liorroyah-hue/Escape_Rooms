@@ -48,8 +48,8 @@ public class QuestionsTest {
 
     @Test
     public void testNullQuestionsListFallback() {
-        // Test behavior when null is passed instead of a list
-        Questions questions = new Questions(null);
+        // Fix: Explicitly cast null to List<Question> to resolve constructor ambiguity
+        Questions questions = new Questions((List<Question>) null);
         assertEquals(1, questions.getQuestionsList().size());
         assertEquals("You have completed all the rooms!", questions.getQuestionsList().get(0));
     }
