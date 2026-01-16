@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
         android:letterSpacing="0.1"
-        android:text="COMMAND CENTER"
+        android:text="@string/home_title"
         android:textColor="@color/room_primary"
         android:textSize="28sp"
         android:textStyle="bold"
@@ -42,74 +42,87 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/titleDivider">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="wrap_content">
 
             <Button
                 android:id="@+id/MyEscapeRoom"
                 style="@style/Widget.EscapeRooms.Button"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="70dp"
                 android:layout_marginBottom="16dp"
-                android:text="Original Escape Room"
-                app:icon="@android:drawable/ic_media_play" />
+                android:text="@string/btn_original_room"
+                app:icon="@android:drawable/ic_media_play"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <Button
                 android:id="@+id/CommunityEscapeRoom"
                 style="@style/Widget.EscapeRooms.Button"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="70dp"
-                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
                 android:backgroundTint="@color/room_surface"
-                android:text="Community Rooms"
+                android:text="@string/btn_community_rooms"
                 android:textColor="@color/room_accent"
                 app:icon="@android:drawable/ic_menu_search"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/MyEscapeRoom"
                 app:strokeColor="@color/room_accent"
                 app:strokeWidth="1dp" />
 
             <Button
                 android:id="@+id/CreateRoom"
                 style="@style/Widget.EscapeRooms.Button"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="70dp"
-                android:layout_marginBottom="16dp"
-                android:text="Create Room"
-                app:icon="@android:drawable/ic_input_add" />
+                android:layout_marginTop="16dp"
+                android:text="@string/btn_create_room"
+                app:icon="@android:drawable/ic_input_add"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/CommunityEscapeRoom" />
 
             <View
-                android:layout_width="match_parent"
+                android:id="@+id/innerDivider"
+                android:layout_width="0dp"
                 android:layout_height="1dp"
-                android:layout_marginVertical="16dp"
+                android:layout_marginTop="32dp"
                 android:alpha="0.2"
-                android:background="@color/text_secondary" />
+                android:background="@color/text_secondary"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/CreateRoom" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <Button
+                android:id="@+id/LER"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_marginTop="16dp"
+                android:text="@string/btn_login"
+                android:textColor="@color/text_secondary"
+                app:layout_constraintEnd_toStartOf="@+id/SER"
+                app:layout_constraintHorizontal_chainStyle="spread"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/innerDivider" />
 
-                <Button
-                    android:id="@+id/LER"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Log in"
-                    android:textColor="@color/text_secondary" />
+            <Button
+                android:id="@+id/SER"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_signup"
+                android:textColor="@color/text_secondary"
+                app:layout_constraintBottom_toBottomOf="@+id/LER"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/LER"
+                app:layout_constraintTop_toTopOf="@+id/LER" />
 
-                <Button
-                    android:id="@+id/SER"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Sign up"
-                    android:textColor="@color/text_secondary" />
-            </LinearLayout>
-
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.core.widget.NestedScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

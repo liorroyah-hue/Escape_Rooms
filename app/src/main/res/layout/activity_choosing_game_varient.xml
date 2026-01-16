@@ -35,16 +35,18 @@
         app:strokeWidth="1dp"
         app:layout_constraintTop_toBottomOf="@id/textView">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:padding="16dp">
 
             <RadioGroup
                 android:id="@+id/radio_group_creation_type"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
                 <RadioButton
                     android:id="@+id/radio_existing_game"
@@ -68,17 +70,25 @@
 
             <View
                 android:id="@+id/divider"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="1dp"
-                android:layout_marginVertical="16dp"
+                android:layout_marginTop="16dp"
                 android:background="@color/room_primary"
-                android:alpha="0.2" />
+                android:alpha="0.2"
+                app:layout_constraintTop_toBottomOf="@id/radio_group_creation_type"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <RadioGroup
                 android:id="@+id/radio_group_game_subject"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:visibility="gone">
+                android:layout_marginTop="16dp"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/divider"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
 
                 <RadioButton
                     android:id="@+id/radio_geography"
@@ -120,10 +130,9 @@
                     android:textColor="@color/text_primary"
                     android:buttonTint="@color/room_accent" />
             </RadioGroup>
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- UI Improvement: Progress Frame with border -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/progress_frame"
         android:layout_width="match_parent"
@@ -137,25 +146,32 @@
         app:strokeWidth="2dp"
         app:layout_constraintTop_toBottomOf="@id/cardSelection">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/segmentedProgressLayout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:padding="4dp"
-            android:weightSum="10">
+            android:padding="4dp">
 
-            <View android:id="@+id/segment1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp" android:background="@color/room_accent" android:alpha="0" />
-            <View android:id="@+id/segment2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp" android:background="@color/room_accent" android:alpha="0" />
-            <View android:id="@+id/segment3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp" android:background="@color/room_accent" android:alpha="0" />
-            <View android:id="@+id/segment4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp" android:background="@color/room_accent" android:alpha="0" />
-            <View android:id="@+id/segment5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp" android:background="@color/room_accent" android:alpha="0" />
-            <View android:id="@+id/segment6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp" android:background="@color/room_accent" android:alpha="0" />
-            <View android:id="@+id/segment7" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp" android:background="@color/room_accent" android:alpha="0" />
-            <View android:id="@+id/segment8" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp" android:background="@color/room_accent" android:alpha="0" />
-            <View android:id="@+id/segment9" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp" android:background="@color/room_accent" android:alpha="0" />
-            <View android:id="@+id/segment10" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="2dp" android:background="@color/room_accent" android:alpha="0" />
-        </LinearLayout>
+            <androidx.constraintlayout.helper.widget.Flow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:flow_wrapMode="none"
+                app:flow_horizontalStyle="spread"
+                app:flow_horizontalGap="4dp"
+                app:constraint_referenced_ids="segment1,segment2,segment3,segment4,segment5,segment6,segment7,segment8,segment9,segment10" />
+
+            <View android:id="@+id/segment1" android:layout_width="0dp" android:layout_height="match_parent" android:background="@color/room_accent" android:alpha="0" />
+            <View android:id="@+id/segment2" android:layout_width="0dp" android:layout_height="match_parent" android:background="@color/room_accent" android:alpha="0" />
+            <View android:id="@+id/segment3" android:layout_width="0dp" android:layout_height="match_parent" android:background="@color/room_accent" android:alpha="0" />
+            <View android:id="@+id/segment4" android:layout_width="0dp" android:layout_height="match_parent" android:background="@color/room_accent" android:alpha="0" />
+            <View android:id="@+id/segment5" android:layout_width="0dp" android:layout_height="match_parent" android:background="@color/room_accent" android:alpha="0" />
+            <View android:id="@+id/segment6" android:layout_width="0dp" android:layout_height="match_parent" android:background="@color/room_accent" android:alpha="0" />
+            <View android:id="@+id/segment7" android:layout_width="0dp" android:layout_height="match_parent" android:background="@color/room_accent" android:alpha="0" />
+            <View android:id="@+id/segment8" android:layout_width="0dp" android:layout_height="match_parent" android:background="@color/room_accent" android:alpha="0" />
+            <View android:id="@+id/segment9" android:layout_width="0dp" android:layout_height="match_parent" android:background="@color/room_accent" android:alpha="0" />
+            <View android:id="@+id/segment10" android:layout_width="0dp" android:layout_height="match_parent" android:background="@color/room_accent" android:alpha="0" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 
     <Button
