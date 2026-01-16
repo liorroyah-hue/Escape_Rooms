@@ -1,19 +1,16 @@
 package com.example.escape_rooms.ui;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
-import android.view.animation.LinearInterpolator;
 import android.widget.Button;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -29,7 +26,10 @@ public class ChoosingGameVarient extends AppCompatActivity {
     private ChoosingGameViewModel viewModel;
     private View progressFrame; 
     private View[] segments;
-    private ValueAnimator currentAnimator;
+    
+    private final Handler progressHandler = new Handler(Looper.getMainLooper());
+    private int currentSegmentCount = 0;
+    private boolean isNavigating = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,17 +57,11 @@ public class ChoosingGameVarient extends AppCompatActivity {
         observeViewModel();
 
         radioGroupGameSubject.setOnCheckedChangeListener((group, checkedId) -> {
-            if (checkedId == R.id.radio_geography) {
-                selectedCategory = getString(R.string.category_geography);
-            } else if (checkedId == R.id.radio_history) {
-                selectedCategory = getString(R.string.category_history);
-            } else if (checkedId == R.id.radio_famous) {
-                selectedCategory = getString(R.string.category_famous);
-            } else if (checkedId == R.id.radio_sports) {
-                selectedCategory = getString(R.string.category_sports);
-            } else if (checkedId == R.id.radio_science) {
-                selectedCategory = getString(R.string.category_science);
-            }
+            if (checkedId == R.id.radio_geography) selectedCategory = getString(R.string.category_geography);
+            else if (checkedId == R.id.radio_history) selectedCategory = getString(R.string.category_history);
+            else if (checkedId == R.id.radio_famous) selectedCategory = getString(R.string.category_famous);
+            else if (checkedId == R.id.radio_sports) selectedCategory = getString(R.string.category_sports);
+            else if (checkedId == R.id.radio_science) selectedCategory = getString(R.string.category_science);
         });
 
         radioGroupCreationType.setOnCheckedChangeListener((group, checkedId) -> {
@@ -93,8 +87,7 @@ public class ChoosingGameVarient extends AppCompatActivity {
                 }
                 viewModel.generateAiGame(selectedCategory);
             } else {
-                // For existing game, fill all 10 segments at 2s per segment = 20 seconds
-                startProgressAnimation(20000, true);
+                startDiscreteProgress(true);
             }
         });
     }
@@ -111,63 +104,62 @@ public class ChoosingGameVarient extends AppCompatActivity {
         segments[7] = findViewById(R.id.segment8);
         segments[8] = findViewById(R.id.segment9);
         segments[9] = findViewById(R.id.segment10);
-        
-        resetProgress();
+        resetProgressUI();
     }
 
-    private void resetProgress() {
+    private void resetProgressUI() {
+        currentSegmentCount = 0;
         for (View s : segments) {
             s.setAlpha(0f);
         }
     }
 
-    private void startProgressAnimation(long duration, boolean navigateOnEnd) {
-        if (currentAnimator != null) currentAnimator.cancel();
-        
+    private void startDiscreteProgress(boolean autoNavigate) {
+        progressHandler.removeCallbacksAndMessages(null);
+        resetProgressUI();
         progressFrame.setVisibility(View.VISIBLE);
-        startGameButton.setEnabled(false);
-        resetProgress();
-        
-        // Duration is for the whole animation (0 to 10 segments)
-        currentAnimator = ValueAnimator.ofFloat(0f, 10f);
-        currentAnimator.setDuration(duration);
-        currentAnimator.setInterpolator(new LinearInterpolator());
-        currentAnimator.addUpdateListener(animation -> {
-            float value = (float) animation.getAnimatedValue();
-            int count = (int) Math.ceil(value);
-            if (count < 1) count = 1;
-            
-            // If waiting for AI (navigateOnEnd = false), we only fill up to 9 segments
-            // to leave the 10th for the "finish" snap.
-            if (!navigateOnEnd && count >= 10) {
-                count = 9;
-            }
-            
-            updateProgressDisplay(count);
-        });
-        
-        if (navigateOnEnd) {
-            currentAnimator.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    navigateToDrawer();
-                }
-            });
-        }
-        currentAnimator.start();
+        setControlsEnabled(false);
+        isNavigating = false;
+
+        // Start with the first segment immediately
+        incrementProgress(autoNavigate);
     }
 
-    private void updateProgressDisplay(int count) {
-        for (int i = 0; i < segments.length; i++) {
-            if (i < count) {
-                segments[i].setAlpha(1.0f);
-            } else {
-                segments[i].setAlpha(0f);
+    private void incrementProgress(boolean autoNavigate) {
+        if (currentSegmentCount < 10) {
+            currentSegmentCount++;
+            updateSegmentsVisibility(currentSegmentCount);
+            
+            // If we are in AI mode (autoNavigate = false), don't show the 10th segment yet
+            if (!autoNavigate && currentSegmentCount == 9) {
+                return; 
+            }
+
+            if (currentSegmentCount < 10) {
+                progressHandler.postDelayed(() -> incrementProgress(autoNavigate), 2000);
+            } else if (autoNavigate) {
+                progressHandler.postDelayed(this::navigateToDrawer, 500);
             }
         }
+    }
+
+    private void updateSegmentsVisibility(int count) {
+        for (int i = 0; i < segments.length; i++) {
+            segments[i].setAlpha(i < count ? 1.0f : 0f);
+        }
+    }
+
+    private void setControlsEnabled(boolean enabled) {
+        startGameButton.setEnabled(enabled);
+        radioGroupCreationType.setEnabled(enabled);
+        for (int i = 0; i < radioGroupCreationType.getChildCount(); i++) radioGroupCreationType.getChildAt(i).setEnabled(enabled);
+        radioGroupGameSubject.setEnabled(enabled);
+        for (int i = 0; i < radioGroupGameSubject.getChildCount(); i++) radioGroupGameSubject.getChildAt(i).setEnabled(enabled);
     }
 
     private void navigateToDrawer() {
+        if (isNavigating) return;
+        isNavigating = true;
         Intent intent = new Intent(this, DrawerActivity.class);
         intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, selectedCreationType);
         intent.putExtra(MainActivity.EXTRA_LEVEL, 1);
@@ -177,27 +169,24 @@ public class ChoosingGameVarient extends AppCompatActivity {
     private void observeViewModel() {
         viewModel.getIsLoading().observe(this, isLoading -> {
             if (isLoading != null && isLoading) {
-                // For AI, we want to advance every 2 seconds.
-                // We'll animate 9 segments (18 seconds) while waiting for the API.
-                startProgressAnimation(18000, false);
+                startDiscreteProgress(false);
             }
         });
 
         viewModel.getErrorMessage().observe(this, error -> {
             if (error != null) {
-                if (currentAnimator != null) currentAnimator.cancel();
+                progressHandler.removeCallbacksAndMessages(null);
                 progressFrame.setVisibility(View.INVISIBLE);
-                startGameButton.setEnabled(true);
+                setControlsEnabled(true);
                 Toast.makeText(this, error, Toast.LENGTH_LONG).show();
             }
         });
 
         viewModel.getNavigateToGame().observe(this, quizData -> {
             if (quizData != null) {
-                if (currentAnimator != null) currentAnimator.cancel();
-                
-                // Gemini call finished! Instantly fill all 10 segments.
-                updateProgressDisplay(10);
+                progressHandler.removeCallbacksAndMessages(null);
+                // Complete the bar instantly
+                updateSegmentsVisibility(10);
                 
                 progressFrame.postDelayed(() -> {
                     Intent intent = new Intent(this, DrawerActivity.class);
@@ -207,5 +196,11 @@ public class ChoosingGameVarient extends AppCompatActivity {
                 }, 600);
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        progressHandler.removeCallbacksAndMessages(null);
+        super.onDestroy();
     }
 }
