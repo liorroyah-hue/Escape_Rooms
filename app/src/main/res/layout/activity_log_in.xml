@@ -54,6 +54,7 @@
         app:boxStrokeColor="@color/room_primary"
         app:hintTextColor="@color/room_primary"
         app:passwordToggleEnabled="true"
+        app:passwordToggleTint="@color/room_accent"
         app:layout_constraintTop_toBottomOf="@+id/layoutUsername"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
