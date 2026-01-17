@@ -33,11 +33,15 @@ public class MainActivity extends AppCompatActivity {
     private QuestionsAdapter questionsAdapter;
     private Button btnSubmitAnswers;
     private GameViewModel viewModel;
+    private GameAudioManager audioManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        audioManager = GameAudioManager.getInstance(this);
+        audioManager.startAmbientMusic(); // Start mission atmosphere
 
         GameViewModel.Factory factory = new GameViewModel.Factory(getApplication(), QuestionRepository.getInstance());
         viewModel = new ViewModelProvider(this, factory).get(GameViewModel.class);
@@ -81,6 +85,9 @@ public class MainActivity extends AppCompatActivity {
 
         viewModel.getToastMessage().observe(this, message -> {
             if (message == null) return;
+            
+            audioManager.playErrorSound(); // Buzz on mistake
+            
             int resId = getResources().getIdentifier(message, "string", getPackageName());
             if (resId != 0) {
                 showCustomToast(getString(resId), false);
@@ -92,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
         viewModel.getNavigationEvent().observe(this, event -> {
             Intent intent;
             if (event.target == GameViewModel.NavigationTarget.NEXT_LEVEL) {
+                audioManager.playSuccessSound(); // Success sound
                 showCustomToast(getString(R.string.msg_room_cleared, event.nextLevel - 1), true);
                 
                 intent = new Intent(this, DrawerActivity.class);
@@ -99,14 +107,12 @@ public class MainActivity extends AppCompatActivity {
                 if (event.aiData != null) {
                     intent.putExtra(EXTRA_CREATION_TYPE, getString(R.string.creation_option_ai));
                     intent.putExtra(EXTRA_AI_GAME_DATA, event.aiData);
-                } else {
-                    intent.putExtra(EXTRA_CREATION_TYPE, getString(R.string.creation_option_existing));
                 }
                 intent.putExtra(EXTRA_TIMINGS, event.timings);
                 startActivity(intent);
                 finish();
             } else {
-                // Navigate directly to PlayerResultsActivity after the final level
+                audioManager.playSuccessSound();
                 intent = new Intent(this, PlayerResultsActivity.class);
                 intent.putExtra(EXTRA_TIMINGS, event.timings);
                 startActivity(intent);
@@ -134,5 +140,12 @@ public class MainActivity extends AppCompatActivity {
         toast.setDuration(Toast.LENGTH_SHORT);
         toast.setView(layout);
         toast.show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Optional: stop ambient music when game closes
+        // audioManager.stopAmbientMusic();
     }
 }

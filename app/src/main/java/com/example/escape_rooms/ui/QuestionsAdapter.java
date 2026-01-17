@@ -1,6 +1,7 @@
 package com.example.escape_rooms.ui;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.escape_rooms.R;
@@ -47,17 +49,37 @@ public class QuestionsAdapter extends RecyclerView.Adapter<QuestionsAdapter.Ques
         holder.answersRadioGroup.removeAllViews();
 
         if (answers != null && !answers.isEmpty()) {
+            ColorStateList colorStateList = new ColorStateList(
+                    new int[][]{
+                            new int[]{-android.R.attr.state_enabled},
+                            new int[]{android.R.attr.state_enabled}
+                    },
+                    new int[]{
+                            ContextCompat.getColor(context, R.color.room_text_dim),
+                            ContextCompat.getColor(context, R.color.room_accent) // Neon Cyan circle
+                    }
+            );
+
             for (String answer : answers) {
                 RadioButton radioButton = new RadioButton(context);
                 radioButton.setText(answer);
+                radioButton.setTextColor(ContextCompat.getColor(context, R.color.room_text));
                 radioButton.setTextSize(16);
+                radioButton.setButtonTintList(colorStateList);
+                radioButton.setPadding(32, 16, 32, 16);
                 radioButton.setTextAlignment(View.TEXT_ALIGNMENT_VIEW_START);
-                radioButton.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+                
+                // Add margins between answers
+                RadioGroup.LayoutParams params = new RadioGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, 
+                        ViewGroup.LayoutParams.WRAP_CONTENT);
+                params.setMargins(0, 8, 0, 8);
+                radioButton.setLayoutParams(params);
+
                 holder.answersRadioGroup.addView(radioButton);
             }
         }
 
-        // When an answer is selected, save it
         holder.answersRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
             RadioButton selectedRadioButton = group.findViewById(checkedId);
             if (selectedRadioButton != null) {
