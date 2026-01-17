@@ -51,6 +51,7 @@ public class ChoosingGameVarient extends AppCompatActivity {
         
         initializeSegments();
 
+        // Default state
         radioGroupCreationType.check(R.id.radio_existing_game);
         selectedCreationType = getString(R.string.creation_option_existing);
 
@@ -109,9 +110,7 @@ public class ChoosingGameVarient extends AppCompatActivity {
 
     private void resetProgressUI() {
         currentSegmentCount = 0;
-        for (View s : segments) {
-            s.setAlpha(0f);
-        }
+        for (View s : segments) s.setAlpha(0f);
     }
 
     private void startDiscreteProgress(boolean autoNavigate) {
@@ -120,32 +119,21 @@ public class ChoosingGameVarient extends AppCompatActivity {
         progressFrame.setVisibility(View.VISIBLE);
         setControlsEnabled(false);
         isNavigating = false;
-
-        // Start with the first segment immediately
         incrementProgress(autoNavigate);
     }
 
     private void incrementProgress(boolean autoNavigate) {
         if (currentSegmentCount < 10) {
             currentSegmentCount++;
-            updateSegmentsVisibility(currentSegmentCount);
+            for (int i = 0; i < segments.length; i++) segments[i].setAlpha(i < currentSegmentCount ? 1.0f : 0f);
             
-            // If we are in AI mode (autoNavigate = false), don't show the 10th segment yet
-            if (!autoNavigate && currentSegmentCount == 9) {
-                return; 
-            }
+            if (!autoNavigate && currentSegmentCount == 9) return; 
 
             if (currentSegmentCount < 10) {
                 progressHandler.postDelayed(() -> incrementProgress(autoNavigate), 2000);
             } else if (autoNavigate) {
                 progressHandler.postDelayed(this::navigateToDrawer, 500);
             }
-        }
-    }
-
-    private void updateSegmentsVisibility(int count) {
-        for (int i = 0; i < segments.length; i++) {
-            segments[i].setAlpha(i < count ? 1.0f : 0f);
         }
     }
 
@@ -164,13 +152,12 @@ public class ChoosingGameVarient extends AppCompatActivity {
         intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, selectedCreationType);
         intent.putExtra(MainActivity.EXTRA_LEVEL, 1);
         startActivity(intent);
+        finish();
     }
 
     private void observeViewModel() {
         viewModel.getIsLoading().observe(this, isLoading -> {
-            if (isLoading != null && isLoading) {
-                startDiscreteProgress(false);
-            }
+            if (isLoading != null && isLoading) startDiscreteProgress(false);
         });
 
         viewModel.getErrorMessage().observe(this, error -> {
@@ -185,22 +172,17 @@ public class ChoosingGameVarient extends AppCompatActivity {
         viewModel.getNavigateToGame().observe(this, quizData -> {
             if (quizData != null) {
                 progressHandler.removeCallbacksAndMessages(null);
-                // Complete the bar instantly
-                updateSegmentsVisibility(10);
+                for (View s : segments) s.setAlpha(1.0f);
                 
                 progressFrame.postDelayed(() -> {
                     Intent intent = new Intent(this, DrawerActivity.class);
                     intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, getString(R.string.creation_option_ai));
                     intent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, quizData);
+                    intent.putExtra(MainActivity.EXTRA_LEVEL, 1);
                     startActivity(intent);
+                    finish();
                 }, 600);
             }
         });
-    }
-
-    @Override
-    protected void onDestroy() {
-        progressHandler.removeCallbacksAndMessages(null);
-        super.onDestroy();
     }
 }

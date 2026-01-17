@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -24,10 +23,11 @@ import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
+    // Unified Intent Keys
     public static final String EXTRA_LEVEL = "com.example.escape_rooms.LEVEL";
     public static final String EXTRA_TIMINGS = "com.example.escape_rooms.TIMINGS";
-    public static final String EXTRA_CREATION_TYPE = "CREATION_TYPE";
-    public static final String EXTRA_AI_GAME_DATA = "AI_GAME_DATA";
+    public static final String EXTRA_CREATION_TYPE = "com.example.escape_rooms.CREATION_TYPE";
+    public static final String EXTRA_AI_GAME_DATA = "com.example.escape_rooms.AI_GAME_DATA";
 
     private RecyclerView questionsRecyclerView;
     private QuestionsAdapter questionsAdapter;
@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         audioManager = GameAudioManager.getInstance(this);
-        audioManager.startAmbientMusic(); // Start mission atmosphere
+        audioManager.startAmbientMusic(); 
 
         GameViewModel.Factory factory = new GameViewModel.Factory(getApplication(), QuestionRepository.getInstance());
         viewModel = new ViewModelProvider(this, factory).get(GameViewModel.class);
@@ -54,13 +54,12 @@ public class MainActivity extends AppCompatActivity {
         @SuppressWarnings("unchecked")
         HashMap<Integer, Long> timings = (HashMap<Integer, Long>) intent.getSerializableExtra(EXTRA_TIMINGS);
         String creationType = intent.getStringExtra(EXTRA_CREATION_TYPE);
+        int level = intent.getIntExtra(EXTRA_LEVEL, 1);
 
         if (getString(R.string.creation_option_ai).equals(creationType)) {
             ChoosingGameViewModel.QuizData quizData = (ChoosingGameViewModel.QuizData) intent.getSerializableExtra(EXTRA_AI_GAME_DATA);
-            int level = intent.getIntExtra(EXTRA_LEVEL, 1);
             viewModel.initAiGame(quizData, level, timings);
         } else {
-            int level = intent.getIntExtra(EXTRA_LEVEL, 1);
             viewModel.initLevel(level, timings);
         }
 
@@ -85,9 +84,7 @@ public class MainActivity extends AppCompatActivity {
 
         viewModel.getToastMessage().observe(this, message -> {
             if (message == null) return;
-            
-            audioManager.playErrorSound(); // Buzz on mistake
-            
+            audioManager.playErrorSound();
             int resId = getResources().getIdentifier(message, "string", getPackageName());
             if (resId != 0) {
                 showCustomToast(getString(resId), false);
@@ -97,25 +94,26 @@ public class MainActivity extends AppCompatActivity {
         });
 
         viewModel.getNavigationEvent().observe(this, event -> {
-            Intent intent;
             if (event.target == GameViewModel.NavigationTarget.NEXT_LEVEL) {
-                audioManager.playSuccessSound(); // Success sound
+                audioManager.playSuccessSound();
                 showCustomToast(getString(R.string.msg_room_cleared, event.nextLevel - 1), true);
                 
-                intent = new Intent(this, DrawerActivity.class);
-                intent.putExtra(EXTRA_LEVEL, event.nextLevel);
+                Intent nextIntent = new Intent(this, DrawerActivity.class);
+                nextIntent.putExtra(EXTRA_LEVEL, event.nextLevel);
+                nextIntent.putExtra(EXTRA_CREATION_TYPE, getIntent().getStringExtra(EXTRA_CREATION_TYPE));
+                
                 if (event.aiData != null) {
-                    intent.putExtra(EXTRA_CREATION_TYPE, getString(R.string.creation_option_ai));
-                    intent.putExtra(EXTRA_AI_GAME_DATA, event.aiData);
+                    nextIntent.putExtra(EXTRA_AI_GAME_DATA, event.aiData);
                 }
-                intent.putExtra(EXTRA_TIMINGS, event.timings);
-                startActivity(intent);
+                
+                nextIntent.putExtra(EXTRA_TIMINGS, event.timings);
+                startActivity(nextIntent);
                 finish();
             } else {
                 audioManager.playSuccessSound();
-                intent = new Intent(this, PlayerResultsActivity.class);
-                intent.putExtra(EXTRA_TIMINGS, event.timings);
-                startActivity(intent);
+                Intent resultsIntent = new Intent(this, PlayerResultsActivity.class);
+                resultsIntent.putExtra(EXTRA_TIMINGS, event.timings);
+                startActivity(resultsIntent);
                 finish();
             }
         });
@@ -123,29 +121,20 @@ public class MainActivity extends AppCompatActivity {
 
     private void showCustomToast(String message, boolean isSuccess) {
         LayoutInflater inflater = getLayoutInflater();
-        View layout = inflater.inflate(R.layout.layout_custom_toast, (ViewGroup) findViewById(R.id.custom_toast_container), false);
+        // Fix: Inflate with null root for Toast to prevent crash
+        View layout = inflater.inflate(R.layout.layout_custom_toast, null);
 
         TextView text = layout.findViewById(R.id.toast_text);
         ImageView icon = layout.findViewById(R.id.toast_icon);
         
-        text.setText(message);
-        
-        if (isSuccess) {
-            icon.setImageResource(R.drawable.ic_lock_open);
-        } else {
-            icon.setImageResource(R.drawable.ic_lock_closed);
+        if (text != null) text.setText(message);
+        if (icon != null) {
+            icon.setImageResource(isSuccess ? R.drawable.ic_lock_open : R.drawable.ic_lock_closed);
         }
 
         Toast toast = new Toast(getApplicationContext());
         toast.setDuration(Toast.LENGTH_SHORT);
         toast.setView(layout);
         toast.show();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Optional: stop ambient music when game closes
-        // audioManager.stopAmbientMusic();
     }
 }

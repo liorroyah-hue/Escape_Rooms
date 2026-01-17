@@ -2,8 +2,11 @@ package com.example.escape_rooms.ui;
 
 import android.content.Context;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.Log;
 
 public class GameAudioManager {
@@ -11,9 +14,11 @@ public class GameAudioManager {
     private MediaPlayer ambientPlayer;
     private final Context context;
     private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Vibrator vibrator;
 
     private GameAudioManager(Context context) {
         this.context = context.getApplicationContext();
+        this.vibrator = (Vibrator) this.context.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     public static synchronized GameAudioManager getInstance(Context context) {
@@ -61,35 +66,44 @@ public class GameAudioManager {
     }
 
     public void playSuccessSound() {
-        // ביטול פעולות ממתינות קודמות למניעת התנגשויות
         handler.removeCallbacksAndMessages(null);
-        
-        // 1. השהיית מוזיקת הרקע
         pauseAmbientMusic();
 
-        // 2. המתנת שנייה של שקט, ואז השמעת צליל הצלחה
+        // משוב רטט "פעימה" עדין להצלחה
+        vibrate(new long[]{0, 50, 50, 50}, new int[]{0, 100, 0, 100});
+
         handler.postDelayed(() -> {
             playDynamicSound("door_open", mediaPlayer -> {
-                // 3. המתנת שנייה של שקט לאחר סיום הצליל, ואז חזרה למוזיקה
                 handler.postDelayed(this::startAmbientMusic, 1000);
             });
         }, 1000);
     }
 
     public void playErrorSound() {
-        // ביטול פעולות ממתינות קודמות
         handler.removeCallbacksAndMessages(null);
-
-        // 1. השהיית מוזיקת הרקע
         pauseAmbientMusic();
 
-        // 2. המתנת שנייה של שקט, ואז השמעת צליל טעות
+        // משוב רטט קצר וחזק לטעות
+        vibrate(new long[]{0, 400}, new int[]{0, 255});
+
         handler.postDelayed(() -> {
             playDynamicSound("error_buzz", mediaPlayer -> {
-                // 3. המתנת שנייה של שקט לאחר סיום הצליל, ואז חזרה למוזיקה
                 handler.postDelayed(this::startAmbientMusic, 1000);
             });
         }, 1000);
+    }
+
+    private void vibrate(long[] timings, int[] amplitudes) {
+        if (vibrator == null || !vibrator.hasVibrator()) return;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1));
+        } else {
+            // Fallback למכשירים ישנים (ללא שליטה בעוצמה)
+            long totalDuration = 0;
+            for (long t : timings) totalDuration += t;
+            vibrator.vibrate(totalDuration);
+        }
     }
 
     private void playDynamicSound(String fileName, MediaPlayer.OnCompletionListener customListener) {
