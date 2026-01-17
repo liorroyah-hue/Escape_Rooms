@@ -51,7 +51,6 @@ public class ChoosingGameVarient extends AppCompatActivity {
         
         initializeSegments();
 
-        // Default state
         radioGroupCreationType.check(R.id.radio_existing_game);
         selectedCreationType = getString(R.string.creation_option_existing);
 
@@ -88,7 +87,8 @@ public class ChoosingGameVarient extends AppCompatActivity {
                 }
                 viewModel.generateAiGame(selectedCategory);
             } else {
-                startDiscreteProgress(true);
+                // Navigate immediately for existing games without showing progress bar
+                navigateToDrawer();
             }
         });
     }
@@ -184,5 +184,11 @@ public class ChoosingGameVarient extends AppCompatActivity {
                 }, 600);
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        progressHandler.removeCallbacksAndMessages(null);
+        super.onDestroy();
     }
 }
