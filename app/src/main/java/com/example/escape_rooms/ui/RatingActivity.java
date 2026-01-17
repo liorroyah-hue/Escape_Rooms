@@ -19,6 +19,9 @@ public class RatingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rating);
 
+        // Stop the ambient music when reaching the rating screen
+        GameAudioManager.getInstance(this).stopAmbientMusic();
+
         RatingBar ratingBar = findViewById(R.id.ratingBar);
         Button btnSubmit = findViewById(R.id.btn_submit_rating);
 
