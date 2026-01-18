@@ -16,6 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,21 +26,18 @@ import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
 import static androidx.test.espresso.matcher.ViewMatchers.hasDescendant;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.isEnabled;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.Matchers.allOf;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Robolectric-based integration test for MainActivity game flow.
- * Uses a manual FakeRepository to avoid Mockito matcher issues in parallel builds.
- */
 @RunWith(RobolectricTestRunner.class)
+@Config(sdk = 31) // Matches your target SDK
 public class GameFlowIntegrationTest {
 
     @Before
     public void setUp() {
-        // Use a manual Fake instead of a Mockito Mock for the static singleton.
-        // This is the most stable way to handle shared state in Robolectric.
         QuestionRepository fakeRepository = new QuestionRepository() {
             @Override
             public void getQuestionsForLevel(int level, QuestionsCallback callback) {
@@ -100,22 +98,27 @@ public class GameFlowIntegrationTest {
     public void testSubmitCorrectAnswers_NavigatesToNextLevel() {
         Intent intent = new Intent(ApplicationProvider.getApplicationContext(), MainActivity.class);
         intent.putExtra(MainActivity.EXTRA_LEVEL, 1);
+        intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, "EXISTING"); // Ensure data required by logic is present
         
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(intent)) {
             scenario.moveToState(Lifecycle.State.RESUMED);
 
+            // Answer Question 1
             onView(withId(R.id.questions_recycler_view))
                     .perform(RecyclerViewActions.scrollTo(hasDescendant(withText("מהו צבע השמיים?"))));
-            onView(withText("כחול")).perform(click());
+            onView(allOf(withText("כחול"), isDisplayed(), isEnabled())).perform(click());
 
+            // Answer Question 2
             onView(withId(R.id.questions_recycler_view))
                     .perform(RecyclerViewActions.scrollTo(hasDescendant(withText("איזה גז בני אדם צריכים כדי לנשום?"))));
-            onView(withText("חמצן")).perform(click());
+            onView(allOf(withText("חמצן"), isDisplayed(), isEnabled())).perform(click());
             
+            // Submit
             onView(withId(R.id.btn_submit_answers)).perform(click());
 
             scenario.onActivity(activity -> {
-                assertTrue("Activity should be finishing to load next room", 
+                // We assert that the activity has responded to the correct answers
+                assertTrue("Activity should be processing transition", 
                         activity.isFinishing() || activity.isDestroyed());
             });
         }
