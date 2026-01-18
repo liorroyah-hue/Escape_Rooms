@@ -21,7 +21,12 @@ public class GameAudioManager {
     private boolean isAmbientEnabled = false;
     private final Random random = new Random();
 
-    private final String[] ambientTracks = {"ambient", "ambient_background"};
+    // Registry of tracks located in res/raw
+    private final String[] ambientTracks = {
+            "ambient", 
+            "ambient_background", 
+            "dark_ambient_soundscape_dreamscape"
+    };
 
     private GameAudioManager(Context context) {
         this.context = context.getApplicationContext();
@@ -41,27 +46,35 @@ public class GameAudioManager {
     }
 
     private void playAmbient() {
-        // וודא שלא מתנגן אפקט כרגע כדי למנוע כפל
         if (!isAmbientEnabled || (effectPlayer != null && effectPlayer.isPlaying())) return;
 
-        if (ambientPlayer == null) {
-            String randomTrack = ambientTracks[random.nextInt(ambientTracks.length)];
-            int resId = context.getResources().getIdentifier(randomTrack, "raw", context.getPackageName());
-            
-            if (resId != 0) {
-                try {
-                    ambientPlayer = MediaPlayer.create(context, resId);
-                    if (ambientPlayer != null) {
-                        ambientPlayer.setLooping(true);
-                        ambientPlayer.setVolume(0.4f, 0.4f);
-                        ambientPlayer.start();
-                    }
-                } catch (Exception e) {
-                    Log.e("AudioManager", "Error playing ambient music", e);
+        // Release the old player before starting a new one
+        if (ambientPlayer != null) {
+            try {
+                if (ambientPlayer.isPlaying()) ambientPlayer.stop();
+                ambientPlayer.release();
+            } catch (Exception ignored) {}
+            ambientPlayer = null;
+        }
+
+        // Randomly choose a track from the available list
+        String randomTrack = ambientTracks[random.nextInt(ambientTracks.length)];
+        int resId = context.getResources().getIdentifier(randomTrack, "raw", context.getPackageName());
+        
+        if (resId != 0) {
+            try {
+                ambientPlayer = MediaPlayer.create(context, resId);
+                if (ambientPlayer != null) {
+                    ambientPlayer.setLooping(true);
+                    ambientPlayer.setVolume(0.4f, 0.4f);
+                    ambientPlayer.start();
+                    Log.d("AudioManager", "Playing random track: " + randomTrack);
                 }
+            } catch (Exception e) {
+                Log.e("AudioManager", "Error playing ambient music", e);
             }
-        } else if (!ambientPlayer.isPlaying()) {
-            ambientPlayer.start();
+        } else {
+            Log.e("AudioManager", "Resource not found: " + randomTrack);
         }
     }
 
@@ -97,16 +110,13 @@ public class GameAudioManager {
     }
 
     public void playSuccessSound() {
-        // עצירה מוחלטת של כל טיימר או סאונד קודם
         handler.removeCallbacksAndMessages(null);
         pauseAmbientMusic();
         
         vibrate(new long[]{0, 50, 50, 50}, new int[]{0, 100, 0, 100});
 
-        // מרווח שקט של שנייה
         handler.postDelayed(() -> {
             playDynamicSound("door_open", mediaPlayer -> {
-                // רק אם מוזיקת הרקע עדיין אמורה לפעול, נחזיר אותה אחרי עוד שנייה של שקט
                 if (isAmbientEnabled) {
                     handler.postDelayed(this::playAmbient, 1000);
                 }
@@ -144,7 +154,6 @@ public class GameAudioManager {
         int resId = context.getResources().getIdentifier(fileName, "raw", context.getPackageName());
         if (resId != 0) {
             try {
-                // שחרור האפקט הקודם אם קיים
                 if (effectPlayer != null) {
                     try {
                         if (effectPlayer.isPlaying()) effectPlayer.stop();
