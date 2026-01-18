@@ -7,6 +7,7 @@ import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.escape_rooms.R;
+import com.example.escape_rooms.repository.services.GameAudioManager;
 import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 
 import java.util.HashMap;
@@ -37,6 +38,10 @@ public class DrawerActivity extends AppCompatActivity {
         imageDrawer.setImageResource(drawerImages[(level - 1) % 10]);
 
         imageDrawer.setOnClickListener(v -> {
+            // Trigger a NEW random ambient track when entering the room
+            GameAudioManager.getInstance(this).stopAmbientMusic();
+            GameAudioManager.getInstance(this).startAmbientMusic();
+
             Intent intent = new Intent(DrawerActivity.this, MainActivity.class);
             // Forward everything correctly using the unified keys
             intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, creationType);
