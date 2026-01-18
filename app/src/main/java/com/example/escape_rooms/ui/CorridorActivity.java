@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class Corridor extends AppCompatActivity {
+public class CorridorActivity extends AppCompatActivity {
 
     private ImageView doorImage;
 
@@ -53,7 +53,7 @@ public class Corridor extends AppCompatActivity {
 
         doorImage.setOnClickListener(v -> {
             // Create a new intent to start the main game activity
-            Intent gameIntent = new Intent(Corridor.this, MainActivity.class);
+            Intent gameIntent = new Intent(CorridorActivity.this, MainActivity.class);
             
             // Copy all the extras from the original intent to the new one
             if (originalIntent.getExtras() != null) {
