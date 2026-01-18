@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/room_dark_bg"
     android:padding="16dp"
+    android:layoutDirection="rtl"
     tools:context="com.example.escape_rooms.ui.HomePage">
 
     <TextView
@@ -19,7 +20,7 @@
         android:textColor="@color/room_primary"
         android:textSize="28sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:textAlignment="viewStart"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -29,8 +30,7 @@
         android:layout_height="2dp"
         android:layout_marginTop="8dp"
         android:background="@color/room_accent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@id/tv_title_main"
         app:layout_constraintTop_toBottomOf="@id/tv_title_main" />
 
     <androidx.core.widget.NestedScrollView
@@ -53,7 +53,10 @@
                 android:layout_height="70dp"
                 android:layout_marginBottom="16dp"
                 android:text="@string/btn_original_room"
+                android:gravity="center_vertical|start"
+                android:paddingStart="24dp"
                 app:icon="@android:drawable/ic_media_play"
+                app:iconGravity="textStart"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -67,7 +70,11 @@
                 android:backgroundTint="@color/room_surface"
                 android:text="@string/btn_community_rooms"
                 android:textColor="@color/room_accent"
+                android:gravity="center_vertical|start"
+                android:paddingStart="24dp"
                 app:icon="@android:drawable/ic_menu_search"
+                app:iconGravity="textStart"
+                app:iconTint="@color/room_accent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/MyEscapeRoom"
@@ -81,7 +88,10 @@
                 android:layout_height="70dp"
                 android:layout_marginTop="16dp"
                 android:text="@string/btn_create_room"
+                android:gravity="center_vertical|start"
+                android:paddingStart="24dp"
                 app:icon="@android:drawable/ic_input_add"
+                app:iconGravity="textStart"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/CommunityEscapeRoom" />
