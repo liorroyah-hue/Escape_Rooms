@@ -16,6 +16,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.escape_rooms.R;
 import com.example.escape_rooms.repository.QuestionRepository;
+import com.example.escape_rooms.repository.services.GameAudioManager;
+import com.example.escape_rooms.ui.adaptors.QuestionsAdapter;
 import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 import com.example.escape_rooms.viewmodel.GameViewModel;
 
