@@ -19,7 +19,7 @@
             android:exported="false" />
             
         <activity
-            android:name=".ui.ChoosingGameVarient"
+            android:name=".ui.ChoosingGameVarientActivity"
             android:exported="false" />
             
         <!-- This is now the starting activity -->
@@ -41,7 +41,7 @@
             android:exported="false" />
             
         <activity
-            android:name=".ui.Corridor"
+            android:name=".ui.CorridorActivity"
             android:exported="false" />
             
         <activity
