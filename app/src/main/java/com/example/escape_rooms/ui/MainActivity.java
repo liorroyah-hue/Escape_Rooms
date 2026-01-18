@@ -33,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
 
     private RecyclerView questionsRecyclerView;
     private QuestionsAdapter questionsAdapter;
-    private Button btnSubmitAnswers;
     private GameViewModel viewModel;
     private GameAudioManager audioManager;
 
@@ -49,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
         viewModel = new ViewModelProvider(this, factory).get(GameViewModel.class);
 
         questionsRecyclerView = findViewById(R.id.questions_recycler_view);
-        btnSubmitAnswers = findViewById(R.id.btn_submit_answers);
+        Button btnSubmitAnswers = findViewById(R.id.btn_submit_answers);
         questionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         Intent intent = getIntent();
