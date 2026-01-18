@@ -1,4 +1,4 @@
-package com.example.escape_rooms.ui;
+package com.example.escape_rooms.ui.adaptors;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
