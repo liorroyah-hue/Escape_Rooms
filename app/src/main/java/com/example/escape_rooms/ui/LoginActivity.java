@@ -70,7 +70,7 @@ public class LoginActivity extends AppCompatActivity {
                 Toast.makeText(this, "Login Successful!", Toast.LENGTH_SHORT).show();
                 
                 textStatus.postDelayed(() -> {
-                    Intent intent = new Intent(this, ChoosingGameVarient.class);
+                    Intent intent = new Intent(this, ChoosingGameVarientActivity.class);
                     startActivity(intent);
                     finish();
                 }, 1000);
