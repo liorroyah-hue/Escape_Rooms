@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.os.VibratorManager;
 import android.util.Log;
 
 import java.util.Random;
@@ -20,8 +21,8 @@ public class GameAudioManager {
     private final Vibrator vibrator;
     private boolean isAmbientEnabled = false;
     private final Random random = new Random();
+    private int lastTrackIndex = -1; // מעקב אחרי השיר האחרון שנוגן
 
-    // Registry of tracks located in res/raw
     private final String[] ambientTracks = {
             "ambient", 
             "ambient_background", 
@@ -30,7 +31,12 @@ public class GameAudioManager {
 
     private GameAudioManager(Context context) {
         this.context = context.getApplicationContext();
-        this.vibrator = (Vibrator) this.context.getSystemService(Context.VIBRATOR_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            VibratorManager vibratorManager = (VibratorManager) this.context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+            this.vibrator = vibratorManager.getDefaultVibrator();
+        } else {
+            this.vibrator = (Vibrator) this.context.getSystemService(Context.VIBRATOR_SERVICE);
+        }
     }
 
     public static synchronized GameAudioManager getInstance(Context context) {
@@ -42,23 +48,36 @@ public class GameAudioManager {
 
     public void startAmbientMusic() {
         isAmbientEnabled = true;
+        // אם המוזיקה כבר מתנגנת, אל תתחיל אותה מחדש כדי לשמור על רציפות
+        if (ambientPlayer != null && ambientPlayer.isPlaying()) {
+            return;
+        }
         playAmbient();
     }
 
     private void playAmbient() {
         if (!isAmbientEnabled || (effectPlayer != null && effectPlayer.isPlaying())) return;
 
-        // Release the old player before starting a new one
+        // שחרור הנגן הקודם אם קיים
         if (ambientPlayer != null) {
             try {
-                if (ambientPlayer.isPlaying()) ambientPlayer.stop();
                 ambientPlayer.release();
             } catch (Exception ignored) {}
             ambientPlayer = null;
         }
 
-        // Randomly choose a track from the available list
-        String randomTrack = ambientTracks[random.nextInt(ambientTracks.length)];
+        // הגרלת שיר חדש ששונה מהקודם (אם יש יותר משיר אחד ברשימה)
+        int nextTrackIndex;
+        if (ambientTracks.length > 1) {
+            do {
+                nextTrackIndex = random.nextInt(ambientTracks.length);
+            } while (nextTrackIndex == lastTrackIndex);
+        } else {
+            nextTrackIndex = 0;
+        }
+        
+        lastTrackIndex = nextTrackIndex;
+        String randomTrack = ambientTracks[nextTrackIndex];
         int resId = context.getResources().getIdentifier(randomTrack, "raw", context.getPackageName());
         
         if (resId != 0) {
@@ -73,8 +92,6 @@ public class GameAudioManager {
             } catch (Exception e) {
                 Log.e("AudioManager", "Error playing ambient music", e);
             }
-        } else {
-            Log.e("AudioManager", "Resource not found: " + randomTrack);
         }
     }
 
@@ -118,6 +135,7 @@ public class GameAudioManager {
         handler.postDelayed(() -> {
             playDynamicSound("door_open", mediaPlayer -> {
                 if (isAmbientEnabled) {
+                    // כאן אנחנו קוראים ל-playAmbient שיגרור הגרלה של שיר חדש אחרי הצלחה
                     handler.postDelayed(this::playAmbient, 1000);
                 }
             });
