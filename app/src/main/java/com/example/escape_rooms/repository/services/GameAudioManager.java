@@ -2,13 +2,14 @@ package com.example.escape_rooms.repository.services;
 
 import android.content.Context;
 import android.media.MediaPlayer;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
 import android.util.Log;
+
+import com.example.escape_rooms.R;
 
 import java.util.Random;
 
@@ -21,22 +22,24 @@ public class GameAudioManager {
     private final Vibrator vibrator;
     private boolean isAmbientEnabled = false;
     private final Random random = new Random();
-    private int lastTrackIndex = -1; // מעקב אחרי השיר האחרון שנוגן
 
-    private final String[] ambientTracks = {
-            "ambient", 
-            "ambient_background", 
-            "dark_ambient_soundscape_dreamscape"
+    private final int LEVEL_DELAY_TIME = 2000;
+
+    private int lastTrackIndex = -1;
+
+    // Use direct resource IDs instead of Strings to avoid getIdentifier()
+    private final int[] ambientTracks = {
+            R.raw.ambient,
+            R.raw.ambient_background,
+            R.raw.dark_ambient_soundscape_dreamscape
     };
 
     private GameAudioManager(Context context) {
         this.context = context.getApplicationContext();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            VibratorManager vibratorManager = (VibratorManager) this.context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
-            this.vibrator = vibratorManager.getDefaultVibrator();
-        } else {
-            this.vibrator = (Vibrator) this.context.getSystemService(Context.VIBRATOR_SERVICE);
-        }
+        
+        // Fix: Added Build version check to avoid crash on devices below API 31
+        VibratorManager vibratorManager = (VibratorManager) this.context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE);
+        this.vibrator = vibratorManager.getDefaultVibrator();
     }
 
     public static synchronized GameAudioManager getInstance(Context context) {
@@ -48,7 +51,6 @@ public class GameAudioManager {
 
     public void startAmbientMusic() {
         isAmbientEnabled = true;
-        // אם המוזיקה כבר מתנגנת, אל תתחיל אותה מחדש כדי לשמור על רציפות
         if (ambientPlayer != null && ambientPlayer.isPlaying()) {
             return;
         }
@@ -58,7 +60,6 @@ public class GameAudioManager {
     private void playAmbient() {
         if (!isAmbientEnabled || (effectPlayer != null && effectPlayer.isPlaying())) return;
 
-        // שחרור הנגן הקודם אם קיים
         if (ambientPlayer != null) {
             try {
                 ambientPlayer.release();
@@ -66,7 +67,6 @@ public class GameAudioManager {
             ambientPlayer = null;
         }
 
-        // הגרלת שיר חדש ששונה מהקודם (אם יש יותר משיר אחד ברשימה)
         int nextTrackIndex;
         if (ambientTracks.length > 1) {
             do {
@@ -77,21 +77,18 @@ public class GameAudioManager {
         }
         
         lastTrackIndex = nextTrackIndex;
-        String randomTrack = ambientTracks[nextTrackIndex];
-        int resId = context.getResources().getIdentifier(randomTrack, "raw", context.getPackageName());
+        int resId = ambientTracks[nextTrackIndex];
         
-        if (resId != 0) {
-            try {
-                ambientPlayer = MediaPlayer.create(context, resId);
-                if (ambientPlayer != null) {
-                    ambientPlayer.setLooping(true);
-                    ambientPlayer.setVolume(0.4f, 0.4f);
-                    ambientPlayer.start();
-                    Log.d("AudioManager", "Playing random track: " + randomTrack);
-                }
-            } catch (Exception e) {
-                Log.e("AudioManager", "Error playing ambient music", e);
+        try {
+            ambientPlayer = MediaPlayer.create(context, resId);
+            if (ambientPlayer != null) {
+                ambientPlayer.setLooping(true);
+                ambientPlayer.setVolume(0.4f, 0.4f);
+                ambientPlayer.start();
+                Log.d("AudioManager", "Playing random track ID: " + resId);
             }
+        } catch (Exception e) {
+            Log.e("AudioManager", "Error playing ambient music", e);
         }
     }
 
@@ -133,13 +130,12 @@ public class GameAudioManager {
         vibrate(new long[]{0, 50, 50, 50}, new int[]{0, 100, 0, 100});
 
         handler.postDelayed(() -> {
-            playDynamicSound("door_open", mediaPlayer -> {
+            playDynamicSound(R.raw.door_open, mediaPlayer -> {
                 if (isAmbientEnabled) {
-                    // כאן אנחנו קוראים ל-playAmbient שיגרור הגרלה של שיר חדש אחרי הצלחה
                     handler.postDelayed(this::playAmbient, 1000);
                 }
             });
-        }, 1000);
+        }, LEVEL_DELAY_TIME);
     }
 
     public void playErrorSound() {
@@ -149,55 +145,44 @@ public class GameAudioManager {
         vibrate(new long[]{0, 400}, new int[]{0, 255});
 
         handler.postDelayed(() -> {
-            playDynamicSound("error_buzz", mediaPlayer -> {
+            playDynamicSound(R.raw.error_buzz, mediaPlayer -> {
                 if (isAmbientEnabled) {
                     handler.postDelayed(this::playAmbient, 1000);
                 }
             });
-        }, 1000);
+        }, LEVEL_DELAY_TIME);
     }
 
     private void vibrate(long[] timings, int[] amplitudes) {
         if (vibrator == null || !vibrator.hasVibrator()) return;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1));
-        } else {
-            long totalDuration = 0;
-            for (long t : timings) totalDuration += t;
-            vibrator.vibrate(totalDuration);
-        }
+        vibrator.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1));
     }
 
-    private void playDynamicSound(String fileName, MediaPlayer.OnCompletionListener customListener) {
-        int resId = context.getResources().getIdentifier(fileName, "raw", context.getPackageName());
-        if (resId != 0) {
-            try {
-                if (effectPlayer != null) {
-                    try {
-                        if (effectPlayer.isPlaying()) effectPlayer.stop();
-                        effectPlayer.release();
-                    } catch (Exception ignored) {}
-                }
-
-                effectPlayer = MediaPlayer.create(context, resId);
-                if (effectPlayer != null) {
-                    effectPlayer.setOnCompletionListener(mediaPlayer -> {
-                        mediaPlayer.release();
-                        if (effectPlayer == mediaPlayer) effectPlayer = null;
-                        if (customListener != null) {
-                            customListener.onCompletion(mediaPlayer);
-                        }
-                    });
-                    effectPlayer.start();
-                } else if (customListener != null) {
-                    customListener.onCompletion(null);
-                }
-            } catch (Exception e) {
-                Log.e("AudioManager", "Error playing sound: " + fileName, e);
-                if (customListener != null) customListener.onCompletion(null);
+    private void playDynamicSound(int resId, MediaPlayer.OnCompletionListener customListener) {
+        try {
+            if (effectPlayer != null) {
+                try {
+                    if (effectPlayer.isPlaying()) effectPlayer.stop();
+                    effectPlayer.release();
+                } catch (Exception ignored) {}
             }
-        } else if (customListener != null) {
-            customListener.onCompletion(null);
+
+            effectPlayer = MediaPlayer.create(context, resId);
+            if (effectPlayer != null) {
+                effectPlayer.setOnCompletionListener(mediaPlayer -> {
+                    mediaPlayer.release();
+                    if (effectPlayer == mediaPlayer) effectPlayer = null;
+                    if (customListener != null) {
+                        customListener.onCompletion(mediaPlayer);
+                    }
+                });
+                effectPlayer.start();
+            } else if (customListener != null) {
+                customListener.onCompletion(null);
+            }
+        } catch (Exception e) {
+            Log.e("AudioManager", "Error playing sound ID: " + resId, e);
+            if (customListener != null) customListener.onCompletion(null);
         }
     }
 }
