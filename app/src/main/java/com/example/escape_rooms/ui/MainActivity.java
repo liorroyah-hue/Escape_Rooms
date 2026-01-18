@@ -42,7 +42,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         audioManager = GameAudioManager.getInstance(this);
-        audioManager.startAmbientMusic(); 
 
         GameViewModel.Factory factory = new GameViewModel.Factory(getApplication(), QuestionRepository.getInstance());
         viewModel = new ViewModelProvider(this, factory).get(GameViewModel.class);
@@ -61,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
             ChoosingGameViewModel.QuizData quizData = (ChoosingGameViewModel.QuizData) intent.getSerializableExtra(EXTRA_AI_GAME_DATA);
             viewModel.initAiGame(quizData, level, timings);
         } else {
+            level = intent.getIntExtra(EXTRA_LEVEL, 1);
             viewModel.initLevel(level, timings);
         }
 
@@ -86,7 +86,15 @@ public class MainActivity extends AppCompatActivity {
         viewModel.getToastMessage().observe(this, message -> {
             if (message == null) return;
             audioManager.playErrorSound();
-            int resId = getResources().getIdentifier(message, "string", getPackageName());
+            
+            // Map known resource keys to direct R.string IDs to avoid getIdentifier reflection
+            int resId = 0;
+            if ("msg_answer_all".equals(message)) {
+                resId = R.string.msg_answer_all;
+            } else if ("msg_incorrect".equals(message)) {
+                resId = R.string.msg_incorrect;
+            }
+            
             if (resId != 0) {
                 showCustomToast(getString(resId), false);
             } else {
@@ -97,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
         viewModel.getNavigationEvent().observe(this, event -> {
             if (event.target == GameViewModel.NavigationTarget.NEXT_LEVEL) {
                 audioManager.playSuccessSound();
+                audioManager.startAmbientMusic();
                 showCustomToast(getString(R.string.msg_room_cleared, event.nextLevel - 1), true);
                 
                 Intent nextIntent = new Intent(this, DrawerActivity.class);
