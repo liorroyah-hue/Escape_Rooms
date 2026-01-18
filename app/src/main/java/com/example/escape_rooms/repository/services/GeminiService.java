@@ -1,4 +1,4 @@
-package com.example.escape_rooms.repository;
+package com.example.escape_rooms.repository.services;
 
 import android.util.Log;
 import com.google.gson.Gson;
