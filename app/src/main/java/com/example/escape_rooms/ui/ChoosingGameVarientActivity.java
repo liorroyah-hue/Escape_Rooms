@@ -19,7 +19,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.escape_rooms.R;
 import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 
-public class ChoosingGameVarient extends AppCompatActivity {
+public class ChoosingGameVarientActivity extends AppCompatActivity {
     private RadioGroup radioGroupGameSubject, radioGroupCreationType;
     private String selectedCategory, selectedCreationType;
     private Button startGameButton;
