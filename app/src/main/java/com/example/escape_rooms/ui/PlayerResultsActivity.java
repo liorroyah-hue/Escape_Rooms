@@ -63,7 +63,8 @@ public class PlayerResultsActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e(TAG, "Error loading results", e);
             Toast.makeText(this, getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(this, HomePage.class));
+            // Fixed: Redirect to ChoosingGameVarientActivity since HomePage was deleted
+            startActivity(new Intent(this, ChoosingGameVarientActivity.class));
             finish();
         }
     }
