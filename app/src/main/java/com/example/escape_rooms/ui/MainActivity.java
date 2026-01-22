@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
             ChoosingGameViewModel.QuizData quizData = (ChoosingGameViewModel.QuizData) intent.getSerializableExtra(EXTRA_AI_GAME_DATA);
             viewModel.initAiGame(quizData, level, timings);
         } else {
-            level = intent.getIntExtra(EXTRA_LEVEL, 1);
+            // Level is already extracted above
             viewModel.initLevel(level, timings);
         }
 
@@ -87,7 +87,6 @@ public class MainActivity extends AppCompatActivity {
             if (message == null) return;
             audioManager.playErrorSound();
             
-            // Map known resource keys to direct R.string IDs to avoid getIdentifier reflection
             int resId = 0;
             if ("msg_answer_all".equals(message)) {
                 resId = R.string.msg_answer_all;
@@ -105,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
         viewModel.getNavigationEvent().observe(this, event -> {
             if (event.target == GameViewModel.NavigationTarget.NEXT_LEVEL) {
                 audioManager.playSuccessSound();
-                audioManager.startAmbientMusic();
+                // Removed redundant startAmbientMusic() as it's handled by audioManager
                 showCustomToast(getString(R.string.msg_room_cleared, event.nextLevel - 1), true);
                 
                 Intent nextIntent = new Intent(this, DrawerActivity.class);
@@ -131,8 +130,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void showCustomToast(String message, boolean isSuccess) {
         LayoutInflater inflater = getLayoutInflater();
-        // Fix: Inflate with null root for Toast to prevent crash
-        View layout = inflater.inflate(R.layout.layout_custom_toast, null);
+        // Modern practice: provide root for layout params but don't attach
+        View layout = inflater.inflate(R.layout.layout_custom_toast, null, false);
 
         TextView text = layout.findViewById(R.id.toast_text);
         ImageView icon = layout.findViewById(R.id.toast_icon);
