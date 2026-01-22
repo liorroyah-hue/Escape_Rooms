@@ -10,6 +10,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -19,10 +20,14 @@ import com.example.escape_rooms.repository.services.GameAudioManager;
 import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 public class DrawerActivity extends AppCompatActivity {
 
     private final GameRepository gameRepository = new GameRepository();
+    private static final String PREFS_NAME = "EscapeRoomSolvedPrefs";
+    private static final String KEY_SOLVED_IMAGES = "solved_images";
 
     @Override
     @SuppressWarnings("unchecked")
@@ -37,37 +42,82 @@ public class DrawerActivity extends AppCompatActivity {
         int level = incomingIntent.getIntExtra(MainActivity.EXTRA_LEVEL, 1);
         HashMap<Integer, Long> timings = (HashMap<Integer, Long>) incomingIntent.getSerializableExtra(MainActivity.EXTRA_TIMINGS);
 
-        // --- Make each ImageView Draggable ---
+        // --- Handle Solved Images Logic ---
+        SharedPreferences solvedPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        Set<String> solvedImageIds = solvedPrefs.getStringSet(KEY_SOLVED_IMAGES, new HashSet<>());
+        
+        // Reset solved images if it's the first level
+        if (level == 1) {
+            solvedImageIds = new HashSet<>();
+            solvedPrefs.edit().putStringSet(KEY_SOLVED_IMAGES, solvedImageIds).apply();
+        }
+
         ViewGroup container = findViewById(R.id.image_container);
+        LinearLayout bottomTray = findViewById(R.id.bottom_panel_tray);
         int[] viewIds = {R.id.image1, R.id.image2, R.id.image3, R.id.image4, R.id.image5, R.id.image6};
         
         for (int id : viewIds) {
-            ImageView imageView = container.findViewById(id);
+            ImageView imageView = findViewById(id);
             if (imageView != null) {
-                imageView.setOnTouchListener(new DraggableTouchListener());
+                String idStr = String.valueOf(id);
                 
-                // Add click listener to enter the level
-                imageView.setOnClickListener(v -> {
-                    // 1. Save results to DB
-                    saveProgressToDatabase(level - 1, timings);
+                if (solvedImageIds.contains(idStr)) {
+                    // Move to bottom tray if already solved
+                    moveViewToTray(imageView, container, bottomTray);
+                } else {
+                    // Normal state: Draggable and Clickable
+                    imageView.setOnTouchListener(new DraggableTouchListener());
+                    imageView.setOnClickListener(v -> {
+                        // Mark this image as solved for the next time we return
+                        Set<String> updatedSolved = new HashSet<>(solvedPrefs.getStringSet(KEY_SOLVED_IMAGES, new HashSet<>()));
+                        updatedSolved.add(String.valueOf(v.getId()));
+                        solvedPrefs.edit().putStringSet(KEY_SOLVED_IMAGES, updatedSolved).apply();
 
-                    // 2. Audio shuffle
-                    GameAudioManager.getInstance(this).stopAmbientMusic();
-                    GameAudioManager.getInstance(this).startAmbientMusic();
+                        // Save progress to DB
+                        saveProgressToDatabase(level - 1, timings);
 
-                    // 3. Navigation
-                    Intent intent = new Intent(DrawerActivity.this, MainActivity.class);
-                    intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, creationType);
-                    if (aiData != null) {
-                        intent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, aiData);
-                    }
-                    intent.putExtra(MainActivity.EXTRA_LEVEL, level);
-                    intent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
-                    startActivity(intent);
-                    finish(); 
-                });
+                        // Audio shuffle
+                        GameAudioManager.getInstance(this).stopAmbientMusic();
+                        GameAudioManager.getInstance(this).startAmbientMusic();
+
+                        // Navigation
+                        Intent intent = new Intent(DrawerActivity.this, MainActivity.class);
+                        intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, creationType);
+                        if (aiData != null) {
+                            intent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, aiData);
+                        }
+                        intent.putExtra(MainActivity.EXTRA_LEVEL, level);
+                        intent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
+                        startActivity(intent);
+                        finish(); 
+                    });
+                }
             }
         }
+    }
+
+    private void moveViewToTray(ImageView view, ViewGroup originalContainer, LinearLayout tray) {
+        // Remove from original relative container
+        originalContainer.removeView(view);
+        
+        // Set fixed size for the tray
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                dpToPx(60), dpToPx(60));
+        params.setMargins(dpToPx(8), 0, dpToPx(8), 0);
+        view.setLayoutParams(params);
+        
+        // Disable interaction
+        view.setOnTouchListener(null);
+        view.setOnClickListener(null);
+        view.setAlpha(0.7f); // Visual indicator it's "collected"
+        
+        // Add to tray
+        tray.addView(view);
+    }
+
+    private int dpToPx(int dp) {
+        float density = getResources().getDisplayMetrics().density;
+        return Math.round((float) dp * density);
     }
 
     private void saveProgressToDatabase(int lastCompletedLevel, HashMap<Integer, Long> timings) {
