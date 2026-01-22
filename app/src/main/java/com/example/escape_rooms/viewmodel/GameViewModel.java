@@ -11,12 +11,13 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.escape_rooms.model.Question;
 import com.example.escape_rooms.model.Questions;
-import com.example.escape_rooms.repository.services.GeminiService;
 import com.example.escape_rooms.repository.QuestionRepository;
+import com.example.escape_rooms.repository.services.GeminiService;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,14 +32,12 @@ public class GameViewModel extends AndroidViewModel {
     private final MutableLiveData<String> toastMessage = new MutableLiveData<>();
     private final MutableLiveData<NavigationEvent> navigationEvent = new MutableLiveData<>();
 
-    // New event for single level completion
-    private final MutableLiveData<Boolean> levelCompleteEvent = new MutableLiveData<>();
-
     private int currentLevel = 1;
     private long startTime;
     private HashMap<Integer, Long> levelTimings = new HashMap<>();
     private static final int MAX_LEVELS = 10;
-    private String aiGameSubject;
+    
+    private ChoosingGameViewModel.QuizData fullAiQuizData;
 
     public GameViewModel(@NonNull Application application, @NonNull QuestionRepository questionRepository) {
         super(application);
@@ -47,8 +46,7 @@ public class GameViewModel extends AndroidViewModel {
 
     public LiveData<Questions> getCurrentQuestions() { return currentQuestions; }
     public LiveData<String> getToastMessage() { return toastMessage; }
-    public LiveData<NavigationEvent> getNavigationEvent() { return navigationEvent; } // Kept for future multi-level modes
-    public LiveData<Boolean> getLevelCompleteEvent() { return levelCompleteEvent; }
+    public LiveData<NavigationEvent> getNavigationEvent() { return navigationEvent; }
 
     public void initLevel(int level, HashMap<Integer, Long> timings) {
         this.currentLevel = level;
@@ -58,8 +56,8 @@ public class GameViewModel extends AndroidViewModel {
         loadLevel();
     }
 
-    public void initAiGame(String subject, int level, HashMap<Integer, Long> timings) {
-        this.aiGameSubject = subject;
+    public void initAiGame(ChoosingGameViewModel.QuizData quizData, int level, HashMap<Integer, Long> timings) {
+        this.fullAiQuizData = quizData;
         this.currentLevel = level;
         if (timings != null) {
             this.levelTimings = timings;
@@ -69,42 +67,47 @@ public class GameViewModel extends AndroidViewModel {
 
     private void loadLevel() {
         startTime = System.currentTimeMillis();
-        // For single-question mode, we adapt the call to fetch one question.
         repository.getQuestionsForLevel(currentLevel, new QuestionRepository.QuestionsCallback() {
             @Override
             public void onSuccess(List<Question> questions) {
                 if (questions == null || questions.isEmpty()) {
                     toastMessage.postValue("No questions found for level " + currentLevel);
                 } else {
-                    // Take only the first question for single-question mode
-                    currentQuestions.postValue(new Questions(questions.subList(0, 1)));
+                    currentQuestions.postValue(new Questions(questions));
                 }
             }
 
             @Override
             public void onError(Exception e) {
                 Log.e("GameViewModel", "Failed to load questions", e);
-                toastMessage.postValue("Failed to load questions. Please check your connection.");
+                toastMessage.postValue("Failed to load questions");
             }
         });
     }
 
     private void loadAiLevel() {
+        if (fullAiQuizData == null) return;
         startTime = System.currentTimeMillis();
-        toastMessage.postValue("Generating AI question...");
-        executor.execute(() -> {
-            try {
-                // Generate 1 new question for the current level
-                String jsonResponse = geminiService.generateQandA(aiGameSubject, 1);
-                String cleanedJson = jsonResponse.replace("```json", "").replace("```", "").trim();
-                Gson gson = new Gson();
-                QuizData quizData = gson.fromJson(cleanedJson, QuizData.class);
-                currentQuestions.postValue(new Questions(quizData));
-            } catch (Exception e) {
-                toastMessage.postValue("AI Error: " + e.getMessage());
-                Log.e("GameViewModel", "Failed to generate AI questions", e);
-            }
-        });
+        
+        int startIndex = (currentLevel - 1) * 2;
+        if (startIndex + 1 < fullAiQuizData.questions.size()) {
+            
+            ChoosingGameViewModel.QuizData levelSubset = new ChoosingGameViewModel.QuizData();
+            levelSubset.questions = new ArrayList<>();
+            levelSubset.answers = new ArrayList<>();
+            levelSubset.correctAnswers = new ArrayList<>();
+            
+            levelSubset.questions.add(fullAiQuizData.questions.get(startIndex));
+            levelSubset.questions.add(fullAiQuizData.questions.get(startIndex + 1));
+            
+            levelSubset.answers.add(fullAiQuizData.answers.get(startIndex));
+            levelSubset.answers.add(fullAiQuizData.answers.get(startIndex + 1));
+            
+            levelSubset.correctAnswers.add(fullAiQuizData.correctAnswers.get(startIndex));
+            levelSubset.correctAnswers.add(fullAiQuizData.correctAnswers.get(startIndex + 1));
+            
+            currentQuestions.postValue(new Questions(levelSubset));
+        }
     }
 
     public void verifyAndSubmit(Map<String, String> selectedAnswers) {
@@ -125,24 +128,17 @@ public class GameViewModel extends AndroidViewModel {
         }
 
         if (allCorrect) {
-            // Signal that the single level is complete
-            levelCompleteEvent.postValue(true);
+            long duration = System.currentTimeMillis() - startTime;
+            levelTimings.put(currentLevel, duration);
+
+            if (currentLevel < MAX_LEVELS) {
+                navigationEvent.setValue(new NavigationEvent(NavigationTarget.NEXT_LEVEL, currentLevel + 1, levelTimings, fullAiQuizData));
+            } else {
+                navigationEvent.setValue(new NavigationEvent(NavigationTarget.RESULTS, 0, levelTimings, null));
+            }
         } else {
             toastMessage.setValue("msg_incorrect");
         }
-    }
-
-    public static class QuizData implements Serializable {
-        @SerializedName("questions")
-        private List<String> questions;
-        @SerializedName("answers")
-        private List<List<String>> answers;
-        @SerializedName("correctAnswers")
-        private List<String> correctAnswers;
-
-        public List<String> getQuestions() { return questions; }
-        public List<List<String>> getAnswers() { return answers; }
-        public List<String> getCorrectAnswers() { return correctAnswers; }
     }
 
     public enum NavigationTarget { NEXT_LEVEL, RESULTS }
@@ -151,13 +147,13 @@ public class GameViewModel extends AndroidViewModel {
         public final NavigationTarget target;
         public final int nextLevel;
         public final HashMap<Integer, Long> timings;
-        public final String aiGameSubject;
+        public final ChoosingGameViewModel.QuizData aiData;
 
-        public NavigationEvent(NavigationTarget target, int nextLevel, HashMap<Integer, Long> timings, String aiGameSubject) {
+        public NavigationEvent(NavigationTarget target, int nextLevel, HashMap<Integer, Long> timings, ChoosingGameViewModel.QuizData aiData) {
             this.target = target;
             this.nextLevel = nextLevel;
             this.timings = timings;
-            this.aiGameSubject = aiGameSubject;
+            this.aiData = aiData;
         }
     }
 
@@ -173,10 +169,7 @@ public class GameViewModel extends AndroidViewModel {
         @NonNull
         @Override
         public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-            if (modelClass.isAssignableFrom(GameViewModel.class)) {
-                return (T) new GameViewModel(application, questionRepository);
-            }
-            throw new IllegalArgumentException("Unknown ViewModel class");
+            return (T) new GameViewModel(application, questionRepository);
         }
     }
 }
