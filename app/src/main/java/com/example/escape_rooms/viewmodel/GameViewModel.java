@@ -11,7 +11,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.escape_rooms.model.Question;
 import com.example.escape_rooms.model.Questions;
-import com.example.escape_rooms.repository.GeminiService;
+import com.example.escape_rooms.repository.services.GeminiService;
 import com.example.escape_rooms.repository.QuestionRepository;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
@@ -31,6 +31,9 @@ public class GameViewModel extends AndroidViewModel {
     private final MutableLiveData<String> toastMessage = new MutableLiveData<>();
     private final MutableLiveData<NavigationEvent> navigationEvent = new MutableLiveData<>();
 
+    // New event for single level completion
+    private final MutableLiveData<Boolean> levelCompleteEvent = new MutableLiveData<>();
+
     private int currentLevel = 1;
     private long startTime;
     private HashMap<Integer, Long> levelTimings = new HashMap<>();
@@ -44,46 +47,55 @@ public class GameViewModel extends AndroidViewModel {
 
     public LiveData<Questions> getCurrentQuestions() { return currentQuestions; }
     public LiveData<String> getToastMessage() { return toastMessage; }
-    public LiveData<NavigationEvent> getNavigationEvent() { return navigationEvent; }
+    public LiveData<NavigationEvent> getNavigationEvent() { return navigationEvent; } // Kept for future multi-level modes
+    public LiveData<Boolean> getLevelCompleteEvent() { return levelCompleteEvent; }
 
-    public void initLevel(int level) {
+    public void initLevel(int level, HashMap<Integer, Long> timings) {
         this.currentLevel = level;
-        this.aiGameSubject = null; // Ensure this is a regular game
+        if (timings != null) {
+            this.levelTimings = timings;
+        }
         loadLevel();
     }
 
-    public void initAiGame(String subject, int level) {
+    public void initAiGame(String subject, int level, HashMap<Integer, Long> timings) {
         this.aiGameSubject = subject;
         this.currentLevel = level;
+        if (timings != null) {
+            this.levelTimings = timings;
+        }
         loadAiLevel();
     }
 
     private void loadLevel() {
         startTime = System.currentTimeMillis();
+        // For single-question mode, we adapt the call to fetch one question.
         repository.getQuestionsForLevel(currentLevel, new QuestionRepository.QuestionsCallback() {
             @Override
             public void onSuccess(List<Question> questions) {
                 if (questions == null || questions.isEmpty()) {
                     toastMessage.postValue("No questions found for level " + currentLevel);
                 } else {
-                    currentQuestions.postValue(new Questions(questions));
+                    // Take only the first question for single-question mode
+                    currentQuestions.postValue(new Questions(questions.subList(0, 1)));
                 }
             }
 
             @Override
             public void onError(Exception e) {
                 Log.e("GameViewModel", "Failed to load questions", e);
-                toastMessage.postValue("Failed to load questions. Please check connection.");
+                toastMessage.postValue("Failed to load questions. Please check your connection.");
             }
         });
     }
 
     private void loadAiLevel() {
         startTime = System.currentTimeMillis();
-        toastMessage.postValue("Generating AI questions for level " + currentLevel + "...");
+        toastMessage.postValue("Generating AI question...");
         executor.execute(() -> {
             try {
-                String jsonResponse = geminiService.generateQandA(aiGameSubject, 2); // Generates 2 questions per level
+                // Generate 1 new question for the current level
+                String jsonResponse = geminiService.generateQandA(aiGameSubject, 1);
                 String cleanedJson = jsonResponse.replace("```json", "").replace("```", "").trim();
                 Gson gson = new Gson();
                 QuizData quizData = gson.fromJson(cleanedJson, QuizData.class);
@@ -113,20 +125,13 @@ public class GameViewModel extends AndroidViewModel {
         }
 
         if (allCorrect) {
-            long duration = System.currentTimeMillis() - startTime;
-            levelTimings.put(currentLevel, duration);
-
-            if (currentLevel < MAX_LEVELS) {
-                navigationEvent.setValue(new NavigationEvent(NavigationTarget.NEXT_LEVEL, currentLevel + 1, levelTimings, aiGameSubject));
-            } else {
-                navigationEvent.setValue(new NavigationEvent(NavigationTarget.RESULTS, 0, levelTimings, null));
-            }
+            // Signal that the single level is complete
+            levelCompleteEvent.postValue(true);
         } else {
             toastMessage.setValue("msg_incorrect");
         }
     }
 
-    // This is the single, authoritative QuizData class
     public static class QuizData implements Serializable {
         @SerializedName("questions")
         private List<String> questions;

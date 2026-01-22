@@ -23,7 +23,6 @@ public class DrawerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_drawer);
 
-        Flow imageFlow = findViewById(R.id.image_flow);
 
         // --- Initial Random Placement with Flow ---
         List<Integer> viewIds = new ArrayList<>();
@@ -41,8 +40,7 @@ public class DrawerActivity extends AppCompatActivity {
             shuffledIds[i] = viewIds.get(i);
         }
 
-        imageFlow.setReferencedIds(shuffledIds);
-        // --- End Initial Placement ---
+
 
         // --- Make each ImageView Draggable ---
         ViewGroup container = findViewById(R.id.image_container);

@@ -29,25 +29,30 @@ public class Questions {
 
     /**
      * Constructor for AI-generated questions.
-     * This is now robust and uses the correct QuizData type.
+     * This is now robust and uses the correct QuizData type from GameViewModel.
      */
     public Questions(GameViewModel.QuizData quizData) {
-        if (quizData != null && quizData.getQuestions() != null && !quizData.getQuestions().isEmpty() &&
-            quizData.getAnswers() != null && quizData.getCorrectAnswers() != null &&
+        // Defensive coding: check for nulls and size mismatches
+        if (quizData != null &&
+            quizData.getQuestions() != null &&
+            quizData.getAnswers() != null &&
+            quizData.getCorrectAnswers() != null &&
+            !quizData.getQuestions().isEmpty() &&
             quizData.getQuestions().size() == quizData.getAnswers().size() &&
             quizData.getQuestions().size() == quizData.getCorrectAnswers().size()) {
-            
+
             for (int i = 0; i < quizData.getQuestions().size(); i++) {
                 String question = quizData.getQuestions().get(i);
-                String correctAnswer = quizData.getCorrectAnswers().get(i);
                 List<String> answers = quizData.getAnswers().get(i);
+                String correctAnswer = quizData.getCorrectAnswers().get(i);
 
-                if (question != null && correctAnswer != null && answers != null) {
+                if (question != null && !question.isEmpty() && answers != null && correctAnswer != null) {
                     addQuestion(question, correctAnswer, new ArrayList<>(answers));
                 }
             }
         }
-        
+
+        // If, after all checks, no questions were added, add the default completion message.
         if (questionsList.isEmpty()) {
             addQuestion("You have completed all the rooms!", "Win", new ArrayList<String>() {{ add("Win"); }});
         }

@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.escape_rooms.R;
 import com.example.escape_rooms.repository.QuestionRepository;
+import com.example.escape_rooms.ui.adapters.QuestionsAdapter;
 import com.example.escape_rooms.viewmodel.GameViewModel;
 
 import java.util.HashMap;
@@ -47,13 +48,14 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         String creationType = intent.getStringExtra(EXTRA_CREATION_TYPE);
-        int level = intent.getIntExtra(EXTRA_LEVEL, 1);
 
         if (getString(R.string.creation_option_ai).equals(creationType)) {
             String subject = intent.getStringExtra(EXTRA_AI_SUBJECT);
-            viewModel.initAiGame(subject, level);
+            int level = intent.getIntExtra(EXTRA_LEVEL, 1);
+            viewModel.initAiGame(subject, level, null);
         } else {
-            viewModel.initLevel(level);
+            int level = intent.getIntExtra(EXTRA_LEVEL, 1);
+            viewModel.initLevel(level, null);
         }
 
         observeViewModel();
@@ -85,22 +87,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        viewModel.getNavigationEvent().observe(this, event -> {
-            Intent intent;
-            if (event.target == GameViewModel.NavigationTarget.NEXT_LEVEL) {
-                showCustomToast(getString(R.string.msg_room_cleared, event.nextLevel - 1), true);
-                intent = new Intent(this, MainActivity.class);
-                intent.putExtra(EXTRA_LEVEL, event.nextLevel);
-                if (event.aiGameSubject != null) {
-                    intent.putExtra(EXTRA_CREATION_TYPE, getString(R.string.creation_option_ai));
-                    intent.putExtra(EXTRA_AI_SUBJECT, event.aiGameSubject);
-                }
-            } else {
-                intent = new Intent(this, PlayerResultsActivity.class);
+        // Observe the new level complete event
+        viewModel.getLevelCompleteEvent().observe(this, isComplete -> {
+            if (isComplete) {
+                showCustomToast(getString(R.string.msg_room_cleared, getIntent().getIntExtra(EXTRA_LEVEL, 0)), true);
+                // Set the result and finish to return to DrawerActivity
+                Intent resultIntent = new Intent();
+                setResult(RESULT_OK, resultIntent);
+                finish();
             }
-            intent.putExtra(EXTRA_TIMINGS, event.timings);
-            startActivity(intent);
-            finish();
         });
     }
 
