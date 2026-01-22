@@ -24,9 +24,9 @@ public class ChoosingGameVarientActivity extends AppCompatActivity {
     private String selectedCategory, selectedCreationType;
     private Button startGameButton;
     private ChoosingGameViewModel viewModel;
-    private View progressFrame; 
+    private View progressFrame;
     private View[] segments;
-    
+
     private final Handler progressHandler = new Handler(Looper.getMainLooper());
     private int currentSegmentCount = 0;
     private boolean isNavigating = false;
@@ -48,7 +48,7 @@ public class ChoosingGameVarientActivity extends AppCompatActivity {
         radioGroupGameSubject = findViewById(R.id.radio_group_game_subject);
         radioGroupCreationType = findViewById(R.id.radio_group_creation_type);
         progressFrame = findViewById(R.id.progress_frame);
-        
+
         initializeSegments();
 
         radioGroupCreationType.check(R.id.radio_existing_game);
@@ -126,8 +126,8 @@ public class ChoosingGameVarientActivity extends AppCompatActivity {
         if (currentSegmentCount < 10) {
             currentSegmentCount++;
             for (int i = 0; i < segments.length; i++) segments[i].setAlpha(i < currentSegmentCount ? 1.0f : 0f);
-            
-            if (!autoNavigate && currentSegmentCount == 9) return; 
+
+            if (!autoNavigate && currentSegmentCount == 9) return;
 
             if (currentSegmentCount < 10) {
                 progressHandler.postDelayed(() -> incrementProgress(autoNavigate), 2000);
@@ -173,7 +173,7 @@ public class ChoosingGameVarientActivity extends AppCompatActivity {
             if (quizData != null) {
                 progressHandler.removeCallbacksAndMessages(null);
                 for (View s : segments) s.setAlpha(1.0f);
-                
+
                 progressFrame.postDelayed(() -> {
                     Intent intent = new Intent(this, DrawerActivity.class);
                     intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, getString(R.string.creation_option_ai));

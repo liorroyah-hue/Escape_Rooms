@@ -29,16 +29,25 @@ public class Questions {
 
     /**
      * Constructor for AI-generated questions.
+     * Uses the QuizData type from ChoosingGameViewModel.
      */
     public Questions(ChoosingGameViewModel.QuizData quizData) {
-        if (quizData != null && quizData.questions != null && !quizData.questions.isEmpty()) {
+        if (quizData != null && quizData.questions != null && !quizData.questions.isEmpty() &&
+            quizData.answers != null && quizData.correctAnswers != null &&
+            quizData.questions.size() == quizData.answers.size() &&
+            quizData.questions.size() == quizData.correctAnswers.size()) {
+            
             for (int i = 0; i < quizData.questions.size(); i++) {
                 String question = quizData.questions.get(i);
                 String correctAnswer = quizData.correctAnswers.get(i);
                 List<String> answers = quizData.answers.get(i);
-                addQuestion(question, correctAnswer, new ArrayList<>(answers));
+
+                if (question != null && correctAnswer != null && answers != null) {
+                    addQuestion(question, correctAnswer, new ArrayList<>(answers));
+                }
             }
         }
+        
         if (questionsList.isEmpty()) {
             addQuestion("You have completed all the rooms!", "Win", new ArrayList<String>() {{ add("Win"); }});
         }

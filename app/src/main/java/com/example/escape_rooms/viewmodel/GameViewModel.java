@@ -12,14 +12,22 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.escape_rooms.model.Question;
 import com.example.escape_rooms.model.Questions;
 import com.example.escape_rooms.repository.QuestionRepository;
+import com.example.escape_rooms.repository.services.GeminiService;
+import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class GameViewModel extends AndroidViewModel {
     private final QuestionRepository repository;
+    private final GeminiService geminiService = new GeminiService();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final MutableLiveData<Questions> currentQuestions = new MutableLiveData<>();
     private final MutableLiveData<String> toastMessage = new MutableLiveData<>();
     private final MutableLiveData<NavigationEvent> navigationEvent = new MutableLiveData<>();

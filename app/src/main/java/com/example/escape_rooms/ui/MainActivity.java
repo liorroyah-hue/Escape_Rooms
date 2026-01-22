@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -42,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         audioManager = GameAudioManager.getInstance(this);
+        audioManager.startAmbientMusic(); 
 
         GameViewModel.Factory factory = new GameViewModel.Factory(getApplication(), QuestionRepository.getInstance());
         viewModel = new ViewModelProvider(this, factory).get(GameViewModel.class);
@@ -60,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
             ChoosingGameViewModel.QuizData quizData = (ChoosingGameViewModel.QuizData) intent.getSerializableExtra(EXTRA_AI_GAME_DATA);
             viewModel.initAiGame(quizData, level, timings);
         } else {
-            // Level is already extracted above
             viewModel.initLevel(level, timings);
         }
 
@@ -104,7 +105,6 @@ public class MainActivity extends AppCompatActivity {
         viewModel.getNavigationEvent().observe(this, event -> {
             if (event.target == GameViewModel.NavigationTarget.NEXT_LEVEL) {
                 audioManager.playSuccessSound();
-                // Removed redundant startAmbientMusic() as it's handled by audioManager
                 showCustomToast(getString(R.string.msg_room_cleared, event.nextLevel - 1), true);
                 
                 Intent nextIntent = new Intent(this, DrawerActivity.class);
@@ -130,8 +130,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void showCustomToast(String message, boolean isSuccess) {
         LayoutInflater inflater = getLayoutInflater();
-        // Modern practice: provide root for layout params but don't attach
-        View layout = inflater.inflate(R.layout.layout_custom_toast, null, false);
+        // Fix: Inflate with null root for Toast to prevent crash
+        View layout = inflater.inflate(R.layout.layout_custom_toast, null);
 
         TextView text = layout.findViewById(R.id.toast_text);
         ImageView icon = layout.findViewById(R.id.toast_icon);

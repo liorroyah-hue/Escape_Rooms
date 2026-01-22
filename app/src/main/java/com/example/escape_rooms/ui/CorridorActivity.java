@@ -52,6 +52,7 @@ public class CorridorActivity extends AppCompatActivity {
 
         doorImage.setOnClickListener(v -> {
             Intent gameIntent = new Intent(CorridorActivity.this, MainActivity.class);
+            // Unified way to pass all extras including EXTRA_AI_GAME_DATA
             if (originalIntent.getExtras() != null) {
                 gameIntent.putExtras(originalIntent.getExtras());
             }
