@@ -13,21 +13,17 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:padding="8dp"
-        app:layout_constraintBottom_toTopOf="@id/coordinatorLayout"
+        app:layout_constraintBottom_toTopOf="@id/bottom_panel_tray"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0">
-
-        <!-- The Flow helper for a clean, wrapping initial layout -->
+        app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:id="@+id/image1"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:layout_marginStart="36dp"
-            android:layout_marginTop="348dp"
+            android:layout_marginStart="64dp"
+            android:layout_marginTop="100dp"
             android:src="@drawable/sade_white"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -36,8 +32,8 @@
             android:id="@+id/image2"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:layout_marginTop="400dp"
-            android:layout_marginEnd="88dp"
+            android:layout_marginTop="50dp"
+            android:layout_marginEnd="60dp"
             android:src="@drawable/safe_black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -46,8 +42,8 @@
             android:id="@+id/image3"
             android:layout_width="90dp"
             android:layout_height="90dp"
-            android:layout_marginStart="52dp"
-            android:layout_marginTop="68dp"
+            android:layout_marginStart="150dp"
+            android:layout_marginTop="200dp"
             android:src="@drawable/drawer_black"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -56,8 +52,8 @@
             android:id="@+id/image4"
             android:layout_width="120dp"
             android:layout_height="120dp"
-            android:layout_marginTop="28dp"
-            android:layout_marginEnd="64dp"
+            android:layout_marginTop="300dp"
+            android:layout_marginEnd="108dp"
             android:src="@drawable/drawer_white"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -66,8 +62,8 @@
             android:id="@+id/image5"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:layout_marginStart="88dp"
-            android:layout_marginTop="216dp"
+            android:layout_marginStart="40dp"
+            android:layout_marginTop="350dp"
             android:src="@drawable/table_with_drawer"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -76,28 +72,35 @@
             android:id="@+id/image6"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:layout_marginTop="192dp"
-            android:layout_marginEnd="88dp"
+            android:layout_marginTop="150dp"
+            android:layout_marginEnd="200dp"
             android:src="@drawable/drawer_old"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:id="@+id/coordinatorLayout"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+    <!-- Bottom Panel Tray for solved items -->
+    <LinearLayout
+        android:id="@+id/bottom_panel_tray"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="@color/room_surface"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
+        
+        <!-- Solved images will be added here dynamically -->
+        
+    </LinearLayout>
 
-        <com.google.android.material.bottomappbar.BottomAppBar
-            android:id="@+id/bottomAppBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom" />
-
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/room_accent"
+        app:layout_constraintBottom_toTopOf="@id/bottom_panel_tray" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
