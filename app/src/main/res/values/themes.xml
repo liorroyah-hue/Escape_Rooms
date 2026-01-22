@@ -1,26 +1,27 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Base.Theme.Escape_Rooms" parent="Theme.Material3.Dark.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <item name="colorPrimary">@color/room_primary</item>
-        <item name="colorSecondary">@color/room_secondary</item>
+    <style name="Theme.Escape_Rooms" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Main background and surface colors -->
         <item name="android:windowBackground">@color/room_dark_bg</item>
-        <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="colorPrimary">@color/room_primary</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorSecondary">@color/room_accent</item>
         <item name="colorSurface">@color/room_surface</item>
+        <item name="android:textColorPrimary">@color/room_text</item>
+        <item name="android:textColorSecondary">@color/room_text_dim</item>
+        
+        <!-- Customize navigation bar and status bar -->
+        <item name="android:statusBarColor">@color/room_dark_bg</item>
+        <item name="android:navigationBarColor">@color/room_dark_bg</item>
     </style>
 
-    <style name="Theme.Escape_Rooms" parent="Base.Theme.Escape_Rooms" />
-
-    <!-- Custom Button Style -->
+    <!-- Custom Button Style - Industrial Look -->
     <style name="Widget.EscapeRooms.Button" parent="Widget.Material3.Button">
+        <item name="backgroundTint">@color/room_primary</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="cornerRadius">4dp</item> <!-- Sharp corners for industrial feel -->
         <item name="android:textAllCaps">true</item>
+        <item name="android:textStyle">bold</item>
         <item name="android:letterSpacing">0.1</item>
-        <item name="shapeAppearance">@style/ShapeAppearance.EscapeRooms.SmallComponent</item>
-    </style>
-
-    <style name="ShapeAppearance.EscapeRooms.SmallComponent" parent="ShapeAppearance.Material3.SmallComponent">
-        <item name="cornerFamily">cut</item>
-        <item name="cornerSize">8dp</item>
     </style>
 </resources>

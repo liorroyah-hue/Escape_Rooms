@@ -3,14 +3,16 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Escape Room Theme Colors -->
-    <color name="room_dark_bg">#121212</color>
-    <color name="room_surface">#1E1E1E</color>
-    <color name="room_primary">#4CAF50</color> <!-- Toxic Green -->
-    <color name="room_secondary">#FF5722</color> <!-- Rusty Orange -->
-    <color name="room_accent">#00E5FF</color> <!-- High Tech Cyan -->
-    <color name="room_error">#CF6679</color>
-    
-    <color name="text_primary">#E0E0E0</color>
-    <color name="text_secondary">#9E9E9E</color>
+    <!-- Escape Room Cyber Theme -->
+    <color name="room_dark_bg">#0A0A0A</color>
+    <color name="room_surface">#1A1A1A</color>
+    <color name="room_primary">#00FF41</color> <!-- Terminal Green -->
+    <color name="room_accent">#00E5FF</color>  <!-- Cyan Glow -->
+    <color name="room_error">#FF003C</color>   <!-- Alert Red -->
+    <color name="room_text">#E0E0E0</color>
+    <color name="room_text_dim">#80E0E0E0</color>
+
+    <!-- Legacy Compatibility (Used in older XML layouts) -->
+    <color name="text_primary">@color/room_text</color>
+    <color name="text_secondary">@color/room_text_dim</color>
 </resources>

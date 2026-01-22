@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.escape_rooms.R;
+import com.example.escape_rooms.repository.services.GameAudioManager;
 import com.example.escape_rooms.viewmodel.RatingViewModel;
 
 public class RatingActivity extends AppCompatActivity {
@@ -18,6 +19,9 @@ public class RatingActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rating);
+
+        // Stop absolutely everything upon entering this screen
+        GameAudioManager.getInstance(this).stopAllSounds();
 
         RatingBar ratingBar = findViewById(R.id.ratingBar);
         Button btnSubmit = findViewById(R.id.btn_submit_rating);
@@ -30,8 +34,8 @@ public class RatingActivity extends AppCompatActivity {
                 viewModel.submitRating(rating);
                 Toast.makeText(this, getString(R.string.msg_rating_saved, (int)rating), Toast.LENGTH_SHORT).show();
                 
-                // Navigate back to ChoosingGameVarient instead of Corridor
-                Intent intent = new Intent(RatingActivity.this, ChoosingGameVarient.class);
+                // Ensure the intent points to the correct activity name
+                Intent intent = new Intent(RatingActivity.this, ChoosingGameVarientActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
                 finish();

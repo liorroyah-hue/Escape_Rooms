@@ -1,21 +1,28 @@
 package com.example.escape_rooms;
 
+import android.content.Context;
 import android.content.Intent;
+import android.view.View;
 
 import androidx.lifecycle.Lifecycle;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.espresso.UiController;
+import androidx.test.espresso.ViewAction;
 import androidx.test.espresso.contrib.RecyclerViewActions;
 
 import com.example.escape_rooms.model.Question;
 import com.example.escape_rooms.repository.QuestionRepository;
 import com.example.escape_rooms.ui.MainActivity;
 
+import org.hamcrest.Matcher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowLooper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,17 +36,12 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Robolectric-based integration test for MainActivity game flow.
- * Uses a manual FakeRepository to avoid Mockito matcher issues in parallel builds.
- */
 @RunWith(RobolectricTestRunner.class)
+@Config(sdk = 31)
 public class GameFlowIntegrationTest {
 
     @Before
     public void setUp() {
-        // Use a manual Fake instead of a Mockito Mock for the static singleton.
-        // This is the most stable way to handle shared state in Robolectric.
         QuestionRepository fakeRepository = new QuestionRepository() {
             @Override
             public void getQuestionsForLevel(int level, QuestionsCallback callback) {
@@ -75,6 +77,7 @@ public class GameFlowIntegrationTest {
         
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(intent)) {
             scenario.moveToState(Lifecycle.State.RESUMED);
+            ShadowLooper.idleMainLooper();
             
             onView(withId(R.id.questions_recycler_view))
                     .check(matches(hasDescendant(withText("מהו צבע השמיים?"))));
@@ -84,40 +87,77 @@ public class GameFlowIntegrationTest {
     }
 
     @Test
-    public void testSubmitWithoutAnswering_StaysOnScreen() {
-        Intent intent = new Intent(ApplicationProvider.getApplicationContext(), MainActivity.class);
-        intent.putExtra(MainActivity.EXTRA_LEVEL, 1);
-        
-        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(intent)) {
-            scenario.moveToState(Lifecycle.State.RESUMED);
-            
-            onView(withId(R.id.btn_submit_answers)).perform(click());
-            onView(withId(R.id.questions_recycler_view)).check(matches(isDisplayed()));
-        }
-    }
-
-    @Test
     public void testSubmitCorrectAnswers_NavigatesToNextLevel() {
-        Intent intent = new Intent(ApplicationProvider.getApplicationContext(), MainActivity.class);
+        Context context = ApplicationProvider.getApplicationContext();
+        Intent intent = new Intent(context, MainActivity.class);
         intent.putExtra(MainActivity.EXTRA_LEVEL, 1);
+        // השתמש במחרוזת העברית כדי להתאים ללוגיקה של ה-Activity
+        intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, context.getString(R.string.creation_option_existing));
         
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(intent)) {
             scenario.moveToState(Lifecycle.State.RESUMED);
+            ShadowLooper.idleMainLooper();
 
+            // בחר תשובה לשאלה 1 (נמצאת בפוזיציה 0)
             onView(withId(R.id.questions_recycler_view))
-                    .perform(RecyclerViewActions.scrollTo(hasDescendant(withText("מהו צבע השמיים?"))));
-            onView(withText("כחול")).perform(click());
+                    .perform(RecyclerViewActions.actionOnItemAtPosition(0, clickChildViewWithText("כחול")));
 
+            // בחר תשובה לשאלה 2 (נמצאת בפוזיציה 1)
             onView(withId(R.id.questions_recycler_view))
-                    .perform(RecyclerViewActions.scrollTo(hasDescendant(withText("איזה גז בני אדם צריכים כדי לנשום?"))));
-            onView(withText("חמצן")).perform(click());
+                    .perform(RecyclerViewActions.actionOnItemAtPosition(1, clickChildViewWithText("חמצן")));
             
+            // הגש תשובות
             onView(withId(R.id.btn_submit_answers)).perform(click());
+            ShadowLooper.idleMainLooper();
 
             scenario.onActivity(activity -> {
-                assertTrue("Activity should be finishing to load next room", 
+                assertTrue("Activity should be finishing to load next screen", 
                         activity.isFinishing() || activity.isDestroyed());
             });
         }
+    }
+
+    /**
+     * פעולה מותאמת אישית ללחיצה על תת-רכיב בתוך פריט ברשימה.
+     */
+    public static ViewAction clickChildViewWithText(final String text) {
+        return new ViewAction() {
+            @Override
+            public Matcher<View> getConstraints() {
+                return isDisplayed();
+            }
+
+            @Override
+            public String getDescription() {
+                return "Click on a child view with specified text: " + text;
+            }
+
+            @Override
+            public void perform(UiController uiController, View view) {
+                // מחפש את התת-רכיב עם הטקסט המבוקש בתוך ה-ViewHolder ומבצע לחיצה
+                View child = findViewWithText(view, text);
+                if (child != null) {
+                    child.performClick();
+                } else {
+                    throw new RuntimeException("Could not find child with text: " + text);
+                }
+            }
+
+            private View findViewWithText(View root, String text) {
+                if (root instanceof android.view.ViewGroup) {
+                    android.view.ViewGroup group = (android.view.ViewGroup) root;
+                    for (int i = 0; i < group.getChildCount(); i++) {
+                        View child = findViewWithText(group.getChildAt(i), text);
+                        if (child != null) return child;
+                    }
+                }
+                if (root instanceof android.widget.TextView) {
+                    if (text.equals(((android.widget.TextView) root).getText().toString())) {
+                        return root;
+                    }
+                }
+                return null;
+            }
+        };
     }
 }

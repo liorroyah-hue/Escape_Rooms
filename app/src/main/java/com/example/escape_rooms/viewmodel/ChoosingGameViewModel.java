@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.example.escape_rooms.repository.GeminiService;
+import com.example.escape_rooms.repository.services.GeminiService;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 

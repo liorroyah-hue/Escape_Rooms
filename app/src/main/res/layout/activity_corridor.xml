@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/room_dark_bg"
-    tools:context=".ui.Corridor">
+    tools:context=".ui.CorridorActivity">
 
     <ImageView
         android:id="@+id/door_image"
