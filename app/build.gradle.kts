@@ -88,7 +88,8 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
-    
+    implementation(libs.androidx.cardview)
+
     // Unit Testing
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
