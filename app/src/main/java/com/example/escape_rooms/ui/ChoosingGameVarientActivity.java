@@ -17,13 +17,13 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.escape_rooms.R;
-import com.example.escape_rooms.viewmodel.GameSetupViewModel;
+import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 
 public class ChoosingGameVarientActivity extends AppCompatActivity {
     private RadioGroup radioGroupGameSubject, radioGroupCreationType;
     private String selectedCategory, selectedCreationType;
     private Button startGameButton;
-    private GameSetupViewModel viewModel;
+    private ChoosingGameViewModel viewModel;
     private View progressFrame;
     private View[] segments;
 
@@ -42,7 +42,7 @@ public class ChoosingGameVarientActivity extends AppCompatActivity {
             return insets;
         });
 
-        viewModel = new ViewModelProvider(this).get(GameSetupViewModel.class);
+        viewModel = new ViewModelProvider(this).get(ChoosingGameViewModel.class);
 
         startGameButton = findViewById(R.id.startGameButton);
         radioGroupGameSubject = findViewById(R.id.radio_group_game_subject);
@@ -177,7 +177,7 @@ public class ChoosingGameVarientActivity extends AppCompatActivity {
                 progressFrame.postDelayed(() -> {
                     Intent intent = new Intent(this, DrawerActivity.class);
                     intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, getString(R.string.creation_option_ai));
-                    intent.putExtra("AI_GAME_DATA", quizData);
+                    intent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, quizData);
                     intent.putExtra(MainActivity.EXTRA_LEVEL, 1);
                     startActivity(intent);
                     finish();
