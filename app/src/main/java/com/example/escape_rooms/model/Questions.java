@@ -1,6 +1,6 @@
 package com.example.escape_rooms.model;
 
-import com.example.escape_rooms.viewmodel.GameViewModel;
+import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,18 +29,18 @@ public class Questions {
 
     /**
      * Constructor for AI-generated questions.
-     * This is now robust and uses the correct QuizData type.
+     * Uses the QuizData type from ChoosingGameViewModel.
      */
-    public Questions(GameViewModel.QuizData quizData) {
-        if (quizData != null && quizData.getQuestions() != null && !quizData.getQuestions().isEmpty() &&
-            quizData.getAnswers() != null && quizData.getCorrectAnswers() != null &&
-            quizData.getQuestions().size() == quizData.getAnswers().size() &&
-            quizData.getQuestions().size() == quizData.getCorrectAnswers().size()) {
+    public Questions(ChoosingGameViewModel.QuizData quizData) {
+        if (quizData != null && quizData.questions != null && !quizData.questions.isEmpty() &&
+            quizData.answers != null && quizData.correctAnswers != null &&
+            quizData.questions.size() == quizData.answers.size() &&
+            quizData.questions.size() == quizData.correctAnswers.size()) {
             
-            for (int i = 0; i < quizData.getQuestions().size(); i++) {
-                String question = quizData.getQuestions().get(i);
-                String correctAnswer = quizData.getCorrectAnswers().get(i);
-                List<String> answers = quizData.getAnswers().get(i);
+            for (int i = 0; i < quizData.questions.size(); i++) {
+                String question = quizData.questions.get(i);
+                String correctAnswer = quizData.correctAnswers.get(i);
+                List<String> answers = quizData.answers.get(i);
 
                 if (question != null && correctAnswer != null && answers != null) {
                     addQuestion(question, correctAnswer, new ArrayList<>(answers));
