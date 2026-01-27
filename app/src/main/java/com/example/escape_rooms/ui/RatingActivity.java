@@ -34,9 +34,8 @@ public class RatingActivity extends AppCompatActivity {
                 viewModel.submitRating(rating);
                 Toast.makeText(this, getString(R.string.msg_rating_saved, (int)rating), Toast.LENGTH_SHORT).show();
                 
-                // Ensure the intent points to the correct activity name
-                Intent intent = new Intent(RatingActivity.this, ChoosingGameVarientActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                // Navigate to Leaderboard after rating
+                Intent intent = new Intent(RatingActivity.this, LeaderboardActivity.class);
                 startActivity(intent);
                 finish();
             } else {
