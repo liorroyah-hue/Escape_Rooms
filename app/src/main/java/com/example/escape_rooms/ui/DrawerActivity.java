@@ -156,14 +156,33 @@ public class DrawerActivity extends AppCompatActivity {
         @SuppressLint("ClickableViewAccessibility")
         @Override
         public boolean onTouch(View view, MotionEvent event) {
+            ViewGroup parent = (ViewGroup) view.getParent();
+            if (parent == null) return false;
+
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    startX = event.getRawX(); startY = event.getRawY();
-                    dX = view.getX() - startX; dY = view.getY() - startY;
+                    startX = event.getRawX(); 
+                    startY = event.getRawY();
+                    dX = view.getX() - startX; 
+                    dY = view.getY() - startY;
                     view.bringToFront();
                     break;
                 case MotionEvent.ACTION_MOVE:
-                    view.animate().x(event.getRawX() + dX).y(event.getRawY() + dY).setDuration(0).start();
+                    float newX = event.getRawX() + dX;
+                    float newY = event.getRawY() + dY;
+
+                    // Constrain X to keep the view within horizontal bounds
+                    newX = Math.max(0, Math.min(newX, parent.getWidth() - view.getWidth()));
+
+                    // Constrain Y to keep the view above the blue line (top of bottom tray)
+                    // The image_container height is restricted by the tray's position in XML
+                    newY = Math.max(0, Math.min(newY, parent.getHeight() - view.getHeight()));
+
+                    view.animate()
+                            .x(newX)
+                            .y(newY)
+                            .setDuration(0)
+                            .start();
                     break;
                 case MotionEvent.ACTION_UP:
                     if (Math.abs(startX - event.getRawX()) < CLICK_ACTION_THRESHOLD && 
