@@ -35,7 +35,7 @@ public class GameViewModel extends AndroidViewModel {
     private int currentLevel = 1;
     private long startTime;
     private HashMap<Integer, Long> levelTimings = new HashMap<>();
-    private static final int MAX_LEVELS = 10;
+    private static final int MAX_LEVELS = 2;
     
     private ChoosingGameViewModel.QuizData fullAiQuizData;
 

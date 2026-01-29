@@ -22,7 +22,6 @@
             android:name=".ui.ChoosingGameVarientActivity"
             android:exported="false" />
             
-        <!-- This is now the starting activity -->
         <activity
             android:name=".ui.LoginActivity"
             android:exported="true">
@@ -51,6 +50,12 @@
         <activity
             android:name=".ui.RatingActivity"
             android:exported="false" />
+
+        <!-- Added the missing Leaderboard Activity registration -->
+        <activity
+            android:name=".ui.LeaderboardActivity"
+            android:exported="false" />
+            
     </application>
 
 </manifest>
