@@ -89,6 +89,7 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     implementation(libs.androidx.cardview)
+    implementation(libs.androidx.gridlayout)
 
     // Unit Testing
     testImplementation(libs.junit)

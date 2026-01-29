@@ -21,6 +21,7 @@ import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 public class DrawerActivity extends AppCompatActivity {
@@ -50,12 +51,19 @@ public class DrawerActivity extends AppCompatActivity {
         if (level == 1) {
             solvedImageIds = new HashSet<>();
             solvedPrefs.edit().putStringSet(KEY_SOLVED_IMAGES, solvedImageIds).apply();
+
         }
 
         ViewGroup container = findViewById(R.id.image_container);
         LinearLayout bottomTray = findViewById(R.id.bottom_panel_tray);
         int[] viewIds = {R.id.image1, R.id.image2, R.id.image3, R.id.image4, R.id.image5, R.id.image6};
-        
+
+        // Randomize the order of the images one a room
+        if(level == 1){
+        for(int i=0; i<6; i++) {
+            RandomizerImagePlacement(findViewById(viewIds[i]));
+        }}
+
         for (int id : viewIds) {
             ImageView imageView = findViewById(id);
             if (imageView != null) {
@@ -183,4 +191,13 @@ public class DrawerActivity extends AppCompatActivity {
             return true;
         }
     }
+    public void RandomizerImagePlacement (ImageView imageView) {
+        Random random = new Random();
+        int randomX = random.nextInt(265);
+        int randomY = random.nextInt(485);
+        imageView.setX(randomX);
+        imageView.setY(randomY);
+    }
+
+
 }
