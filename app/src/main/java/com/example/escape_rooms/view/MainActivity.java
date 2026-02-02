@@ -1,10 +1,9 @@
-package com.example.escape_rooms.ui;
+package com.example.escape_rooms.view;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -18,7 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.escape_rooms.R;
 import com.example.escape_rooms.repository.QuestionRepository;
 import com.example.escape_rooms.repository.services.GameAudioManager;
-import com.example.escape_rooms.ui.adapters.QuestionsAdapter;
+import com.example.escape_rooms.view.adapters.QuestionsAdapter;
 import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 import com.example.escape_rooms.viewmodel.GameViewModel;
 

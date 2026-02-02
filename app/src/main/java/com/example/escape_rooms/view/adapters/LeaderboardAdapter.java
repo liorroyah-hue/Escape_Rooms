@@ -1,4 +1,4 @@
-package com.example.escape_rooms.ui.adapters;
+package com.example.escape_rooms.view.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;

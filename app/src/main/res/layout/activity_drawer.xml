@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/room_dark_bg"
-    tools:context=".ui.DrawerActivity">
+    tools:context=".view.DrawerActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/image_container"

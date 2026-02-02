@@ -2,7 +2,7 @@ package com.example.escape_rooms;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
-import com.example.escape_rooms.ui.LoginActivity;
+import com.example.escape_rooms.view.LoginActivity;
 
 import org.junit.Rule;
 import org.junit.Test;

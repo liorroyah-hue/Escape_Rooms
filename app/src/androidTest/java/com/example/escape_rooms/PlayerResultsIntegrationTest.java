@@ -8,7 +8,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 
-import com.example.escape_rooms.ui.PlayerResultsActivity;
+import com.example.escape_rooms.view.PlayerResultsActivity;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

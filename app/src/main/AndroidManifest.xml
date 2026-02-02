@@ -15,15 +15,15 @@
         android:theme="@style/Theme.Escape_Rooms">
         
         <activity
-            android:name=".ui.DrawerActivity"
+            android:name=".view.DrawerActivity"
             android:exported="false" />
             
         <activity
-            android:name=".ui.ChoosingGameVarientActivity"
+            android:name=".view.ChoosingGameVarientActivity"
             android:exported="false" />
             
         <activity
-            android:name=".ui.LoginActivity"
+            android:name=".view.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,28 +32,28 @@
         </activity>
         
         <activity
-            android:name=".ui.SignUpActivity"
+            android:name=".view.SignUpActivity"
             android:exported="false" />
             
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".view.MainActivity"
             android:exported="false" />
             
         <activity
-            android:name=".ui.CorridorActivity"
+            android:name=".view.CorridorActivity"
             android:exported="false" />
             
         <activity
-            android:name=".ui.PlayerResultsActivity"
+            android:name=".view.PlayerResultsActivity"
             android:exported="false" />
 
         <activity
-            android:name=".ui.RatingActivity"
+            android:name=".view.RatingActivity"
             android:exported="false" />
 
         <!-- Added the missing Leaderboard Activity registration -->
         <activity
-            android:name=".ui.LeaderboardActivity"
+            android:name=".view.LeaderboardActivity"
             android:exported="false" />
             
     </application>

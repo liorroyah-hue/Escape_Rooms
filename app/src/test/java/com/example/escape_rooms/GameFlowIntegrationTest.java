@@ -13,7 +13,7 @@ import androidx.test.espresso.contrib.RecyclerViewActions;
 
 import com.example.escape_rooms.model.Question;
 import com.example.escape_rooms.repository.QuestionRepository;
-import com.example.escape_rooms.ui.MainActivity;
+import com.example.escape_rooms.view.MainActivity;
 
 import org.hamcrest.Matcher;
 import org.junit.After;

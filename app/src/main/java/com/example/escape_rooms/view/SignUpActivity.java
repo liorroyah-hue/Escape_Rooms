@@ -1,4 +1,4 @@
-package com.example.escape_rooms.ui;
+package com.example.escape_rooms.view;
 
 import android.os.Bundle;
 import android.view.View;

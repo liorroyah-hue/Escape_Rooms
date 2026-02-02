@@ -4,7 +4,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
 
-import com.example.escape_rooms.ui.LoginActivity;
+import com.example.escape_rooms.view.LoginActivity;
 
 import org.junit.Rule;
 import org.junit.Test;

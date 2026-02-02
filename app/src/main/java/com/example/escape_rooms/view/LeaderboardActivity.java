@@ -1,4 +1,4 @@
-package com.example.escape_rooms.ui;
+package com.example.escape_rooms.view;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.escape_rooms.R;
 import com.example.escape_rooms.repository.GameRepository;
-import com.example.escape_rooms.ui.adapters.LeaderboardAdapter;
+import com.example.escape_rooms.view.adapters.LeaderboardAdapter;
 
 import java.util.List;
 

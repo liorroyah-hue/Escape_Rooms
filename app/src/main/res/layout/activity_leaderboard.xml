@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/room_dark_bg"
     android:padding="24dp"
-    tools:context=".ui.LeaderboardActivity">
+    tools:context=".view.LeaderboardActivity">
 
     <TextView
         android:id="@+id/tv_leaderboard_title"

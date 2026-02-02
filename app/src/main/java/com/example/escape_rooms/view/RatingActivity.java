@@ -1,4 +1,4 @@
-package com.example.escape_rooms.ui;
+package com.example.escape_rooms.view;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -34,8 +34,8 @@ public class RatingActivity extends AppCompatActivity {
                 viewModel.submitRating(rating);
                 Toast.makeText(this, getString(R.string.msg_rating_saved, (int)rating), Toast.LENGTH_SHORT).show();
                 
-                // Navigate to Leaderboard after rating
-                Intent intent = new Intent(RatingActivity.this, LeaderboardActivity.class);
+                // Explicitly navigate to the LeaderboardActivity in the same package
+                Intent intent = new Intent(this, LeaderboardActivity.class);
                 startActivity(intent);
                 finish();
             } else {
