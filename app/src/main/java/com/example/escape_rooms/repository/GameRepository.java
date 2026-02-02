@@ -1,5 +1,6 @@
 package com.example.escape_rooms.repository;
 
+import android.util.Log;
 import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -38,9 +39,6 @@ public class GameRepository {
         public int levels_completed;
     }
 
-    /**
-     * Saves the total game time and details to Supabase.
-     */
     public void saveGameResult(String username, long totalTimeMillis, int levelsCompleted, GameResultCallback callback) {
         String url = SUPABASE_URL + "/rest/v1/game_results";
 
@@ -72,6 +70,8 @@ public class GameRepository {
                     if (resp.isSuccessful()) {
                         callback.onSuccess();
                     } else {
+                        String error = resp.body() != null ? resp.body().string() : "Unknown";
+                        Log.e("Supabase_Save", "Error " + resp.code() + ": " + error);
                         callback.onError(new Exception("Server Error: " + resp.code()));
                     }
                 }
@@ -79,9 +79,6 @@ public class GameRepository {
         });
     }
 
-    /**
-     * Fetches the top 10 fastest game completions from Supabase.
-     */
     public void getTopScores(LeaderboardCallback callback) {
         // Fetch top 10 results, ordered by time ascending (fastest first)
         String url = SUPABASE_URL + "/rest/v1/game_results?select=username,total_time_ms,levels_completed&order=total_time_ms.asc&limit=10";
@@ -107,6 +104,8 @@ public class GameRepository {
                         List<GameResult> results = gson.fromJson(json, listType);
                         callback.onSuccess(results);
                     } else {
+                        String error = resp.body() != null ? resp.body().string() : "Unknown";
+                        Log.e("Supabase_Fetch", "Error " + resp.code() + ": " + error);
                         callback.onError(new Exception("Server Error: " + resp.code()));
                     }
                 }
