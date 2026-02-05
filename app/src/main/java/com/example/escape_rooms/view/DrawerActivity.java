@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -41,13 +42,21 @@ public class DrawerActivity extends AppCompatActivity {
         // Get the data passed from ChoosingGameVarient or MainActivity
         Intent incomingIntent = getIntent();
         String creationType = incomingIntent.getStringExtra(MainActivity.EXTRA_CREATION_TYPE);
-        QuizData aiData = (QuizData) incomingIntent.getSerializableExtra(MainActivity.EXTRA_AI_GAME_DATA);
+        
+        QuizData aiData;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            aiData = incomingIntent.getSerializableExtra(MainActivity.EXTRA_AI_GAME_DATA, QuizData.class);
+        } else {
+            aiData = (QuizData) incomingIntent.getSerializableExtra(MainActivity.EXTRA_AI_GAME_DATA);
+        }
+        
         int level = incomingIntent.getIntExtra(MainActivity.EXTRA_LEVEL, 1);
         HashMap<Integer, Long> timings = (HashMap<Integer, Long>) incomingIntent.getSerializableExtra(MainActivity.EXTRA_TIMINGS);
 
         // --- Handle Solved Images Logic ---
         SharedPreferences solvedPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        Set<String> solvedImageIds = solvedPrefs.getStringSet(KEY_SOLVED_IMAGES, new HashSet<>());
+        // Fix: Always wrap getStringSet in a new HashSet to ensure data persistence safety
+        Set<String> solvedImageIds = new HashSet<>(solvedPrefs.getStringSet(KEY_SOLVED_IMAGES, new HashSet<>()));
         
         // Reset solved images if it's the first level
         if (level == 1) {
@@ -74,6 +83,8 @@ public class DrawerActivity extends AppCompatActivity {
         for (int d : allDrawables) randomizedDrawables.add(d);
         Collections.shuffle(randomizedDrawables);
 
+        GameAudioManager audioManager = GameAudioManager.getInstance(this);
+
         for (int i = 0; i < viewIds.length; i++) {
             ImageView imageView = findViewById(viewIds[i]);
             if (imageView != null) {
@@ -90,18 +101,18 @@ public class DrawerActivity extends AppCompatActivity {
                 } else {
                     // Normal state: Draggable and Clickable
                     imageView.setOnTouchListener(new DraggableTouchListener());
+                    Set<String> finalSolvedImageIds = solvedImageIds;
                     imageView.setOnClickListener(v -> {
                         // Mark this image as solved for the next time we return
-                        Set<String> updatedSolved = new HashSet<>(solvedPrefs.getStringSet(KEY_SOLVED_IMAGES, new HashSet<>()));
-                        updatedSolved.add(String.valueOf(v.getId()));
-                        solvedPrefs.edit().putStringSet(KEY_SOLVED_IMAGES, updatedSolved).apply();
+                        finalSolvedImageIds.add(String.valueOf(v.getId()));
+                        solvedPrefs.edit().putStringSet(KEY_SOLVED_IMAGES, finalSolvedImageIds).apply();
 
                         // Save progress to DB
                         saveProgressToDatabase(level - 1, timings);
 
                         // Audio shuffle
-                        GameAudioManager.getInstance(this).stopAmbientMusic();
-                        GameAudioManager.getInstance(this).startAmbientMusic();
+                        audioManager.stopAmbientMusic();
+                        audioManager.startAmbientMusic();
 
                         // Navigation
                         Intent intent = new Intent(DrawerActivity.this, MainActivity.class);
@@ -175,7 +186,6 @@ public class DrawerActivity extends AppCompatActivity {
                     newX = Math.max(0, Math.min(newX, parent.getWidth() - view.getWidth()));
 
                     // Constrain Y to keep the view above the blue line (top of bottom tray)
-                    // The image_container height is restricted by the tray's position in XML
                     newY = Math.max(0, Math.min(newY, parent.getHeight() - view.getHeight()));
 
                     view.animate()
