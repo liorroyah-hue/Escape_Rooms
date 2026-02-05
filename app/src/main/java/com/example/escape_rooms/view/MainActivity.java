@@ -59,7 +59,6 @@ public class MainActivity extends AppCompatActivity {
         int level = intent.getIntExtra(EXTRA_LEVEL, 1);
 
         if (getString(R.string.creation_option_ai).equals(creationType)) {
-            // FIX: Use the correct QuizData class from GameViewModel
             GameViewModel.QuizData quizData = (GameViewModel.QuizData) intent.getSerializableExtra(EXTRA_AI_GAME_DATA);
             viewModel.initAiGame(quizData, level, timings);
         } else {
@@ -95,31 +94,30 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // FIX: The navigation logic is now corrected to handle the FIND_ITEM event.
         viewModel.getNavigationEvent().observe(this, event -> {
             if (event.target == GameViewModel.NavigationTarget.FIND_ITEM) {
                 audioManager.playSuccessSound();
-                showCustomToast(getString(R.string.msg_room_cleared, getIntent().getIntExtra(EXTRA_LEVEL, 1)), true);
-                
                 Intent intent = new Intent(this, FindTheItemActivity.class);
-                
-                // Pass all the necessary data for the *next* level to the FindTheItemActivity
                 intent.putExtra(EXTRA_LEVEL, event.nextLevel);
                 intent.putExtra(EXTRA_TIMINGS, event.timings);
                 intent.putExtra(EXTRA_CREATION_TYPE, getIntent().getStringExtra(EXTRA_CREATION_TYPE));
                 if (event.aiData != null) {
                     intent.putExtra(EXTRA_AI_GAME_DATA, (Serializable) event.aiData);
                 }
-                
                 startActivity(intent);
                 finish(); 
+            } else if (event.target == GameViewModel.NavigationTarget.RESULTS) {
+                audioManager.playSuccessSound();
+                Intent intent = new Intent(this, PlayerResultsActivity.class);
+                intent.putExtra(EXTRA_TIMINGS, event.timings);
+                startActivity(intent);
+                finish();
             }
         });
     }
 
     private void showCustomToast(String message, boolean isSuccess) {
         LayoutInflater inflater = getLayoutInflater();
-        // Fix: Inflate with null root to prevent crash
         View layout = inflater.inflate(R.layout.layout_custom_toast, null);
 
         TextView text = layout.findViewById(R.id.toast_text);

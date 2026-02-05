@@ -30,6 +30,8 @@ public class GameViewModel extends AndroidViewModel {
     private long startTime;
     private HashMap<Integer, Long> levelTimings = new HashMap<>();
     private QuizData fullAiQuizData;
+    // The constant that defines the number of levels.
+    private static final int MAX_LEVELS = 10;
 
     public GameViewModel(@NonNull Application application, @NonNull QuestionRepository questionRepository) {
         super(application);
@@ -112,15 +114,20 @@ public class GameViewModel extends AndroidViewModel {
         if (allCorrect) {
             long duration = System.currentTimeMillis() - startTime;
             levelTimings.put(currentLevel, duration);
-            int nextLevel = currentLevel + 1;
-            // Navigate to FindTheItem, but include data for the *next* level.
-            navigationEvent.setValue(new NavigationEvent(NavigationTarget.FIND_ITEM, nextLevel, levelTimings, fullAiQuizData));
+            
+            if (currentLevel < MAX_LEVELS) {
+                int nextLevel = currentLevel + 1;
+                navigationEvent.setValue(new NavigationEvent(NavigationTarget.FIND_ITEM, nextLevel, levelTimings, fullAiQuizData));
+            } else {
+                // Game is won, navigate to results.
+                navigationEvent.setValue(new NavigationEvent(NavigationTarget.RESULTS, 0, levelTimings, null));
+            }
         } else {
             toastMessage.setValue("msg_incorrect");
         }
     }
 
-    public enum NavigationTarget { FIND_ITEM }
+    public enum NavigationTarget { FIND_ITEM, RESULTS }
 
     public static class QuizData implements Serializable {
         @SerializedName("questions") private List<String> questions;

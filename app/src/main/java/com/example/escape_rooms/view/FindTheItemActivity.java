@@ -54,7 +54,7 @@ public class FindTheItemActivity extends AppCompatActivity {
             GameAudioManager.getInstance(this).playSuccessSound();
 
             // Navigate to the Corridor, passing the data for the next level
-            Intent corridorIntent = new Intent(FindTheItemActivity.this, CorridorActivity.class);
+            Intent corridorIntent = new Intent(FindTheItemActivity.this, DrawerActivity.class);
             corridorIntent.putExtra(MainActivity.EXTRA_LEVEL, nextLevel);
             corridorIntent.putExtra(MainActivity.EXTRA_CREATION_TYPE, creationType);
             if (aiData != null) {
