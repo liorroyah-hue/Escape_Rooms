@@ -16,6 +16,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.escape_rooms.R;
+import com.example.escape_rooms.model.QuizData;
 import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 
 public class GameSetupActivity extends AppCompatActivity {
@@ -23,7 +24,6 @@ public class GameSetupActivity extends AppCompatActivity {
     private String selectedCategory, selectedCreationType;
     private Button startGameButton;
     private ChoosingGameViewModel viewModel;
-    private ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +42,6 @@ public class GameSetupActivity extends AppCompatActivity {
         startGameButton = findViewById(R.id.startGameButton);
         radioGroupGameSubject = findViewById(R.id.radio_group_game_subject);
         radioGroupCreationType = findViewById(R.id.radio_group_creation_type);
-        // Note: Using the progress frame from the shared layout if available
         View progressFrame = findViewById(R.id.progress_frame);
 
         radioGroupCreationType.check(R.id.radio_existing_game);
@@ -98,7 +97,7 @@ public class GameSetupActivity extends AppCompatActivity {
         });
     }
 
-    private void navigateToGame(ChoosingGameViewModel.QuizData quizData) {
+    private void navigateToGame(QuizData quizData) {
         Intent intent = new Intent(this, CorridorActivity.class);
         intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, selectedCreationType);
         intent.putExtra(MainActivity.EXTRA_LEVEL, 1);

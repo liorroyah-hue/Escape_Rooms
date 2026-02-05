@@ -15,9 +15,9 @@ import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.escape_rooms.R;
+import com.example.escape_rooms.model.QuizData;
 import com.example.escape_rooms.repository.GameRepository;
 import com.example.escape_rooms.repository.services.GameAudioManager;
-import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,7 +41,7 @@ public class DrawerActivity extends AppCompatActivity {
         // Get the data passed from ChoosingGameVarient or MainActivity
         Intent incomingIntent = getIntent();
         String creationType = incomingIntent.getStringExtra(MainActivity.EXTRA_CREATION_TYPE);
-        ChoosingGameViewModel.QuizData aiData = (ChoosingGameViewModel.QuizData) incomingIntent.getSerializableExtra(MainActivity.EXTRA_AI_GAME_DATA);
+        QuizData aiData = (QuizData) incomingIntent.getSerializableExtra(MainActivity.EXTRA_AI_GAME_DATA);
         int level = incomingIntent.getIntExtra(MainActivity.EXTRA_LEVEL, 1);
         HashMap<Integer, Long> timings = (HashMap<Integer, Long>) incomingIntent.getSerializableExtra(MainActivity.EXTRA_TIMINGS);
 

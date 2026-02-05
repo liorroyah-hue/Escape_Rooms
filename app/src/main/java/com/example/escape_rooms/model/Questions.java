@@ -1,7 +1,5 @@
 package com.example.escape_rooms.model;
 
-import com.example.escape_rooms.viewmodel.GameViewModel;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,9 +26,9 @@ public class Questions {
     }
 
     /**
-     * Correct constructor for AI-generated questions from GameViewModel.
+     * Correct constructor for AI-generated questions from QuizData model.
      */
-    public Questions(GameViewModel.QuizData quizData) {
+    public Questions(QuizData quizData) {
         // Defensive coding: check for nulls and size mismatches
         if (quizData != null &&
             quizData.getQuestions() != null &&

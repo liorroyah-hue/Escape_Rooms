@@ -4,12 +4,10 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.example.escape_rooms.model.QuizData;
 import com.example.escape_rooms.repository.services.GeminiService;
 import com.google.gson.Gson;
-import com.google.gson.annotations.SerializedName;
 
-import java.io.Serializable;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -45,7 +43,7 @@ public class ChoosingGameViewModel extends ViewModel {
                 Gson gson = new Gson();
                 QuizData quizData = gson.fromJson(cleanedJson, QuizData.class);
                 
-                if (quizData != null && quizData.questions != null && quizData.questions.size() >= 20) {
+                if (quizData != null && quizData.getQuestions() != null && quizData.getQuestions().size() >= 20) {
                     navigateToGame.postValue(quizData);
                 } else {
                     errorMessage.postValue("ה-AI לא הצליח לייצר מספיק שאלות. נסו שוב.");
@@ -57,14 +55,5 @@ public class ChoosingGameViewModel extends ViewModel {
                 isLoading.postValue(false);
             }
         });
-    }
-
-    public static class QuizData implements Serializable {
-        @SerializedName("questions")
-        public List<String> questions;
-        @SerializedName("answers")
-        public List<List<String>> answers;
-        @SerializedName("correctAnswers")
-        public List<String> correctAnswers;
     }
 }

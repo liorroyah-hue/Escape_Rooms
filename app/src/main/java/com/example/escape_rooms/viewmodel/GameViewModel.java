@@ -11,10 +11,9 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.escape_rooms.model.Question;
 import com.example.escape_rooms.model.Questions;
+import com.example.escape_rooms.model.QuizData;
 import com.example.escape_rooms.repository.QuestionRepository;
-import com.google.gson.annotations.SerializedName;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,7 +29,6 @@ public class GameViewModel extends AndroidViewModel {
     private long startTime;
     private HashMap<Integer, Long> levelTimings = new HashMap<>();
     private QuizData fullAiQuizData;
-    // The constant that defines the number of levels.
     private static final int MAX_LEVELS = 10;
 
     public GameViewModel(@NonNull Application application, @NonNull QuestionRepository questionRepository) {
@@ -117,9 +115,9 @@ public class GameViewModel extends AndroidViewModel {
             
             if (currentLevel < MAX_LEVELS) {
                 int nextLevel = currentLevel + 1;
+                // Move to FindTheItem instead of going directly to Drawer
                 navigationEvent.setValue(new NavigationEvent(NavigationTarget.FIND_ITEM, nextLevel, levelTimings, fullAiQuizData));
             } else {
-                // Game is won, navigate to results.
                 navigationEvent.setValue(new NavigationEvent(NavigationTarget.RESULTS, 0, levelTimings, null));
             }
         } else {
@@ -128,18 +126,6 @@ public class GameViewModel extends AndroidViewModel {
     }
 
     public enum NavigationTarget { FIND_ITEM, RESULTS }
-
-    public static class QuizData implements Serializable {
-        @SerializedName("questions") private List<String> questions;
-        @SerializedName("answers") private List<List<String>> answers;
-        @SerializedName("correctAnswers") private List<String> correctAnswers;
-        public List<String> getQuestions() { return questions; }
-        public List<List<String>> getAnswers() { return answers; }
-        public List<String> getCorrectAnswers() { return correctAnswers; }
-        public void setQuestions(List<String> questions) { this.questions = questions; }
-        public void setAnswers(List<List<String>> answers) { this.answers = answers; }
-        public void setCorrectAnswers(List<String> correctAnswers) { this.correctAnswers = correctAnswers; }
-    }
 
     public static class NavigationEvent {
         public final NavigationTarget target;
@@ -167,10 +153,7 @@ public class GameViewModel extends AndroidViewModel {
         @NonNull
         @Override
         public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-            if (modelClass.isAssignableFrom(GameViewModel.class)) {
-                return (T) new GameViewModel(application, questionRepository);
-            }
-            throw new IllegalArgumentException("Unknown ViewModel class");
+            return (T) new GameViewModel(application, questionRepository);
         }
     }
 }
