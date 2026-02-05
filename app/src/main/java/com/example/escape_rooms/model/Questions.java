@@ -1,6 +1,6 @@
 package com.example.escape_rooms.model;
 
-import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
+import com.example.escape_rooms.viewmodel.GameViewModel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,7 +12,7 @@ public class Questions {
     private final HashMap<String, String> correctAnswers = new HashMap<>();
 
     /**
-     * Constructor for Supabase questions.
+     * Constructor for Supabase (database) questions.
      */
     public Questions(List<Question> questions) {
         if (questions != null && !questions.isEmpty()) {
@@ -28,28 +28,32 @@ public class Questions {
     }
 
     /**
-     * Constructor for AI-generated questions.
-     * Uses the QuizData type from ChoosingGameViewModel.
+     * Correct constructor for AI-generated questions from GameViewModel.
      */
-    public Questions(ChoosingGameViewModel.QuizData quizData) {
-        if (quizData != null && quizData.questions != null && !quizData.questions.isEmpty() &&
-            quizData.answers != null && quizData.correctAnswers != null &&
-            quizData.questions.size() == quizData.answers.size() &&
-            quizData.questions.size() == quizData.correctAnswers.size()) {
-            
-            for (int i = 0; i < quizData.questions.size(); i++) {
-                String question = quizData.questions.get(i);
-                String correctAnswer = quizData.correctAnswers.get(i);
-                List<String> answers = quizData.answers.get(i);
+    public Questions(GameViewModel.QuizData quizData) {
+        // Defensive coding: check for nulls and size mismatches
+        if (quizData != null &&
+            quizData.getQuestions() != null &&
+            quizData.getAnswers() != null &&
+            quizData.getCorrectAnswers() != null &&
+            !quizData.getQuestions().isEmpty() &&
+            quizData.getQuestions().size() == quizData.getAnswers().size() &&
+            quizData.getQuestions().size() == quizData.getCorrectAnswers().size()) {
 
-                if (question != null && correctAnswer != null && answers != null) {
+            for (int i = 0; i < quizData.getQuestions().size(); i++) {
+                String question = quizData.getQuestions().get(i);
+                List<String> answers = quizData.getAnswers().get(i);
+                String correctAnswer = quizData.getCorrectAnswers().get(i);
+
+                if (question != null && !question.isEmpty() && answers != null && correctAnswer != null) {
                     addQuestion(question, correctAnswer, new ArrayList<>(answers));
                 }
             }
         }
-        
+
+        // If, after all checks, no questions were added, add the default completion message.
         if (questionsList.isEmpty()) {
-            addQuestion("You have completed all the rooms!", "Win", new ArrayList<String>() {{ add("Win"); }});
+            addQuestion("Error processing AI questions!", "OK", new ArrayList<String>() {{ add("OK"); }});
         }
     }
 

@@ -12,8 +12,6 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.escape_rooms.model.Question;
 import com.example.escape_rooms.model.Questions;
 import com.example.escape_rooms.repository.QuestionRepository;
-import com.example.escape_rooms.repository.services.GeminiService;
-import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
@@ -21,13 +19,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class GameViewModel extends AndroidViewModel {
     private final QuestionRepository repository;
-    private final GeminiService geminiService = new GeminiService();
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final MutableLiveData<Questions> currentQuestions = new MutableLiveData<>();
     private final MutableLiveData<String> toastMessage = new MutableLiveData<>();
     private final MutableLiveData<NavigationEvent> navigationEvent = new MutableLiveData<>();
@@ -35,9 +29,7 @@ public class GameViewModel extends AndroidViewModel {
     private int currentLevel = 1;
     private long startTime;
     private HashMap<Integer, Long> levelTimings = new HashMap<>();
-    private static final int MAX_LEVELS = 2;
-    
-    private ChoosingGameViewModel.QuizData fullAiQuizData;
+    private QuizData fullAiQuizData;
 
     public GameViewModel(@NonNull Application application, @NonNull QuestionRepository questionRepository) {
         super(application);
@@ -56,7 +48,7 @@ public class GameViewModel extends AndroidViewModel {
         loadLevel();
     }
 
-    public void initAiGame(ChoosingGameViewModel.QuizData quizData, int level, HashMap<Integer, Long> timings) {
+    public void initAiGame(QuizData quizData, int level, HashMap<Integer, Long> timings) {
         this.fullAiQuizData = quizData;
         this.currentLevel = level;
         if (timings != null) {
@@ -70,11 +62,7 @@ public class GameViewModel extends AndroidViewModel {
         repository.getQuestionsForLevel(currentLevel, new QuestionRepository.QuestionsCallback() {
             @Override
             public void onSuccess(List<Question> questions) {
-                if (questions == null || questions.isEmpty()) {
-                    toastMessage.postValue("No questions found for level " + currentLevel);
-                } else {
-                    currentQuestions.postValue(new Questions(questions));
-                }
+                currentQuestions.postValue(new Questions(questions));
             }
 
             @Override
@@ -88,25 +76,19 @@ public class GameViewModel extends AndroidViewModel {
     private void loadAiLevel() {
         if (fullAiQuizData == null) return;
         startTime = System.currentTimeMillis();
-        
-        int startIndex = (currentLevel - 1) * 2;
-        if (startIndex + 1 < fullAiQuizData.questions.size()) {
-            
-            ChoosingGameViewModel.QuizData levelSubset = new ChoosingGameViewModel.QuizData();
-            levelSubset.questions = new ArrayList<>();
-            levelSubset.answers = new ArrayList<>();
-            levelSubset.correctAnswers = new ArrayList<>();
-            
-            levelSubset.questions.add(fullAiQuizData.questions.get(startIndex));
-            levelSubset.questions.add(fullAiQuizData.questions.get(startIndex + 1));
-            
-            levelSubset.answers.add(fullAiQuizData.answers.get(startIndex));
-            levelSubset.answers.add(fullAiQuizData.answers.get(startIndex + 1));
-            
-            levelSubset.correctAnswers.add(fullAiQuizData.correctAnswers.get(startIndex));
-            levelSubset.correctAnswers.add(fullAiQuizData.correctAnswers.get(startIndex + 1));
-            
+
+        int questionsPerLevel = 2;
+        int startIndex = (currentLevel - 1) * questionsPerLevel;
+        int endIndex = Math.min(startIndex + questionsPerLevel, fullAiQuizData.getQuestions().size());
+
+        if (startIndex < endIndex) {
+            QuizData levelSubset = new QuizData();
+            levelSubset.setQuestions(new ArrayList<>(fullAiQuizData.getQuestions().subList(startIndex, endIndex)));
+            levelSubset.setAnswers(new ArrayList<>(fullAiQuizData.getAnswers().subList(startIndex, endIndex)));
+            levelSubset.setCorrectAnswers(new ArrayList<>(fullAiQuizData.getCorrectAnswers().subList(startIndex, endIndex)));
             currentQuestions.postValue(new Questions(levelSubset));
+        } else {
+            toastMessage.postValue("No more AI questions for this level.");
         }
     }
 
@@ -130,26 +112,35 @@ public class GameViewModel extends AndroidViewModel {
         if (allCorrect) {
             long duration = System.currentTimeMillis() - startTime;
             levelTimings.put(currentLevel, duration);
-
-            if (currentLevel < MAX_LEVELS) {
-                navigationEvent.setValue(new NavigationEvent(NavigationTarget.NEXT_LEVEL, currentLevel + 1, levelTimings, fullAiQuizData));
-            } else {
-                navigationEvent.setValue(new NavigationEvent(NavigationTarget.RESULTS, 0, levelTimings, null));
-            }
+            int nextLevel = currentLevel + 1;
+            // Navigate to FindTheItem, but include data for the *next* level.
+            navigationEvent.setValue(new NavigationEvent(NavigationTarget.FIND_ITEM, nextLevel, levelTimings, fullAiQuizData));
         } else {
             toastMessage.setValue("msg_incorrect");
         }
     }
 
-    public enum NavigationTarget { NEXT_LEVEL, RESULTS }
+    public enum NavigationTarget { FIND_ITEM }
+
+    public static class QuizData implements Serializable {
+        @SerializedName("questions") private List<String> questions;
+        @SerializedName("answers") private List<List<String>> answers;
+        @SerializedName("correctAnswers") private List<String> correctAnswers;
+        public List<String> getQuestions() { return questions; }
+        public List<List<String>> getAnswers() { return answers; }
+        public List<String> getCorrectAnswers() { return correctAnswers; }
+        public void setQuestions(List<String> questions) { this.questions = questions; }
+        public void setAnswers(List<List<String>> answers) { this.answers = answers; }
+        public void setCorrectAnswers(List<String> correctAnswers) { this.correctAnswers = correctAnswers; }
+    }
 
     public static class NavigationEvent {
         public final NavigationTarget target;
         public final int nextLevel;
         public final HashMap<Integer, Long> timings;
-        public final ChoosingGameViewModel.QuizData aiData;
+        public final QuizData aiData;
 
-        public NavigationEvent(NavigationTarget target, int nextLevel, HashMap<Integer, Long> timings, ChoosingGameViewModel.QuizData aiData) {
+        public NavigationEvent(NavigationTarget target, int nextLevel, HashMap<Integer, Long> timings, QuizData aiData) {
             this.target = target;
             this.nextLevel = nextLevel;
             this.timings = timings;
@@ -169,7 +160,10 @@ public class GameViewModel extends AndroidViewModel {
         @NonNull
         @Override
         public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-            return (T) new GameViewModel(application, questionRepository);
+            if (modelClass.isAssignableFrom(GameViewModel.class)) {
+                return (T) new GameViewModel(application, questionRepository);
+            }
+            throw new IllegalArgumentException("Unknown ViewModel class");
         }
     }
 }
