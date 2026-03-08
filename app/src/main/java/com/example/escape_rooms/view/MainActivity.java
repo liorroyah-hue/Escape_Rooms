@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -16,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.escape_rooms.R;
+import com.example.escape_rooms.model.QuizData;
 import com.example.escape_rooms.repository.QuestionRepository;
 import com.example.escape_rooms.repository.services.GameAudioManager;
 import com.example.escape_rooms.view.adapters.QuestionsAdapter;
@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         int level = intent.getIntExtra(EXTRA_LEVEL, 1);
 
         if (getString(R.string.creation_option_ai).equals(creationType)) {
-            GameViewModel.QuizData quizData = (GameViewModel.QuizData) intent.getSerializableExtra(EXTRA_AI_GAME_DATA);
+            QuizData quizData = (QuizData) intent.getSerializableExtra(EXTRA_AI_GAME_DATA);
             viewModel.initAiGame(quizData, level, timings);
         } else {
             viewModel.initLevel(level, timings);
@@ -86,7 +86,15 @@ public class MainActivity extends AppCompatActivity {
 
         viewModel.getToastMessage().observe(this, message -> {
             if (message == null) return;
-            int resId = getResources().getIdentifier(message, "string", getPackageName());
+            audioManager.playErrorSound();
+            
+            int resId = 0;
+            if ("msg_answer_all".equals(message)) {
+                resId = R.string.msg_answer_all;
+            } else if ("msg_incorrect".equals(message)) {
+                resId = R.string.msg_incorrect;
+            }
+            
             if (resId != 0) {
                 showCustomToast(getString(resId), false);
             } else {
@@ -118,11 +126,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void showCustomToast(String message, boolean isSuccess) {
         LayoutInflater inflater = getLayoutInflater();
-        View layout = inflater.inflate(R.layout.layout_custom_toast, null);
+        // Modern practice: provide root for layout params but don't attach
+        View layout = inflater.inflate(R.layout.layout_custom_toast, null, false);
 
         TextView text = layout.findViewById(R.id.toast_text);
         ImageView icon = layout.findViewById(R.id.toast_icon);
-
+        
         if (text != null) text.setText(message);
         if (icon != null) {
             icon.setImageResource(isSuccess ? R.drawable.ic_lock_open : R.drawable.ic_lock_closed);
