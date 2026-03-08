@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
@@ -16,11 +15,10 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.escape_rooms.R;
-import com.example.escape_rooms.model.QuizData;
 import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 
 public class GameSetupActivity extends AppCompatActivity {
-    private RadioGroup radioGroupGameSubject, radioGroupCreationType;
+    private RadioGroup radioGroupGameSubject;
     private String selectedCategory, selectedCreationType;
     private Button startGameButton;
     private ChoosingGameViewModel viewModel;
@@ -41,11 +39,10 @@ public class GameSetupActivity extends AppCompatActivity {
 
         startGameButton = findViewById(R.id.startGameButton);
         radioGroupGameSubject = findViewById(R.id.radio_group_game_subject);
-        radioGroupCreationType = findViewById(R.id.radio_group_creation_type);
         View progressFrame = findViewById(R.id.progress_frame);
 
-        radioGroupCreationType.check(R.id.radio_existing_game);
-        selectedCreationType = getString(R.string.creation_option_existing);
+        // Only AI game is supported now
+        selectedCreationType = getString(R.string.creation_option_ai);
 
         observeViewModel(progressFrame);
 
@@ -57,26 +54,12 @@ public class GameSetupActivity extends AppCompatActivity {
             else if (checkedId == R.id.radio_science) selectedCategory = getString(R.string.category_science);
         });
 
-        radioGroupCreationType.setOnCheckedChangeListener((group, checkedId) -> {
-            if (checkedId == R.id.radio_existing_game) {
-                selectedCreationType = getString(R.string.creation_option_existing);
-                radioGroupGameSubject.setVisibility(View.GONE);
-            } else if (checkedId == R.id.radio_ai_game) {
-                selectedCreationType = getString(R.string.creation_option_ai);
-                radioGroupGameSubject.setVisibility(View.VISIBLE);
-            }
-        });
-
         startGameButton.setOnClickListener(v -> {
-            if (selectedCreationType.equals(getString(R.string.creation_option_ai))) {
-                if (selectedCategory == null) {
-                    Toast.makeText(this, R.string.select_category_prompt, Toast.LENGTH_SHORT).show();
-                    return; 
-                }
-                viewModel.generateAiGame(selectedCategory);
-            } else {
-                navigateToGame(null);
+            if (selectedCategory == null) {
+                Toast.makeText(this, R.string.select_category_prompt, Toast.LENGTH_SHORT).show();
+                return; 
             }
+            viewModel.generateAiGame(selectedCategory);
         });
     }
 
@@ -92,19 +75,13 @@ public class GameSetupActivity extends AppCompatActivity {
 
         viewModel.getNavigateToGame().observe(this, quizData -> {
             if (quizData != null) {
-                navigateToGame(quizData);
+                Intent intent = new Intent(this, CorridorActivity.class);
+                intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, selectedCreationType);
+                intent.putExtra(MainActivity.EXTRA_LEVEL, 1);
+                intent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, quizData);
+                startActivity(intent);
+                finish();
             }
         });
-    }
-
-    private void navigateToGame(QuizData quizData) {
-        Intent intent = new Intent(this, CorridorActivity.class);
-        intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, selectedCreationType);
-        intent.putExtra(MainActivity.EXTRA_LEVEL, 1);
-        if (quizData != null) {
-            intent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, quizData);
-        }
-        startActivity(intent);
-        finish();
     }
 }

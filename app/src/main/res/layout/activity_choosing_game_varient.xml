@@ -41,94 +41,52 @@
             android:padding="16dp">
 
             <RadioGroup
-                android:id="@+id/radio_group_creation_type"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent">
-
-                <RadioButton
-                    android:id="@+id/radio_existing_game"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/creation_option_existing"
-                    android:textColor="@color/text_primary"
-                    android:buttonTint="@color/room_primary"
-                    android:textSize="18sp" />
-
-                <RadioButton
-                    android:id="@+id/radio_ai_game"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/creation_option_ai"
-                    android:textColor="@color/text_primary"
-                    android:buttonTint="@color/room_primary"
-                    android:textSize="18sp" />
-            </RadioGroup>
-
-            <View
-                android:id="@+id/divider"
-                android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_marginTop="16dp"
-                android:background="@color/room_primary"
-                android:alpha="0.2"
-                app:layout_constraintTop_toBottomOf="@id/radio_group_creation_type"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
-
-            <RadioGroup
                 android:id="@+id/radio_group_game_subject"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:visibility="gone"
-                app:layout_constraintTop_toBottomOf="@id/divider"
-                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent">
+                app:layout_constraintStart_toStartOf="parent">
 
                 <RadioButton
                     android:id="@+id/radio_geography"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:buttonTint="@color/room_accent"
                     android:text="@string/category_geography"
-                    android:textColor="@color/text_primary"
-                    android:buttonTint="@color/room_accent" />
+                    android:textColor="@color/text_primary" />
 
                 <RadioButton
                     android:id="@+id/radio_history"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:buttonTint="@color/room_accent"
                     android:text="@string/category_history"
-                    android:textColor="@color/text_primary"
-                    android:buttonTint="@color/room_accent" />
+                    android:textColor="@color/text_primary" />
 
                 <RadioButton
                     android:id="@+id/radio_famous"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:buttonTint="@color/room_accent"
                     android:text="@string/category_famous"
-                    android:textColor="@color/text_primary"
-                    android:buttonTint="@color/room_accent" />
+                    android:textColor="@color/text_primary" />
 
                 <RadioButton
                     android:id="@+id/radio_sports"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:buttonTint="@color/room_accent"
                     android:text="@string/category_sports"
-                    android:textColor="@color/text_primary"
-                    android:buttonTint="@color/room_accent" />
+                    android:textColor="@color/text_primary" />
 
                 <RadioButton
                     android:id="@+id/radio_science"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:buttonTint="@color/room_accent"
                     android:text="@string/category_science"
-                    android:textColor="@color/text_primary"
-                    android:buttonTint="@color/room_accent" />
+                    android:textColor="@color/text_primary" />
             </RadioGroup>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>

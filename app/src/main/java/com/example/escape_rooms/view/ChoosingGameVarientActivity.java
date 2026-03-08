@@ -20,7 +20,7 @@ import com.example.escape_rooms.R;
 import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 
 public class ChoosingGameVarientActivity extends AppCompatActivity {
-    private RadioGroup radioGroupGameSubject, radioGroupCreationType;
+    private RadioGroup radioGroupGameSubject;
     private String selectedCategory, selectedCreationType;
     private Button startGameButton;
     private ChoosingGameViewModel viewModel;
@@ -46,13 +46,12 @@ public class ChoosingGameVarientActivity extends AppCompatActivity {
 
         startGameButton = findViewById(R.id.startGameButton);
         radioGroupGameSubject = findViewById(R.id.radio_group_game_subject);
-        radioGroupCreationType = findViewById(R.id.radio_group_creation_type);
         progressFrame = findViewById(R.id.progress_frame);
 
         initializeSegments();
 
-        radioGroupCreationType.check(R.id.radio_existing_game);
-        selectedCreationType = getString(R.string.creation_option_existing);
+        // Only AI game is supported now
+        selectedCreationType = getString(R.string.creation_option_ai);
 
         observeViewModel();
 
@@ -64,32 +63,12 @@ public class ChoosingGameVarientActivity extends AppCompatActivity {
             else if (checkedId == R.id.radio_science) selectedCategory = getString(R.string.category_science);
         });
 
-        radioGroupCreationType.setOnCheckedChangeListener((group, checkedId) -> {
-            if (checkedId == R.id.radio_existing_game) {
-                selectedCreationType = getString(R.string.creation_option_existing);
-                radioGroupGameSubject.setVisibility(View.GONE);
-            } else if (checkedId == R.id.radio_ai_game) {
-                selectedCreationType = getString(R.string.creation_option_ai);
-                radioGroupGameSubject.setVisibility(View.VISIBLE);
-            }
-        });
-
         startGameButton.setOnClickListener(v -> {
-            if (selectedCreationType == null) {
-                Toast.makeText(this, R.string.select_creation_type_prompt, Toast.LENGTH_SHORT).show();
+            if (selectedCategory == null) {
+                Toast.makeText(this, R.string.select_category_prompt, Toast.LENGTH_SHORT).show();
                 return;
             }
-
-            if (selectedCreationType.equals(getString(R.string.creation_option_ai))) {
-                if (selectedCategory == null) {
-                    Toast.makeText(this, R.string.select_category_prompt, Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                viewModel.generateAiGame(selectedCategory);
-            } else {
-                // Navigate immediately for existing games without showing progress bar
-                navigateToDrawer();
-            }
+            viewModel.generateAiGame(selectedCategory);
         });
     }
 
@@ -139,8 +118,6 @@ public class ChoosingGameVarientActivity extends AppCompatActivity {
 
     private void setControlsEnabled(boolean enabled) {
         startGameButton.setEnabled(enabled);
-        radioGroupCreationType.setEnabled(enabled);
-        for (int i = 0; i < radioGroupCreationType.getChildCount(); i++) radioGroupCreationType.getChildAt(i).setEnabled(enabled);
         radioGroupGameSubject.setEnabled(enabled);
         for (int i = 0; i < radioGroupGameSubject.getChildCount(); i++) radioGroupGameSubject.getChildAt(i).setEnabled(enabled);
     }
