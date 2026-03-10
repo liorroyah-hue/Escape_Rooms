@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/room_dark_bg"
     android:padding="24dp"
+    android:layoutDirection="rtl"
     tools:context=".view.LeaderboardActivity">
 
     <TextView
@@ -13,8 +14,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:letterSpacing="0.2"
-        android:text="TOP OPERATIVES"
+        android:letterSpacing="0.1"
+        android:text="שיאני המשימה"
         android:textColor="@color/room_primary"
         android:textSize="32sp"
         android:textStyle="bold"
@@ -59,7 +60,7 @@
         style="@style/Widget.EscapeRooms.Button"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:text="RETURN TO HQ"
+        android:text="חזור לתפריט"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

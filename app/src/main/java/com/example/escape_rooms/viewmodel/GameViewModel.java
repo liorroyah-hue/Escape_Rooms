@@ -29,7 +29,7 @@ public class GameViewModel extends AndroidViewModel {
     private long startTime;
     private HashMap<Integer, Long> levelTimings = new HashMap<>();
     private QuizData fullAiQuizData;
-    private static final int MAX_LEVELS = 10;
+    private static final int MAX_LEVELS = 5;
 
     public GameViewModel(@NonNull Application application, @NonNull QuestionRepository questionRepository) {
         super(application);

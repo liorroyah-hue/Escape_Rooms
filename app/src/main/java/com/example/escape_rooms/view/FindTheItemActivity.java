@@ -22,7 +22,7 @@ public class FindTheItemActivity extends AppCompatActivity {
     private int[] findItemInImages = {R.drawable.find_the_item1, R.drawable.find_the_item2, R.drawable.find_the_item3, R.drawable.find_the_item4, R.drawable.find_the_item5};
     String[] textForImageString = {"find the butterfly", "find the bunny", "find the bone", "find the giraffe", "find the leaf"};
     private int[] CordsX = {80, 252, 20, 16, 336};
-    private int[] CordsY = {632, 408, 476, 100, 264};
+    private int[] CordsY = {632, 480, 476, 100, 264};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
