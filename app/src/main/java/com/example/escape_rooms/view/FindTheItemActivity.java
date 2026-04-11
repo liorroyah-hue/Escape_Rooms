@@ -4,13 +4,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.escape_rooms.R;
 import com.example.escape_rooms.repository.services.GameAudioManager;
+import com.example.escape_rooms.viewmodel.GameViewModel;
 
 import java.io.Serializable;
 import java.util.Random;
@@ -29,69 +29,52 @@ public class FindTheItemActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fing_the_item);
 
-        // You can get the screen's DPI like this:
-        android.util.DisplayMetrics displayMetrics = new android.util.DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        int dpi = displayMetrics.densityDpi;
-        // Log it to see the value for your device/emulator
-        Log.d("FindTheItemActivity", "Device DPI: " + dpi);
-
         invisibleButton = findViewById(R.id.invisibleButton);
-        findItemImage =findViewById(R.id.findItemImage);
+        findItemImage = findViewById(R.id.findItemImage);
         textForImage = findViewById(R.id.textForImage);
 
-        // Get the data for the *next* level, passed from MainActivity
         Intent intent = getIntent();
         int nextLevel = intent.getIntExtra(MainActivity.EXTRA_LEVEL, 1);
         String creationType = intent.getStringExtra(MainActivity.EXTRA_CREATION_TYPE);
         Serializable aiData = intent.getSerializableExtra(MainActivity.EXTRA_AI_GAME_DATA);
         Serializable timings = intent.getSerializableExtra(MainActivity.EXTRA_TIMINGS);
 
-        // Set up the current level's puzzle
         Random random = new Random();
         int randomIndex = random.nextInt(textForImageString.length);
         textForImage.setText(textForImageString[randomIndex]);
         findItemImage.setImageResource(findItemInImages[randomIndex]);
 
-        // Call the corrected method to place the button
         MoveButtonToCorrectPlace(invisibleButton, randomIndex);
-
-        findItemImage.setOnClickListener(v -> {
-
-                });
 
         invisibleButton.setOnClickListener(v -> {
             GameAudioManager.getInstance(this).playSuccessSound();
 
-            // Navigate to the Corridor, passing the data for the next level
-            Intent corridorIntent = new Intent(FindTheItemActivity.this, DrawerActivity.class);
-            corridorIntent.putExtra(MainActivity.EXTRA_LEVEL, nextLevel);
-            corridorIntent.putExtra(MainActivity.EXTRA_CREATION_TYPE, creationType);
+            Intent nextIntent;
+            // Logic to determine if we move to the next room briefing or results
+            if (nextLevel > GameViewModel.MAX_LEVELS) {
+                // If we finished the last level (now 5), move to Results
+                nextIntent = new Intent(FindTheItemActivity.this, PlayerResultsActivity.class);
+            } else {
+                // Move to the next room briefing
+                nextIntent = new Intent(FindTheItemActivity.this, DrawerActivity.class);
+            }
+
+            nextIntent.putExtra(MainActivity.EXTRA_LEVEL, nextLevel);
+            nextIntent.putExtra(MainActivity.EXTRA_CREATION_TYPE, creationType);
             if (aiData != null) {
-                corridorIntent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, aiData);
+                nextIntent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, aiData);
             }
             if (timings != null) {
-                corridorIntent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
+                nextIntent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
             }
-            startActivity(corridorIntent);
+            startActivity(nextIntent);
             finish();
         });
     }
 
-    /**
-     * Correctly places the button using density-independent (dp) coordinates.
-     * This method converts DP values to pixels, so the button scales correctly
-     * on screens with different densities.
-     */
     public void MoveButtonToCorrectPlace(Button button, int index) {
-        double cordX_dp = CordsX[index];
-        double cordY_dp = CordsY[index];
-
         float density = getResources().getDisplayMetrics().density;
-        float cordX_px = (float) cordX_dp * density;
-        float cordY_px = (float) cordY_dp * density;
-
-        button.setTranslationX(cordX_px);
-        button.setTranslationY(cordY_px);
+        button.setTranslationX((float) CordsX[index] * density);
+        button.setTranslationY((float) CordsY[index] * density);
     }
 }

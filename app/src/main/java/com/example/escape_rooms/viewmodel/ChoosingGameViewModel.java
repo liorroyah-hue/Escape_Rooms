@@ -35,15 +35,15 @@ public class ChoosingGameViewModel extends ViewModel {
         isLoading.setValue(true);
         executor.execute(() -> {
             try {
-                // Generate all 20 questions (2 per level for 10 levels) at once
-                String jsonResponse = geminiService.generateQandA(subject, 20);
+                // Request 10 questions (2 per level for 5 levels)
+                String jsonResponse = geminiService.generateQandA(subject, 10);
                 
                 String cleanedJson = jsonResponse.replace("```json", "").replace("```", "").trim();
                 
                 Gson gson = new Gson();
                 QuizData quizData = gson.fromJson(cleanedJson, QuizData.class);
                 
-                if (quizData != null && quizData.getQuestions() != null && quizData.getQuestions().size() >= 20) {
+                if (quizData != null && quizData.getQuestions() != null && quizData.getQuestions().size() >= 10) {
                     navigateToGame.postValue(quizData);
                 } else {
                     errorMessage.postValue("ה-AI לא הצליח לייצר מספיק שאלות. נסו שוב.");
