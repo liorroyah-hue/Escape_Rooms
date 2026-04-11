@@ -6,23 +6,22 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.example.escape_rooms.R;
+import com.example.escape_rooms.model.FindItemTask;
+import com.example.escape_rooms.repository.QuestionRepository;
 import com.example.escape_rooms.repository.services.GameAudioManager;
 import com.example.escape_rooms.viewmodel.GameViewModel;
 
 import java.io.Serializable;
-import java.util.Random;
 
 public class FindTheItemActivity extends AppCompatActivity {
-    Button invisibleButton;
-    ImageView findItemImage;
-    TextView textForImage;
-    private int[] findItemInImages = {R.drawable.find_the_item1, R.drawable.find_the_item2, R.drawable.find_the_item3, R.drawable.find_the_item4, R.drawable.find_the_item5};
-    String[] textForImageString = {"find the butterfly", "find the bunny", "find the bone", "find the giraffe", "find the leaf"};
-    private int[] CordsX = {80, 252, 20, 16, 336};
-    private int[] CordsY = {632, 480, 476, 100, 264};
+    private Button invisibleButton;
+    private ImageView findItemImage;
+    private TextView textForImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,42 +38,67 @@ public class FindTheItemActivity extends AppCompatActivity {
         Serializable aiData = intent.getSerializableExtra(MainActivity.EXTRA_AI_GAME_DATA);
         Serializable timings = intent.getSerializableExtra(MainActivity.EXTRA_TIMINGS);
 
-        Random random = new Random();
-        int randomIndex = random.nextInt(textForImageString.length);
-        textForImage.setText(textForImageString[randomIndex]);
-        findItemImage.setImageResource(findItemInImages[randomIndex]);
+        // Fetch task from Supabase
+        QuestionRepository.getInstance().getRandomFindItemTask(new QuestionRepository.FindItemCallback() {
+            @Override
+            public void onSuccess(FindItemTask task) {
+                runOnUiThread(() -> {
+                    textForImage.setText(task.getPromptText());
+                    
+                    // Use Glide to load the image from the URL in the database
+                    Glide.with(FindTheItemActivity.this)
+                            .load(task.getImageName()) // image_name field must contain the full public URL
+                            .placeholder(R.drawable.find_the_item2) // Default while loading
+                            .error(android.R.drawable.stat_notify_error) // Show if URL is broken
+                            .centerCrop()
+                            .into(findItemImage);
+                    
+                    // Place button using coordinates from DB
+                    MoveButtonToCorrectPlace(invisibleButton, task.getXCord(), task.getYCord());
+                });
+            }
 
-        MoveButtonToCorrectPlace(invisibleButton, randomIndex);
+            @Override
+            public void onError(Exception e) {
+                runOnUiThread(() -> {
+                    Log.e("FindTheItem", "Failed to fetch task", e);
+                    Toast.makeText(FindTheItemActivity.this, "Error loading task from cloud", Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
 
         invisibleButton.setOnClickListener(v -> {
             GameAudioManager.getInstance(this).playSuccessSound();
 
-            Intent nextIntent;
-            // Logic to determine if we move to the next room briefing or results
             if (nextLevel > GameViewModel.MAX_LEVELS) {
-                // If we finished the last level (now 5), move to Results
-                nextIntent = new Intent(FindTheItemActivity.this, PlayerResultsActivity.class);
+                Intent resultsIntent = new Intent(FindTheItemActivity.this, PlayerResultsActivity.class);
+                resultsIntent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
+                startActivity(resultsIntent);
             } else {
-                // Move to the next room briefing
-                nextIntent = new Intent(FindTheItemActivity.this, DrawerActivity.class);
+                Intent corridorIntent = new Intent(FindTheItemActivity.this, DrawerActivity.class);
+                corridorIntent.putExtra(MainActivity.EXTRA_LEVEL, nextLevel);
+                corridorIntent.putExtra(MainActivity.EXTRA_CREATION_TYPE, creationType);
+                if (aiData != null) {
+                    corridorIntent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, aiData);
+                }
+                if (timings != null) {
+                    corridorIntent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
+                }
+                startActivity(corridorIntent);
             }
-
-            nextIntent.putExtra(MainActivity.EXTRA_LEVEL, nextLevel);
-            nextIntent.putExtra(MainActivity.EXTRA_CREATION_TYPE, creationType);
-            if (aiData != null) {
-                nextIntent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, aiData);
-            }
-            if (timings != null) {
-                nextIntent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
-            }
-            startActivity(nextIntent);
             finish();
         });
     }
 
-    public void MoveButtonToCorrectPlace(Button button, int index) {
+    /**
+     * Places the button using coordinates from the database.
+     */
+    public void MoveButtonToCorrectPlace(Button button, int x_dp, int y_dp) {
         float density = getResources().getDisplayMetrics().density;
-        button.setTranslationX((float) CordsX[index] * density);
-        button.setTranslationY((float) CordsY[index] * density);
+        float cordX_px = (float) x_dp * density;
+        float cordY_px = (float) y_dp * density;
+
+        button.setTranslationX(cordX_px);
+        button.setTranslationY(cordY_px);
     }
 }

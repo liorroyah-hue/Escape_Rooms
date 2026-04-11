@@ -2,6 +2,7 @@ package com.example.escape_rooms.repository;
 
 import androidx.annotation.NonNull;
 import com.example.escape_rooms.model.Question;
+import com.example.escape_rooms.model.FindItemTask;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
@@ -61,8 +62,51 @@ public class QuestionRepository {
         });
     }
 
+    public void getRandomFindItemTask(FindItemCallback callback) {
+        // Fetch tasks from Supabase
+        String url = UserRepository.SUPABASE_URL + "/rest/v1/find_item_tasks?select=*&limit=10";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("apikey", UserRepository.SUPABASE_KEY)
+                .addHeader("Accept", "application/json")
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                callback.onError(e);
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                try (Response resp = response) {
+                    if (resp.isSuccessful()) {
+                        String json = resp.body().string();
+                        Type listType = new TypeToken<List<FindItemTask>>() {}.getType();
+                        List<FindItemTask> tasks = gson.fromJson(json, listType);
+                        if (tasks != null && !tasks.isEmpty()) {
+                            // Pick one randomly from the fetched list
+                            int randomIndex = (int) (Math.random() * tasks.size());
+                            callback.onSuccess(tasks.get(randomIndex));
+                        } else {
+                            callback.onError(new Exception("No FindItem tasks found in database"));
+                        }
+                    } else {
+                        callback.onError(new Exception("Fetch Error: " + resp.code()));
+                    }
+                }
+            }
+        });
+    }
+
     public interface QuestionsCallback {
         void onSuccess(List<Question> questions);
+        void onError(Exception e);
+    }
+
+    public interface FindItemCallback {
+        void onSuccess(FindItemTask task);
         void onError(Exception e);
     }
 }
