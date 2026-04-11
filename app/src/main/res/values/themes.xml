@@ -9,7 +9,7 @@
         <item name="colorSurface">@color/room_surface</item>
         <item name="android:textColorPrimary">@color/room_text</item>
         <item name="android:textColorSecondary">@color/room_text_dim</item>
-        
+
         <!-- Customize navigation bar and status bar -->
         <item name="android:statusBarColor">@color/room_dark_bg</item>
         <item name="android:navigationBarColor">@color/room_dark_bg</item>
@@ -23,5 +23,10 @@
         <item name="android:textAllCaps">true</item>
         <item name="android:textStyle">bold</item>
         <item name="android:letterSpacing">0.1</item>
+    </style>
+    <!-- Base application theme. -->
+    <style name="Base.Theme.Escape_Rooms" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 </resources>

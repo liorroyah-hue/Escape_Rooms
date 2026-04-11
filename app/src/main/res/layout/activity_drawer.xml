@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/room_dark_bg"
+    android:background="@drawable/emptyroom"
     tools:context=".view.DrawerActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout

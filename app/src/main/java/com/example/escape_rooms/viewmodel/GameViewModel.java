@@ -14,6 +14,7 @@ import com.example.escape_rooms.model.Questions;
 import com.example.escape_rooms.model.QuizData;
 import com.example.escape_rooms.repository.QuestionRepository;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +30,9 @@ public class GameViewModel extends AndroidViewModel {
     private long startTime;
     private HashMap<Integer, Long> levelTimings = new HashMap<>();
     private QuizData fullAiQuizData;
-    private static final int MAX_LEVELS = 5;
+    
+    // Total number of rooms/levels
+    public static final int MAX_LEVELS = 5;
 
     public GameViewModel(@NonNull Application application, @NonNull QuestionRepository questionRepository) {
         super(application);
@@ -62,7 +65,11 @@ public class GameViewModel extends AndroidViewModel {
         repository.getQuestionsForLevel(currentLevel, new QuestionRepository.QuestionsCallback() {
             @Override
             public void onSuccess(List<Question> questions) {
-                currentQuestions.postValue(new Questions(questions));
+                if (questions == null || questions.isEmpty()) {
+                    toastMessage.postValue("No questions found for level " + currentLevel);
+                } else {
+                    currentQuestions.postValue(new Questions(questions));
+                }
             }
 
             @Override
@@ -74,7 +81,7 @@ public class GameViewModel extends AndroidViewModel {
     }
 
     private void loadAiLevel() {
-        if (fullAiQuizData == null) return;
+        if (fullAiQuizData == null || fullAiQuizData.getQuestions() == null) return;
         startTime = System.currentTimeMillis();
 
         int questionsPerLevel = 2;
@@ -113,13 +120,9 @@ public class GameViewModel extends AndroidViewModel {
             long duration = System.currentTimeMillis() - startTime;
             levelTimings.put(currentLevel, duration);
             
-            if (currentLevel < MAX_LEVELS) {
-                int nextLevel = currentLevel + 1;
-                // Move to FindTheItem instead of going directly to Drawer
-                navigationEvent.setValue(new NavigationEvent(NavigationTarget.FIND_ITEM, nextLevel, levelTimings, fullAiQuizData));
-            } else {
-                navigationEvent.setValue(new NavigationEvent(NavigationTarget.RESULTS, 0, levelTimings, null));
-            }
+            int nextLevel = currentLevel + 1;
+            // Always move to FindTheItem screen after solving questions, even for the last level.
+            navigationEvent.setValue(new NavigationEvent(NavigationTarget.FIND_ITEM, nextLevel, levelTimings, fullAiQuizData));
         } else {
             toastMessage.setValue("msg_incorrect");
         }
@@ -153,7 +156,10 @@ public class GameViewModel extends AndroidViewModel {
         @NonNull
         @Override
         public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-            return (T) new GameViewModel(application, questionRepository);
+            if (modelClass.isAssignableFrom(GameViewModel.class)) {
+                return (T) new GameViewModel(application, questionRepository);
+            }
+            throw new IllegalArgumentException("Unknown ViewModel class");
         }
     }
 }

@@ -13,53 +13,50 @@
         android:roundIcon="@drawable/escape_room__glowing_keyhole"
         android:supportsRtl="true"
         android:theme="@style/Theme.Escape_Rooms">
-        
+        <activity
+            android:name=".view.Room_Example"
+            android:exported="false"
+            android:theme="@style/Theme.Escape_Rooms" />
+        <activity
+            android:name=".view.Room_example"
+            android:exported="false"
+            android:theme="@style/Theme.Escape_Rooms" />
         <activity
             android:name=".view.DrawerActivity"
             android:exported="false" />
-            
         <activity
             android:name=".view.ChoosingGameVarientActivity"
             android:exported="false" />
-            
         <activity
             android:name=".view.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
         <activity
             android:name=".view.SignUpActivity"
             android:exported="false" />
-            
         <activity
             android:name=".view.MainActivity"
             android:exported="false" />
-            
         <activity
             android:name=".view.CorridorActivity"
             android:exported="false" />
-            
         <activity
             android:name=".view.PlayerResultsActivity"
             android:exported="false" />
-
         <activity
             android:name=".view.RatingActivity"
-            android:exported="false" />
-
-        <!-- Added the missing Leaderboard Activity registration -->
+            android:exported="false" /> <!-- Added the missing Leaderboard Activity registration -->
         <activity
             android:name=".view.LeaderboardActivity"
             android:exported="false" />
-
         <activity
             android:name=".view.FindTheItemActivity"
             android:exported="false" />
-            
     </application>
 
 </manifest>
