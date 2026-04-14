@@ -37,7 +37,7 @@ public class LeaderboardActivity extends AppCompatActivity {
         fetchLeaderboardData();
 
         btnExit.setOnClickListener(v -> {
-            Intent intent = new Intent(LeaderboardActivity.this, ChoosingGameVarientActivity.class);
+            Intent intent = new Intent(LeaderboardActivity.this, ChoosingGameVariantActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
             finish();

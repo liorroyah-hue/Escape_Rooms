@@ -25,7 +25,7 @@
             android:name=".view.DrawerActivity"
             android:exported="false" />
         <activity
-            android:name=".view.ChoosingGameVarientActivity"
+            android:name=".view.ChoosingGameVariantActivity"
             android:exported="false" />
         <activity
             android:name=".view.LoginActivity"

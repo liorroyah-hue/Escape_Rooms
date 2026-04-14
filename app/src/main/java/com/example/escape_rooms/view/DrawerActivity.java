@@ -39,7 +39,7 @@ public class DrawerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_drawer);
 
-        // Get the data passed from ChoosingGameVarient or MainActivity
+        // Get the data passed from ChoosingGameVariant or MainActivity
         Intent incomingIntent = getIntent();
         String creationType = incomingIntent.getStringExtra(MainActivity.EXTRA_CREATION_TYPE);
         
