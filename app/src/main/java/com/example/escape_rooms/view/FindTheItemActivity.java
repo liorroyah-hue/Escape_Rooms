@@ -1,15 +1,23 @@
 package com.example.escape_rooms.view;
 
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.example.escape_rooms.R;
 import com.example.escape_rooms.model.FindItemTask;
 import com.example.escape_rooms.repository.QuestionRepository;
@@ -22,15 +30,20 @@ public class FindTheItemActivity extends AppCompatActivity {
     private Button invisibleButton;
     private ImageView findItemImage;
     private TextView textForImage;
+    private ProgressBar loadingProgress;
+
+    private static final String PROJECT_ID = "wjwbshqrvbgdtqanztqz";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Ensure this matches your XML filename exactly
         setContentView(R.layout.activity_fing_the_item);
 
         invisibleButton = findViewById(R.id.invisibleButton);
         findItemImage = findViewById(R.id.findItemImage);
         textForImage = findViewById(R.id.textForImage);
+        loadingProgress = findViewById(R.id.loadingProgress);
 
         Intent intent = getIntent();
         int nextLevel = intent.getIntExtra(MainActivity.EXTRA_LEVEL, 1);
@@ -38,38 +51,63 @@ public class FindTheItemActivity extends AppCompatActivity {
         Serializable aiData = intent.getSerializableExtra(MainActivity.EXTRA_AI_GAME_DATA);
         Serializable timings = intent.getSerializableExtra(MainActivity.EXTRA_TIMINGS);
 
-        // Fetch task from Supabase
+        if (loadingProgress != null) loadingProgress.setVisibility(View.VISIBLE);
+
         QuestionRepository.getInstance().getRandomFindItemTask(new QuestionRepository.FindItemCallback() {
             @Override
             public void onSuccess(FindItemTask task) {
+                if (isFinishing() || isDestroyed()) return;
+
+                String imageUrl = task.getImageName();
+                if (imageUrl.contains("[YOUR_PROJECT_ID]")) {
+                    imageUrl = imageUrl.replace("[YOUR_PROJECT_ID]", PROJECT_ID);
+                } else if (!imageUrl.startsWith("http")) {
+                    imageUrl = "https://" + PROJECT_ID + ".supabase.co/storage/v1/object/public/find-item-images/" + imageUrl;
+                }
+
+                Log.d("FindTheItem", "Attempting to load URL: " + imageUrl);
+
+                final String finalUrl = imageUrl;
                 runOnUiThread(() -> {
                     textForImage.setText(task.getPromptText());
                     
-                    // Use Glide to load the image from the URL in the database
                     Glide.with(FindTheItemActivity.this)
-                            .load(task.getImageName()) // image_name field must contain the full public URL
-                            .placeholder(R.drawable.find_the_item2) // Default while loading
-                            .error(android.R.drawable.stat_notify_error) // Show if URL is broken
+                            .load(finalUrl)
+                            .placeholder(R.drawable.find_the_item2)
+                            .error(android.R.drawable.stat_notify_error)
+                            .listener(new RequestListener<Drawable>() {
+                                @Override
+                                public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                    Log.e("FindTheItem", "Glide Load Failed", e);
+                                    if (loadingProgress != null) loadingProgress.setVisibility(View.GONE);
+                                    return false;
+                                }
+
+                                @Override
+                                public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                    if (loadingProgress != null) loadingProgress.setVisibility(View.GONE);
+                                    return false;
+                                }
+                            })
                             .centerCrop()
                             .into(findItemImage);
                     
-                    // Place button using coordinates from DB
                     MoveButtonToCorrectPlace(invisibleButton, task.getXCord(), task.getYCord());
                 });
             }
 
             @Override
             public void onError(Exception e) {
+                Log.e("FindTheItem", "Repository Error", e);
                 runOnUiThread(() -> {
-                    Log.e("FindTheItem", "Failed to fetch task", e);
-                    Toast.makeText(FindTheItemActivity.this, "Error loading task from cloud", Toast.LENGTH_SHORT).show();
+                    if (loadingProgress != null) loadingProgress.setVisibility(View.GONE);
+                    Toast.makeText(FindTheItemActivity.this, "Database Connection Error", Toast.LENGTH_SHORT).show();
                 });
             }
         });
 
         invisibleButton.setOnClickListener(v -> {
             GameAudioManager.getInstance(this).playSuccessSound();
-
             if (nextLevel > GameViewModel.MAX_LEVELS) {
                 Intent resultsIntent = new Intent(FindTheItemActivity.this, PlayerResultsActivity.class);
                 resultsIntent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
@@ -78,27 +116,17 @@ public class FindTheItemActivity extends AppCompatActivity {
                 Intent corridorIntent = new Intent(FindTheItemActivity.this, DrawerActivity.class);
                 corridorIntent.putExtra(MainActivity.EXTRA_LEVEL, nextLevel);
                 corridorIntent.putExtra(MainActivity.EXTRA_CREATION_TYPE, creationType);
-                if (aiData != null) {
-                    corridorIntent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, aiData);
-                }
-                if (timings != null) {
-                    corridorIntent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
-                }
+                if (aiData != null) corridorIntent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, aiData);
+                if (timings != null) corridorIntent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
                 startActivity(corridorIntent);
             }
             finish();
         });
     }
 
-    /**
-     * Places the button using coordinates from the database.
-     */
     public void MoveButtonToCorrectPlace(Button button, int x_dp, int y_dp) {
         float density = getResources().getDisplayMetrics().density;
-        float cordX_px = (float) x_dp * density;
-        float cordY_px = (float) y_dp * density;
-
-        button.setTranslationX(cordX_px);
-        button.setTranslationY(cordY_px);
+        button.setTranslationX((float) x_dp * density);
+        button.setTranslationY((float) y_dp * density);
     }
 }

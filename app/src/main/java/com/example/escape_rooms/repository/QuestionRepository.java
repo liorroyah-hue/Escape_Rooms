@@ -8,6 +8,7 @@ import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Random;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.OkHttpClient;
@@ -17,6 +18,7 @@ import okhttp3.Response;
 public class QuestionRepository {
     private final OkHttpClient client = new OkHttpClient();
     private final Gson gson = new Gson();
+    private final Random random = new Random();
 
     private static QuestionRepository instance;
 
@@ -25,10 +27,6 @@ public class QuestionRepository {
             instance = new QuestionRepository();
         }
         return instance;
-    }
-
-    public static synchronized void setTestInstance(QuestionRepository testInstance) {
-        instance = testInstance;
     }
 
     public void getQuestionsForLevel(int level, QuestionsCallback callback) {
@@ -63,7 +61,7 @@ public class QuestionRepository {
     }
 
     public void getRandomFindItemTask(FindItemCallback callback) {
-        // Fetch tasks from Supabase
+        // Ensure the table name 'find_item_tasks' exists in your Supabase DB
         String url = UserRepository.SUPABASE_URL + "/rest/v1/find_item_tasks?select=*&limit=10";
 
         Request request = new Request.Builder()
@@ -85,15 +83,17 @@ public class QuestionRepository {
                         String json = resp.body().string();
                         Type listType = new TypeToken<List<FindItemTask>>() {}.getType();
                         List<FindItemTask> tasks = gson.fromJson(json, listType);
+                        
                         if (tasks != null && !tasks.isEmpty()) {
-                            // Pick one randomly from the fetched list
-                            int randomIndex = (int) (Math.random() * tasks.size());
+                            int randomIndex = random.nextInt(tasks.size());
                             callback.onSuccess(tasks.get(randomIndex));
                         } else {
-                            callback.onError(new Exception("No FindItem tasks found in database"));
+                            callback.onError(new Exception("No FindItem tasks found"));
                         }
                     } else {
-                        callback.onError(new Exception("Fetch Error: " + resp.code()));
+                        // Log the error body to see exactly why Supabase rejected the request
+                        String errorBody = resp.body() != null ? resp.body().string() : "Unknown error";
+                        callback.onError(new Exception("Supabase Error " + resp.code() + ": " + errorBody));
                     }
                 }
             }

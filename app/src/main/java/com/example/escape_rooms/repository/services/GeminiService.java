@@ -17,7 +17,8 @@ import okhttp3.Response;
 
 public class GeminiService {
     private static final String TAG = "GeminiService";
-    private static final String API_KEY = BuildConfig.GEMINI_API_KEY;
+    private static final String GeminiApiKey ="AIzaSyDgVCdvHw6NyigHEuRd8GtOl6E3AYHBCU4";
+    private static final String API_KEY = GeminiApiKey;
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
     private final OkHttpClient client = new OkHttpClient.Builder()
