@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
@@ -37,7 +38,6 @@ public class FindTheItemActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Ensure this matches your XML filename exactly
         setContentView(R.layout.activity_fing_the_item);
 
         invisibleButton = findViewById(R.id.invisibleButton);
@@ -59,22 +59,31 @@ public class FindTheItemActivity extends AppCompatActivity {
                 if (isFinishing() || isDestroyed()) return;
 
                 String imageUrl = task.getImageName();
-                if (imageUrl.contains("[YOUR_PROJECT_ID]")) {
-                    imageUrl = imageUrl.replace("[YOUR_PROJECT_ID]", PROJECT_ID);
-                } else if (!imageUrl.startsWith("http")) {
-                    imageUrl = "https://" + PROJECT_ID + ".supabase.co/storage/v1/object/public/find-item-images/" + imageUrl;
+//                               if (imageUrl.contains("wjwbshqrvbgdtqanztqz")) {
+//                    imageUrl = imageUrl.replace("wjwbshqrvbgdtqanztqz", PROJECT_ID);
+//                } else if (!imageUrl.startsWith("http")) {
+//                    imageUrl = "https://" + PROJECT_ID + ".supabase.co/storage/v1/object/public/find-item-images/" + imageUrl;
+//                }
+                if (imageUrl.startsWith("http")) {
+                    // ה-URL כבר מלא, אל תשנה כלום
+                } else {
+                    imageUrl = "https://" + PROJECT_ID +
+                            ".supabase.co/storage/v1/object/public/find-item-images/" + imageUrl;
                 }
+
+                Log.d("FindTheItem", "Final URL: " + imageUrl);
 
                 Log.d("FindTheItem", "Attempting to load URL: " + imageUrl);
 
                 final String finalUrl = imageUrl;
                 runOnUiThread(() -> {
                     textForImage.setText(task.getPromptText());
-                    
+
                     Glide.with(FindTheItemActivity.this)
                             .load(finalUrl)
-                            .placeholder(R.drawable.find_the_item2)
+                            .thumbnail(0.1f)
                             .error(android.R.drawable.stat_notify_error)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
                             .listener(new RequestListener<Drawable>() {
                                 @Override
                                 public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
@@ -91,7 +100,7 @@ public class FindTheItemActivity extends AppCompatActivity {
                             })
                             .centerCrop()
                             .into(findItemImage);
-                    
+
                     MoveButtonToCorrectPlace(invisibleButton, task.getXCord(), task.getYCord());
                 });
             }
