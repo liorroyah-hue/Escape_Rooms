@@ -33,6 +33,9 @@ public class DrawerActivity extends AppCompatActivity {
     private static final String PREFS_NAME = "EscapeRoomSolvedPrefs";
     private static final String KEY_SOLVED_IMAGES = "solved_images";
 
+    // Static list to maintain the same randomization throughout the session
+    private static List<Integer> sessionRandomizedDrawables = null;
+
     @Override
     @SuppressWarnings("unchecked")
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,10 +61,11 @@ public class DrawerActivity extends AppCompatActivity {
         // Fix: Always wrap getStringSet in a new HashSet to ensure data persistence safety
         Set<String> solvedImageIds = new HashSet<>(solvedPrefs.getStringSet(KEY_SOLVED_IMAGES, new HashSet<>()));
         
-        // Reset solved images if it's the first level
+        // Reset solved images and randomization if it's the first level
         if (level == 1) {
             solvedImageIds = new HashSet<>();
             solvedPrefs.edit().putStringSet(KEY_SOLVED_IMAGES, solvedImageIds).apply();
+            sessionRandomizedDrawables = null; // Clear session randomization on new game
         }
 
         ViewGroup container = findViewById(R.id.image_container);
@@ -71,6 +75,10 @@ public class DrawerActivity extends AppCompatActivity {
 
         // --- List of available image resources for randomization ---
         int[] allDrawables = {
+                R.drawable.rug, R.drawable.aron, R.drawable.bed, R.drawable.aron2,
+                R.drawable.books, R.drawable.miror, R.drawable.plant, R.drawable.books2,
+                R.drawable.chair, R.drawable.plant2, R.drawable.lantern, R.drawable.picture, 
+                R.drawable.lantern1, R.drawable.sliipers, R.drawable.picture1, R.drawable.vavbgadim,
             R.drawable.drawer_old, R.drawable.sade_white, R.drawable.safe_black, 
             R.drawable.drawer_black, R.drawable.drawer_white, R.drawable.table_with_drawer,
             R.drawable.drawer_oldremovebgpreview, R.drawable.sade_whiteremovebgpreview,
@@ -78,10 +86,14 @@ public class DrawerActivity extends AppCompatActivity {
             R.drawable.drawer_whiteremovebgpreview, R.drawable.table_with_drawerremovebgpreview
         };
 
-        // Create a list and shuffle it to get 10 random images
-        List<Integer> randomizedDrawables = new ArrayList<>();
-        for (int d : allDrawables) randomizedDrawables.add(d);
-        Collections.shuffle(randomizedDrawables);
+        // Create or reuse the randomized list
+        if (sessionRandomizedDrawables == null) {
+            sessionRandomizedDrawables = new ArrayList<>();
+            for (int d : allDrawables) sessionRandomizedDrawables.add(d);
+            Collections.shuffle(sessionRandomizedDrawables);
+        }
+        
+        List<Integer> randomizedDrawables = sessionRandomizedDrawables;
 
         GameAudioManager audioManager = GameAudioManager.getInstance(this);
 
