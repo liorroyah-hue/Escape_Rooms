@@ -10,10 +10,10 @@
 
     <ImageView
         android:id="@+id/findItemImage"
-        android:src="@drawable/find_the_item1"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:scaleType="centerCrop"
+        android:src="@drawable/find_the_item1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -21,20 +21,22 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0" />
 
+
     <TextView
         android:id="@+id/textForImage"
         android:layout_width="408dp"
         android:layout_height="45dp"
         android:layout_margin="16dp"
+        android:layout_marginTop="12dp"
         android:textAlignment="center"
         android:textColor="@color/room_primary"
         android:textSize="32sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.666"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/findItemImage"
         tools:text="Find the hidden item" />
-
 
     <ProgressBar
         android:id="@+id/loadingProgress"

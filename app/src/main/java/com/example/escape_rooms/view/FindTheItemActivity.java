@@ -59,11 +59,6 @@ public class FindTheItemActivity extends AppCompatActivity {
                 if (isFinishing() || isDestroyed()) return;
 
                 String imageUrl = task.getImageName();
-//                               if (imageUrl.contains("wjwbshqrvbgdtqanztqz")) {
-//                    imageUrl = imageUrl.replace("wjwbshqrvbgdtqanztqz", PROJECT_ID);
-//                } else if (!imageUrl.startsWith("http")) {
-//                    imageUrl = "https://" + PROJECT_ID + ".supabase.co/storage/v1/object/public/find-item-images/" + imageUrl;
-//                }
                 if (imageUrl.startsWith("http")) {
                     // ה-URL כבר מלא, אל תשנה כלום
                 } else {
@@ -72,10 +67,12 @@ public class FindTheItemActivity extends AppCompatActivity {
                 }
 
                 Log.d("FindTheItem", "Final URL: " + imageUrl);
-
                 Log.d("FindTheItem", "Attempting to load URL: " + imageUrl);
 
                 final String finalUrl = imageUrl;
+                final int xCord = task.getXCord();
+                final int yCord = task.getYCord();
+
                 runOnUiThread(() -> {
                     textForImage.setText(task.getPromptText());
 
@@ -101,7 +98,7 @@ public class FindTheItemActivity extends AppCompatActivity {
                             .centerCrop()
                             .into(findItemImage);
 
-                    MoveButtonToCorrectPlace(invisibleButton, task.getXCord(), task.getYCord());
+                    MoveButtonToCorrectPlace(invisibleButton, xCord, yCord);
                 });
             }
 
@@ -134,8 +131,20 @@ public class FindTheItemActivity extends AppCompatActivity {
     }
 
     public void MoveButtonToCorrectPlace(Button button, int x_dp, int y_dp) {
-        float density = getResources().getDisplayMetrics().density;
-        button.setTranslationX((float) x_dp * density);
-        button.setTranslationY((float) y_dp * density);
+        findItemImage.post(() -> {
+            float density = getResources().getDisplayMetrics().density;
+
+            int[] imageLocation = new int[2];
+            findItemImage.getLocationOnScreen(imageLocation);
+
+            int[] buttonLocation = new int[2];
+            button.getLocationOnScreen(buttonLocation);
+
+            float offsetX = (imageLocation[0] - buttonLocation[0]) + (x_dp * density);
+            float offsetY = (imageLocation[1] - buttonLocation[1]) + (y_dp * density);
+
+            button.setTranslationX(offsetX);
+            button.setTranslationY(offsetY);
+        });
     }
 }
