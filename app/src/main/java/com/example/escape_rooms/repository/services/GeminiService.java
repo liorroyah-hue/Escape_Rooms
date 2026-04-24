@@ -17,7 +17,7 @@ import okhttp3.Response;
 
 public class GeminiService {
     private static final String TAG = "GeminiService";
-    private static final String GeminiApiKey ="AIzaSyCob4b8ezSANEfR5oyXOeD31phwr2neaKs";
+    private static final String GeminiApiKey ="AIzaSyC42-zmqHz4V3_fi4TAe-kp3vVcNnc6s80";
     private static final String API_KEY = GeminiApiKey;
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
@@ -33,7 +33,7 @@ public class GeminiService {
         String prompt = buildPrompt(subject, numberOfQuestions);
         
         try {
-            return callGeminiApi("v1beta", "gemma-3-12b", prompt);
+            return callGeminiApi("v1beta", "gemini-3.0-flash", prompt);
         } catch (IOException e) {
             if (e.getMessage() != null && e.getMessage().contains("404")) {
                 Log.w(TAG, "gemma-3-12b not found, falling back to gemini-2.5-flash");
