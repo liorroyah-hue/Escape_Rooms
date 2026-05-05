@@ -21,6 +21,8 @@ import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 
 public class ChoosingGameVariantActivity extends AppCompatActivity {
     private RadioGroup radioGroupGameSubject;
+    private RadioGroup radioGroupGameSource;
+    private View cardSelection;
     private String selectedCategory, selectedCreationType;
     private Button startGameButton;
     private ChoosingGameViewModel viewModel;
@@ -46,14 +48,27 @@ public class ChoosingGameVariantActivity extends AppCompatActivity {
 
         startGameButton = findViewById(R.id.startGameButton);
         radioGroupGameSubject = findViewById(R.id.radio_group_game_subject);
+        radioGroupGameSource = findViewById(R.id.radio_group_game_source);
+        cardSelection = findViewById(R.id.cardSelection);
         progressFrame = findViewById(R.id.progress_frame);
 
         initializeSegments();
 
-        // Only AI game is supported now
+        // Default to AI mode (matches the radio button checked by default in the layout)
         selectedCreationType = getString(R.string.creation_option_ai);
 
         observeViewModel();
+
+        radioGroupGameSource.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.radio_source_db) {
+                selectedCreationType = getString(R.string.creation_option_existing);
+                // The DB-backed game does not filter by category, so hide the category card.
+                cardSelection.setVisibility(View.GONE);
+            } else {
+                selectedCreationType = getString(R.string.creation_option_ai);
+                cardSelection.setVisibility(View.VISIBLE);
+            }
+        });
 
         radioGroupGameSubject.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.radio_geography) selectedCategory = getString(R.string.category_geography);
@@ -64,11 +79,18 @@ public class ChoosingGameVariantActivity extends AppCompatActivity {
         });
 
         startGameButton.setOnClickListener(v -> {
-            if (selectedCategory == null) {
-                Toast.makeText(this, R.string.select_category_prompt, Toast.LENGTH_SHORT).show();
-                return;
+            String aiOption = getString(R.string.creation_option_ai);
+            if (aiOption.equals(selectedCreationType)) {
+                if (selectedCategory == null) {
+                    Toast.makeText(this, R.string.select_category_prompt, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                viewModel.generateAiGame(selectedCategory);
+            } else {
+                // Database-backed game: questions come from Supabase via QuestionRepository.
+                // No AI call is needed; navigate directly into the room flow.
+                navigateToDrawer();
             }
-            viewModel.generateAiGame(selectedCategory);
         });
     }
 

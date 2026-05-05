@@ -1,17 +1,26 @@
 package com.example.escape_rooms.view;
 
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.activity.EdgeToEdge;
+import androidx.activity.SystemBarStyle;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
@@ -38,12 +47,46 @@ public class FindTheItemActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Edge-to-edge with fully transparent system bars (no scrim) so the
+        // background image truly covers from top of status bar to bottom of
+        // navigation bar.
+        EdgeToEdge.enable(
+                this,
+                SystemBarStyle.dark(Color.TRANSPARENT),
+                SystemBarStyle.dark(Color.TRANSPARENT)
+        );
         setContentView(R.layout.activity_fing_the_item);
+
+        // Some OEMs/older OS versions still apply theme statusBarColor /
+        // navigationBarColor on top of the activity. Force them transparent
+        // here so the image is not occluded.
+        Window window = getWindow();
+        if (window != null) {
+            window.setStatusBarColor(Color.TRANSPARENT);
+            window.setNavigationBarColor(Color.TRANSPARENT);
+        }
 
         invisibleButton = findViewById(R.id.invisibleButton);
         findItemImage = findViewById(R.id.findItemImage);
+        findItemImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
         textForImage = findViewById(R.id.textForImage);
         loadingProgress = findViewById(R.id.loadingProgress);
+
+        // Background image fills the whole screen (including under status/nav bars).
+        // Inset only the foreground container so text and progress stay clear of system bars.
+        View foreground = findViewById(R.id.foregroundContainer);
+        if (foreground != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(foreground, (v, insets) -> {
+                Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+                lp.topMargin = bars.top;
+                lp.bottomMargin = bars.bottom;
+                lp.leftMargin = bars.left;
+                lp.rightMargin = bars.right;
+                v.setLayoutParams(lp);
+                return insets;
+            });
+        }
 
         Intent intent = getIntent();
         int nextLevel = intent.getIntExtra(MainActivity.EXTRA_LEVEL, 1);
@@ -92,13 +135,17 @@ public class FindTheItemActivity extends AppCompatActivity {
                                 @Override
                                 public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
                                     if (loadingProgress != null) loadingProgress.setVisibility(View.GONE);
+                                    // Position the click target only AFTER the
+                                    // real image is loaded — the button math
+                                    // depends on the loaded drawable's
+                                    // intrinsic dimensions, not the placeholder.
+                                    findItemImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                                    findItemImage.post(() -> MoveButtonToCorrectPlace(invisibleButton, xCord, yCord));
                                     return false;
                                 }
                             })
                             .centerCrop()
                             .into(findItemImage);
-
-                    MoveButtonToCorrectPlace(invisibleButton, xCord, yCord);
                 });
             }
 
@@ -132,7 +179,19 @@ public class FindTheItemActivity extends AppCompatActivity {
 
     public void MoveButtonToCorrectPlace(Button button, int x_dp, int y_dp) {
         findItemImage.post(() -> {
-            float density = getResources().getDisplayMetrics().density;
+            // Use Android's actual ImageView matrix instead of duplicating the
+            // scale/crop math. This keeps the hotspot aligned with whatever
+            // transformation ImageView/Glide applies to the loaded drawable.
+            Drawable drawable = findItemImage.getDrawable();
+            if (drawable == null) return;
+
+            int viewW = findItemImage.getWidth();
+            int viewH = findItemImage.getHeight();
+            if (viewW <= 0 || viewH <= 0) return;
+
+            float[] point = new float[]{x_dp, y_dp};
+            Matrix imageMatrix = findItemImage.getImageMatrix();
+            imageMatrix.mapPoints(point);
 
             int[] imageLocation = new int[2];
             findItemImage.getLocationOnScreen(imageLocation);
@@ -140,11 +199,14 @@ public class FindTheItemActivity extends AppCompatActivity {
             int[] buttonLocation = new int[2];
             button.getLocationOnScreen(buttonLocation);
 
-            float offsetX = (imageLocation[0] - buttonLocation[0]) + (x_dp * density);
-            float offsetY = (imageLocation[1] - buttonLocation[1]) + (y_dp * density);
+            float offsetX = (imageLocation[0] - buttonLocation[0])
+                    + point[0] - (button.getWidth() / 2f);
+            float offsetY = (imageLocation[1] - buttonLocation[1])
+                    + point[1] - (button.getHeight() / 2f);
 
             button.setTranslationX(offsetX);
             button.setTranslationY(offsetY);
+            button.bringToFront();
         });
     }
 }

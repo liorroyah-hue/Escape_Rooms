@@ -1,61 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Root is a FrameLayout so the background ImageView can simply fill the
+     entire window with match_parent. The activity calls EdgeToEdge.enable()
+     and forces transparent system bars in onCreate, so this layout truly
+     spans the full screen — top of status bar to bottom of nav bar. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black"
+    android:fitsSystemWindows="false"
     tools:context=".view.FindTheItemActivity">
 
+    <!-- Background image: covers the full window while preserving aspect ratio.
+         Any overflow is cropped, so no black bars appear on tall phones. -->
     <ImageView
         android:id="@+id/findItemImage"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:adjustViewBounds="false"
         android:scaleType="centerCrop"
         android:src="@drawable/find_the_item1"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        android:contentDescription="@null" />
 
+    <!-- Foreground container holds anything that must stay clear of system
+         bars (status bar at top, nav bar at bottom). Margins are applied at
+         runtime from window insets. -->
+    <FrameLayout
+        android:id="@+id/foregroundContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/textForImage"
-        android:layout_width="408dp"
-        android:layout_height="45dp"
-        android:layout_margin="16dp"
-        android:layout_marginTop="12dp"
-        android:textAlignment="center"
-        android:textColor="@color/room_primary"
-        android:textSize="32sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.666"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/findItemImage"
-        tools:text="Find the hidden item" />
+        <TextView
+            android:id="@+id/textForImage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:layout_margin="16dp"
+            android:textAlignment="center"
+            android:textColor="@color/room_primary"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            tools:text="Find the hidden item" />
 
-    <ProgressBar
-        android:id="@+id/loadingProgress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:indeterminateTint="@color/room_accent"
-        android:visibility="visible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        <ProgressBar
+            android:id="@+id/loadingProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminateTint="@color/room_accent"
+            android:visibility="visible" />
+    </FrameLayout>
 
+    <!-- Hidden click target for the item. It is last in the FrameLayout so it
+         stays above the image and foreground overlay and can receive taps. -->
     <Button
         android:id="@+id/invisibleButton"
         android:layout_width="60dp"
         android:layout_height="60dp"
+        android:layout_gravity="start|top"
+        android:alpha="0.45"
         android:background="@android:color/holo_green_dark"
-        android:text=""
-        app:layout_constraintStart_toStartOf="@+id/findItemImage"
-        app:layout_constraintTop_toTopOf="@+id/findItemImage" />
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:padding="0dp"
+        android:text="" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>
