@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,11 @@ public class GameRepository {
 
     public interface LeaderboardCallback {
         void onSuccess(List<GameResult> results);
+        void onError(Exception e);
+    }
+
+    public interface StorageListCallback {
+        void onSuccess(List<String> fileUrls);
         void onError(Exception e);
     }
 
@@ -80,7 +86,6 @@ public class GameRepository {
     }
 
     public void getTopScores(LeaderboardCallback callback) {
-        // Fetch top 10 results, ordered by time ascending (fastest first)
         String url = SUPABASE_URL + "/rest/v1/game_results?select=username,total_time_ms,levels_completed&order=total_time_ms.asc&limit=10";
 
         Request request = new Request.Builder()
@@ -107,6 +112,56 @@ public class GameRepository {
                         String error = resp.body() != null ? resp.body().string() : "Unknown";
                         Log.e("Supabase_Fetch", "Error " + resp.code() + ": " + error);
                         callback.onError(new Exception("Server Error: " + resp.code()));
+                    }
+                }
+            }
+        });
+    }
+
+    public void getImagesFromBucket(String bucketName, StorageListCallback callback) {
+        String url = SUPABASE_URL + "/storage/v1/object/list/" + bucketName;
+        
+        // Supabase expects a JSON body with prefixes and options for the list command
+        Map<String, Object> bodyMap = new HashMap<>();
+        bodyMap.put("prefix", "");
+        bodyMap.put("limit", 11);
+        bodyMap.put("offset", 0);
+        bodyMap.put("sortBy", new HashMap<String, String>() {{ put("column", "name"); put("order", "asc"); }});
+
+        RequestBody body = RequestBody.create(gson.toJson(bodyMap), MediaType.parse("application/json"));
+
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .addHeader("apikey", SUPABASE_KEY)
+                .addHeader("Authorization", "Bearer " + SUPABASE_KEY)
+                .addHeader("Content-Type", "application/json")
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                callback.onError(e);
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                try (Response resp = response) {
+                    if (resp.isSuccessful()) {
+                        String json = resp.body().string();
+                        Type listType = new TypeToken<List<Map<String, Object>>>() {}.getType();
+                        List<Map<String, Object>> files = gson.fromJson(json, listType);
+                        
+                        List<String> urls = new ArrayList<>();
+                        for (Map<String, Object> file : files) {
+                            String name = (String) file.get("name");
+                            if (name != null && !name.startsWith(".")) {
+                                urls.add(SUPABASE_URL + "/storage/v1/object/public/" + bucketName + "/" + name);
+                            }
+                        }
+                        callback.onSuccess(urls);
+                    } else {
+                        callback.onError(new Exception("Storage Error: " + resp.code()));
                     }
                 }
             }
