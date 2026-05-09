@@ -25,7 +25,7 @@
     <ImageView
         android:id="@+id/findItemImage"
         android:layout_width="400dp"
-        android:layout_height="780dp"
+        android:layout_height="700dp"
         android:scaleType="center"
         android:src="@drawable/find_the_item1"
         app:layout_constraintBottom_toBottomOf="parent"
