@@ -52,6 +52,40 @@ public class UserRepository extends BaseRepository {
         });
     }
 
+    /**
+     * Checks if a username already exists in the database.
+     */
+    public void isUsernameTaken(String username, UsersCallback<Boolean> callback) {
+        String url = SUPABASE_URL + "/rest/v1/User?username=eq." + username + "&select=username";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("apikey", SUPABASE_KEY)
+                .addHeader("Accept", "application/json")
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                callback.onError(e);
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                try (Response resp = response) {
+                    if (resp.isSuccessful()) {
+                        String json = resp.body().string();
+                        Type listType = new TypeToken<List<User>>() {}.getType();
+                        List<User> users = gson.fromJson(json, listType);
+                        callback.onSuccess(users != null && !users.isEmpty());
+                    } else {
+                        callback.onError(new Exception("Check Error: " + resp.code()));
+                    }
+                }
+            }
+        });
+    }
+
     public void addUser(User newUser, UsersCallback<User> callback){
         String url = SUPABASE_URL + "/rest/v1/User";
         String json = gson.toJson(newUser);

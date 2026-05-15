@@ -7,8 +7,6 @@ import androidx.lifecycle.ViewModel;
 import com.example.escape_rooms.model.User;
 import com.example.escape_rooms.repository.UserRepository;
 
-import org.json.JSONObject;
-
 public class SignUpViewModel extends ViewModel {
     private final UserRepository userRepository = new UserRepository();
     
@@ -26,8 +24,36 @@ public class SignUpViewModel extends ViewModel {
             return;
         }
 
+        // Password validation: only numbers, 4-12 digits long
+        if (!password.matches("^[0-9]{4,12}$")) {
+            errorMessage.setValue("Password must be 4-12 digits (numbers only)");
+            return;
+        }
+
         isLoading.setValue(true);
-        // Create user WITHOUT id field so Supabase can auto-generate it
+
+        // First, check if the username is already taken
+        userRepository.isUsernameTaken(username, new UserRepository.UsersCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean isTaken) {
+                if (isTaken) {
+                    isLoading.postValue(false);
+                    errorMessage.postValue("Registration failed: Username is already taken.");
+                } else {
+                    // Username is available, proceed with sign up
+                    performActualSignUp(username, password);
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                isLoading.postValue(false);
+                errorMessage.postValue("Failed to check username availability: " + e.getMessage());
+            }
+        });
+    }
+
+    private void performActualSignUp(String username, String password) {
         User newUser = new User(username, password);
         
         userRepository.addUser(newUser, new UserRepository.UsersCallback<User>() {
@@ -40,28 +66,7 @@ public class SignUpViewModel extends ViewModel {
             @Override
             public void onError(Exception e) {
                 isLoading.postValue(false);
-                String rawError = e.getMessage();
-                
-                if (rawError != null && rawError.contains("Server Error: ")) {
-                    try {
-                        // Extract the JSON part
-                        String jsonStr = rawError.replace("Server Error: ", "");
-                        JSONObject json = new JSONObject(jsonStr);
-                        
-                        String message = json.optString("message", "");
-                        String details = json.optString("details", "");
-                        
-                        if (message.contains("duplicate key value violates unique constraint")) {
-                            errorMessage.postValue("Registration failed: This account already exists (ID conflict).");
-                        } else {
-                            errorMessage.postValue("Server Error: " + message + (details.isEmpty() ? "" : " - " + details));
-                        }
-                    } catch (Exception ex) {
-                        errorMessage.postValue("Registration failed: " + rawError);
-                    }
-                } else {
-                    errorMessage.postValue("Registration failed: " + rawError);
-                }
+                errorMessage.postValue("Registration failed: " + e.getMessage());
             }
         });
     }
