@@ -1,6 +1,8 @@
 package com.example.escape_rooms.view;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -13,6 +15,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.escape_rooms.R;
+import com.example.escape_rooms.repository.GameRepository;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,6 +26,7 @@ public class PlayerResultsActivity extends AppCompatActivity {
 
     private static final String TAG = "PlayerResultsActivity";
     public static final String EXTRA_TIMINGS = "com.example.escape_rooms.TIMINGS";
+    private final GameRepository gameRepository = new GameRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +42,9 @@ public class PlayerResultsActivity extends AppCompatActivity {
             HashMap<Integer, Long> timings = (HashMap<Integer, Long>) getIntent().getSerializableExtra(EXTRA_TIMINGS);
 
             long totalMillis = 0;
+            int levelsCompleted = 0;
             if (timings != null) {
+                levelsCompleted = timings.size();
                 List<Integer> sortedLevels = new ArrayList<>(timings.keySet());
                 Collections.sort(sortedLevels);
 
@@ -54,7 +60,9 @@ public class PlayerResultsActivity extends AppCompatActivity {
 
             tvTotalTime.setText(getString(R.string.label_total_time, formatTime(totalMillis)));
 
-            // Navigate to RatingActivity when clicking the button
+            // Save the final result to Supabase Leaderboard
+            saveFinalResultToDatabase(totalMillis, levelsCompleted);
+
             btnProceed.setOnClickListener(v -> {
                 Intent intent = new Intent(PlayerResultsActivity.this, RatingActivity.class);
                 startActivity(intent);
@@ -63,10 +71,26 @@ public class PlayerResultsActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e(TAG, "Error loading results", e);
             Toast.makeText(this, getString(R.string.connection_error), Toast.LENGTH_SHORT).show();
-            // Fixed: Redirect to ChoosingGameVariantActivity since HomePage was deleted
             startActivity(new Intent(this, ChoosingGameVariantActivity.class));
             finish();
         }
+    }
+
+    private void saveFinalResultToDatabase(long totalTime, int levels) {
+        SharedPreferences prefs = getSharedPreferences("EscapeRoomPrefs", Context.MODE_PRIVATE);
+        String username = prefs.getString("current_username", "Guest_User");
+
+        gameRepository.saveGameResult(username, totalTime, levels, new GameRepository.GameResultCallback() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "Final score saved to leaderboard for: " + username);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e(TAG, "Failed to save final score", e);
+            }
+        });
     }
 
     private void addResultRow(LinearLayout container, String roomLabel, String timeValue) {

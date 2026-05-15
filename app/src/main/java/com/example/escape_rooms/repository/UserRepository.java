@@ -14,6 +14,9 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+/**
+ * UserRepository inherits SUPABASE_URL, SUPABASE_KEY, client, and gson from BaseRepository.
+ */
 public class UserRepository extends BaseRepository {
 
     public interface UsersCallback<T> {
@@ -52,9 +55,6 @@ public class UserRepository extends BaseRepository {
         });
     }
 
-    /**
-     * Checks if a username already exists in the database.
-     */
     public void isUsernameTaken(String username, UsersCallback<Boolean> callback) {
         String url = SUPABASE_URL + "/rest/v1/User?username=eq." + username + "&select=username";
 

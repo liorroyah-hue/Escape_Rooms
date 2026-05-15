@@ -16,6 +16,9 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+/**
+ * GameRepository now fully utilizes BaseRepository for client and gson instances.
+ */
 public class GameRepository extends BaseRepository {
 
     public interface GameResultCallback {
@@ -70,8 +73,6 @@ public class GameRepository extends BaseRepository {
                     if (resp.isSuccessful()) {
                         callback.onSuccess();
                     } else {
-                        String error = resp.body() != null ? resp.body().string() : "Unknown";
-                        Log.e("Supabase_Save", "Error " + resp.code() + ": " + error);
                         callback.onError(new Exception("Server Error: " + resp.code()));
                     }
                 }
@@ -103,8 +104,6 @@ public class GameRepository extends BaseRepository {
                         List<GameResult> results = gson.fromJson(json, listType);
                         callback.onSuccess(results);
                     } else {
-                        String error = resp.body() != null ? resp.body().string() : "Unknown";
-                        Log.e("Supabase_Fetch", "Error " + resp.code() + ": " + error);
                         callback.onError(new Exception("Server Error: " + resp.code()));
                     }
                 }
@@ -148,7 +147,7 @@ public class GameRepository extends BaseRepository {
                         List<String> urls = new ArrayList<>();
                         for (Map<String, Object> file : files) {
                             String name = (String) file.get("name");
-                            if (name != null && !name.startsWith(".")) {
+                            if (name != null && !name.startsWith(".") && file.get("id") != null) {
                                 urls.add(SUPABASE_URL + "/storage/v1/object/public/" + bucketName + "/" + name);
                             }
                         }
