@@ -2,7 +2,6 @@ package com.example.escape_rooms.repository;
 
 import android.util.Log;
 import androidx.annotation.NonNull;
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -13,16 +12,11 @@ import java.util.Map;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class GameRepository {
-    private static final String SUPABASE_URL = UserRepository.SUPABASE_URL;
-    private static final String SUPABASE_KEY = UserRepository.SUPABASE_KEY;
-    private final OkHttpClient client = new OkHttpClient();
-    private final Gson gson = new Gson();
+public class GameRepository extends BaseRepository {
 
     public interface GameResultCallback {
         void onSuccess();
@@ -121,10 +115,9 @@ public class GameRepository {
     public void getImagesFromBucket(String bucketName, StorageListCallback callback) {
         String url = SUPABASE_URL + "/storage/v1/object/list/" + bucketName;
         
-        // Supabase expects a JSON body with prefixes and options for the list command
         Map<String, Object> bodyMap = new HashMap<>();
         bodyMap.put("prefix", "");
-        bodyMap.put("limit", 11);
+        bodyMap.put("limit", 100);
         bodyMap.put("offset", 0);
         bodyMap.put("sortBy", new HashMap<String, String>() {{ put("column", "name"); put("order", "asc"); }});
 

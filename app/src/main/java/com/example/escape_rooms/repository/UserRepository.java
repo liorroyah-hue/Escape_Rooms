@@ -3,8 +3,6 @@ package com.example.escape_rooms.repository;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import com.example.escape_rooms.model.User;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -12,18 +10,11 @@ import java.util.List;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class UserRepository {
-    public static final String SUPABASE_URL="https://wjwbshqrvbgdtqanztqz.supabase.co";
-    public static final String SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indqd2JzaHFydmJnZHRxYW56dHF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyOTA1MzgsImV4cCI6MjA3ODg2NjUzOH0.2LL7iEfi0gv_JAaR2984X2ybn4LclXGSTwR-9runIhM";
-    private final OkHttpClient client = new OkHttpClient();
-    
-    // Explicitly configure Gson to NOT serialize nulls (this ensures 'id' is omitted)
-    private final Gson gson = new GsonBuilder().create();
+public class UserRepository extends BaseRepository {
 
     public interface UsersCallback<T> {
         void onSuccess(T result);
@@ -96,7 +87,6 @@ public class UserRepository {
                             callback.onError(new Exception("Failed to parse response"));
                         }
                     } else {
-                        // Return the actual error message from Supabase (e.g. duplicate key, etc.)
                         Log.e("UserRepository", "Supabase Error: " + responseBody);
                         callback.onError(new Exception("Server Error: " + responseBody));
                     }
