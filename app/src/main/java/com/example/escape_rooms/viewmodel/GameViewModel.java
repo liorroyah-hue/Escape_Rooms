@@ -14,7 +14,6 @@ import com.example.escape_rooms.model.Questions;
 import com.example.escape_rooms.model.QuizData;
 import com.example.escape_rooms.repository.QuestionRepository;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +29,8 @@ public class GameViewModel extends AndroidViewModel {
     private long startTime;
     private HashMap<Integer, Long> levelTimings = new HashMap<>();
     private QuizData fullAiQuizData;
-    
-    // Total number of rooms/levels
+    private int lastQuestionId = 0; // tracks the DB id of the last question answered
+
     public static final int MAX_LEVELS = 5;
 
     public GameViewModel(@NonNull Application application, @NonNull QuestionRepository questionRepository) {
@@ -45,18 +44,14 @@ public class GameViewModel extends AndroidViewModel {
 
     public void initLevel(int level, HashMap<Integer, Long> timings) {
         this.currentLevel = level;
-        if (timings != null) {
-            this.levelTimings = timings;
-        }
+        if (timings != null) this.levelTimings = timings;
         loadLevel();
     }
 
     public void initAiGame(QuizData quizData, int level, HashMap<Integer, Long> timings) {
         this.fullAiQuizData = quizData;
         this.currentLevel = level;
-        if (timings != null) {
-            this.levelTimings = timings;
-        }
+        if (timings != null) this.levelTimings = timings;
         loadAiLevel();
     }
 
@@ -68,10 +63,11 @@ public class GameViewModel extends AndroidViewModel {
                 if (questions == null || questions.isEmpty()) {
                     toastMessage.postValue("No questions found for level " + currentLevel);
                 } else {
+                    // Store the id of the first question for this level
+                    lastQuestionId = questions.get(0).getId();
                     currentQuestions.postValue(new Questions(questions));
                 }
             }
-
             @Override
             public void onError(Exception e) {
                 Log.e("GameViewModel", "Failed to load questions", e);
@@ -83,11 +79,9 @@ public class GameViewModel extends AndroidViewModel {
     private void loadAiLevel() {
         if (fullAiQuizData == null || fullAiQuizData.getQuestions() == null) return;
         startTime = System.currentTimeMillis();
-
         int questionsPerLevel = 2;
         int startIndex = (currentLevel - 1) * questionsPerLevel;
         int endIndex = Math.min(startIndex + questionsPerLevel, fullAiQuizData.getQuestions().size());
-
         if (startIndex < endIndex) {
             QuizData levelSubset = new QuizData();
             levelSubset.setQuestions(new ArrayList<>(fullAiQuizData.getQuestions().subList(startIndex, endIndex)));
@@ -119,10 +113,9 @@ public class GameViewModel extends AndroidViewModel {
         if (allCorrect) {
             long duration = System.currentTimeMillis() - startTime;
             levelTimings.put(currentLevel, duration);
-            
             int nextLevel = currentLevel + 1;
-            // Always move to FindTheItem screen after solving questions, even for the last level.
-            navigationEvent.setValue(new NavigationEvent(NavigationTarget.FIND_ITEM, nextLevel, levelTimings, fullAiQuizData));
+            navigationEvent.setValue(new NavigationEvent(
+                    NavigationTarget.FIND_ITEM, nextLevel, levelTimings, fullAiQuizData, lastQuestionId));
         } else {
             toastMessage.setValue("msg_incorrect");
         }
@@ -135,12 +128,15 @@ public class GameViewModel extends AndroidViewModel {
         public final int nextLevel;
         public final HashMap<Integer, Long> timings;
         public final QuizData aiData;
+        public final int questionId;
 
-        public NavigationEvent(NavigationTarget target, int nextLevel, HashMap<Integer, Long> timings, QuizData aiData) {
+        public NavigationEvent(NavigationTarget target, int nextLevel,
+                               HashMap<Integer, Long> timings, QuizData aiData, int questionId) {
             this.target = target;
             this.nextLevel = nextLevel;
             this.timings = timings;
             this.aiData = aiData;
+            this.questionId = questionId;
         }
     }
 

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,15 +14,18 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.example.escape_rooms.R;
 import com.example.escape_rooms.model.QuizData;
 import com.example.escape_rooms.repository.GameRepository;
+import com.example.escape_rooms.repository.QuestionRepository;
 import com.example.escape_rooms.repository.services.GameAudioManager;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,12 +33,18 @@ import java.util.Set;
 
 public class DrawerActivity extends AppCompatActivity {
 
-    private final GameRepository gameRepository = new GameRepository();
+    private static final String TAG = "DrawerActivity";
     private static final String PREFS_NAME = "EscapeRoomSolvedPrefs";
     private static final String KEY_SOLVED_IMAGES = "solved_images";
+    private static final String KEY_SELECTED_ROOM_ID = "selected_room_id";
 
-    // Static list to maintain the same randomization throughout the session
-    private static List<Integer> sessionRandomizedDrawables = null;
+    private static final String STORAGE_BASE_URL =
+            "https://wjwbshqrvbgdtqanztqz.supabase.co/storage/v1/object/public/";
+    private static final String BACKGROUND_BUCKET = "Escape_Room_backround";
+    private static final String OBJECTS_BUCKET    = "clickable_object";
+
+    private final GameRepository gameRepository = new GameRepository();
+    private final QuestionRepository questionRepository = QuestionRepository.getInstance();
 
     @Override
     @SuppressWarnings("unchecked")
@@ -42,102 +52,121 @@ public class DrawerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_drawer);
 
-        // Get the data passed from ChoosingGameVariant or MainActivity
         Intent incomingIntent = getIntent();
         String creationType = incomingIntent.getStringExtra(MainActivity.EXTRA_CREATION_TYPE);
-        
+
         QuizData aiData;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             aiData = incomingIntent.getSerializableExtra(MainActivity.EXTRA_AI_GAME_DATA, QuizData.class);
         } else {
             aiData = (QuizData) incomingIntent.getSerializableExtra(MainActivity.EXTRA_AI_GAME_DATA);
         }
-        
+
         int level = incomingIntent.getIntExtra(MainActivity.EXTRA_LEVEL, 1);
         HashMap<Integer, Long> timings = (HashMap<Integer, Long>) incomingIntent.getSerializableExtra(MainActivity.EXTRA_TIMINGS);
 
-        // --- Handle Solved Images Logic ---
         SharedPreferences solvedPrefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        // Fix: Always wrap getStringSet in a new HashSet to ensure data persistence safety
         Set<String> solvedImageIds = new HashSet<>(solvedPrefs.getStringSet(KEY_SOLVED_IMAGES, new HashSet<>()));
-        
-        // Reset solved images and randomization if it's the first level
+
+        // On a new game clear state and pick a new random room
         if (level == 1) {
             solvedImageIds = new HashSet<>();
-            solvedPrefs.edit().putStringSet(KEY_SOLVED_IMAGES, solvedImageIds).apply();
-            sessionRandomizedDrawables = null; // Clear session randomization on new game
+            solvedPrefs.edit()
+                    .putStringSet(KEY_SOLVED_IMAGES, solvedImageIds)
+                    .remove(KEY_SELECTED_ROOM_ID)
+                    .apply();
         }
 
+        final Set<String> finalSolvedImageIds = solvedImageIds;
+        int savedRoomId = solvedPrefs.getInt(KEY_SELECTED_ROOM_ID, -1);
+
+        if (savedRoomId != -1) {
+            loadRoomAndPopulate(savedRoomId, finalSolvedImageIds, solvedPrefs, level, timings, creationType, aiData);
+        } else {
+            questionRepository.getRandomRoom(new QuestionRepository.RoomCallback() {
+                @Override
+                public void onSuccess(QuestionRepository.RoomData room) {
+                    solvedPrefs.edit().putInt(KEY_SELECTED_ROOM_ID, room.roomId).apply();
+                    runOnUiThread(() -> populateUI(room, finalSolvedImageIds, solvedPrefs,
+                            level, timings, creationType, aiData));
+                }
+                @Override
+                public void onError(Exception e) { Log.e(TAG, "Failed to pick random room", e); }
+            });
+        }
+    }
+
+    private void loadRoomAndPopulate(int roomId, Set<String> solvedImageIds,
+                                     SharedPreferences solvedPrefs, int level,
+                                     HashMap<Integer, Long> timings, String creationType, QuizData aiData) {
+        questionRepository.getRoomById(roomId, new QuestionRepository.RoomCallback() {
+            @Override
+            public void onSuccess(QuestionRepository.RoomData room) {
+                runOnUiThread(() -> populateUI(room, solvedImageIds, solvedPrefs,
+                        level, timings, creationType, aiData));
+            }
+            @Override
+            public void onError(Exception e) { Log.e(TAG, "Failed to load room id=" + roomId, e); }
+        });
+    }
+
+    private void populateUI(QuestionRepository.RoomData room, Set<String> solvedImageIds,
+                             SharedPreferences solvedPrefs, int level,
+                             HashMap<Integer, Long> timings, String creationType, QuizData aiData) {
+
+        // ── Background ──────────────────────────────────────────────────────
+        View rootLayout = findViewById(R.id.main);
+        if (rootLayout != null && room.background != null && !room.background.isEmpty()) {
+            String bgUrl = STORAGE_BASE_URL + BACKGROUND_BUCKET + "/" + room.background.trim();
+            Glide.with(this).load(bgUrl).into(new CustomTarget<Drawable>() {
+                @Override
+                public void onResourceReady(Drawable resource, @Nullable Transition<? super Drawable> t) {
+                    rootLayout.setBackground(resource);
+                }
+                @Override public void onLoadCleared(@Nullable Drawable placeholder) {}
+            });
+        }
+
+        // ── Clickable images ─────────────────────────────────────────────────
+        List<String> objects = room.getClickableObjects();
         ViewGroup container = findViewById(R.id.image_container);
         LinearLayout bottomTray = findViewById(R.id.bottom_panel_tray);
-        int[] viewIds = {R.id.image1, R.id.image2, R.id.image3, R.id.image4, R.id.image5, 
+        int[] viewIds = {R.id.image1, R.id.image2, R.id.image3, R.id.image4, R.id.image5,
                          R.id.image6, R.id.image7, R.id.image8, R.id.image9, R.id.image10};
-
-        // --- List of available image resources for randomization ---
-        int[] allDrawables = {
-                R.drawable.rug, R.drawable.aron, R.drawable.bed, R.drawable.aron2,
-                R.drawable.books, R.drawable.miror, R.drawable.plant, R.drawable.books2,
-                R.drawable.chair, R.drawable.plant2, R.drawable.lantern, R.drawable.picture, 
-                R.drawable.lantern1, R.drawable.sliipers, R.drawable.picture1, R.drawable.vavbgadim,
-            R.drawable.drawer_old, R.drawable.sade_white, R.drawable.safe_black, 
-            R.drawable.drawer_black, R.drawable.drawer_white, R.drawable.table_with_drawer,
-            R.drawable.drawer_oldremovebgpreview, R.drawable.sade_whiteremovebgpreview,
-            R.drawable.safe_blackremovebgpreview, R.drawable.drawer_blackremovebgpreview,
-            R.drawable.drawer_whiteremovebgpreview, R.drawable.table_with_drawerremovebgpreview
-        };
-
-        // Create or reuse the randomized list
-        if (sessionRandomizedDrawables == null) {
-            sessionRandomizedDrawables = new ArrayList<>();
-            for (int d : allDrawables) sessionRandomizedDrawables.add(d);
-            Collections.shuffle(sessionRandomizedDrawables);
-        }
-        
-        List<Integer> randomizedDrawables = sessionRandomizedDrawables;
 
         GameAudioManager audioManager = GameAudioManager.getInstance(this);
 
         for (int i = 0; i < viewIds.length; i++) {
             ImageView imageView = findViewById(viewIds[i]);
-            if (imageView != null) {
-                // Set a random image from our shuffled list
-                if (i < randomizedDrawables.size()) {
-                    imageView.setImageResource(randomizedDrawables.get(i));
-                }
+            if (imageView == null) continue;
 
-                String idStr = String.valueOf(viewIds[i]);
-                
-                if (solvedImageIds.contains(idStr)) {
-                    // Move to bottom tray if already solved
-                    moveViewToTray(imageView, container, bottomTray);
-                } else {
-                    // Normal state: Draggable and Clickable
-                    imageView.setOnTouchListener(new DraggableTouchListener());
-                    Set<String> finalSolvedImageIds = solvedImageIds;
-                    imageView.setOnClickListener(v -> {
-                        // Mark this image as solved for the next time we return
-                        finalSolvedImageIds.add(String.valueOf(v.getId()));
-                        solvedPrefs.edit().putStringSet(KEY_SOLVED_IMAGES, finalSolvedImageIds).apply();
+            if (objects != null && i < objects.size()) {
+                String imgUrl = STORAGE_BASE_URL + OBJECTS_BUCKET + "/" + objects.get(i).trim();
+                Glide.with(this).load(imgUrl).into(imageView);
+            }
 
-                        // Save progress to DB
-                        saveProgressToDatabase(level - 1, timings);
+            String idStr = String.valueOf(viewIds[i]);
+            if (solvedImageIds.contains(idStr)) {
+                moveViewToTray(imageView, container, bottomTray);
+            } else {
+                imageView.setOnTouchListener(new DraggableTouchListener());
+                Set<String> finalSolvedImageIds = solvedImageIds;
+                imageView.setOnClickListener(v -> {
+                    finalSolvedImageIds.add(String.valueOf(v.getId()));
+                    solvedPrefs.edit().putStringSet(KEY_SOLVED_IMAGES, finalSolvedImageIds).apply();
 
-                        // Audio shuffle
-                        audioManager.stopAmbientMusic();
-                        audioManager.startAmbientMusic();
+                    audioManager.stopAmbientMusic();
+                    audioManager.startAmbientMusic();
 
-                        // Navigation
-                        Intent intent = new Intent(DrawerActivity.this, MainActivity.class);
-                        intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, creationType);
-                        if (aiData != null) {
-                            intent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, aiData);
-                        }
-                        intent.putExtra(MainActivity.EXTRA_LEVEL, level);
-                        intent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
-                        startActivity(intent);
-                        finish(); 
-                    });
-                }
+                    Intent intent = new Intent(DrawerActivity.this, MainActivity.class);
+                    intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, creationType);
+                    if (aiData != null) intent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, aiData);
+                    intent.putExtra(MainActivity.EXTRA_LEVEL, level);
+                    intent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
+                    intent.putExtra(MainActivity.EXTRA_ROOM_ID, room.roomId); // pass room_id forward
+                    startActivity(intent);
+                    finish();
+                });
             }
         }
     }
@@ -154,63 +183,31 @@ public class DrawerActivity extends AppCompatActivity {
     }
 
     private int dpToPx(int dp) {
-        float density = getResources().getDisplayMetrics().density;
-        return Math.round((float) dp * density);
-    }
-
-    private void saveProgressToDatabase(int lastCompletedLevel, HashMap<Integer, Long> timings) {
-        if (timings == null || lastCompletedLevel < 1) return;
-        SharedPreferences prefs = getSharedPreferences("EscapeRoomPrefs", Context.MODE_PRIVATE);
-        String username = prefs.getString("current_username", "Guest_User");
-        long totalTime = 0;
-        for (Long time : timings.values()) totalTime += time;
-
-        gameRepository.saveGameResult(username, totalTime, lastCompletedLevel, new GameRepository.GameResultCallback() {
-            @Override public void onSuccess() { Log.d("DrawerActivity", "Saved for " + username); }
-            @Override public void onError(Exception e) { Log.e("DrawerActivity", "Error saving", e); }
-        });
+        return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 
     private static class DraggableTouchListener implements View.OnTouchListener {
-        private float dX, dY;
-        private static final int CLICK_ACTION_THRESHOLD = 10;
-        private float startX, startY;
+        private float dX, dY, startX, startY;
+        private static final int THRESHOLD = 10;
 
         @SuppressLint("ClickableViewAccessibility")
         @Override
-        public boolean onTouch(View view, MotionEvent event) {
+        public boolean onTouch(View view, android.view.MotionEvent event) {
             ViewGroup parent = (ViewGroup) view.getParent();
             if (parent == null) return false;
-
             switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    startX = event.getRawX(); 
-                    startY = event.getRawY();
-                    dX = view.getX() - startX; 
-                    dY = view.getY() - startY;
-                    view.bringToFront();
-                    break;
-                case MotionEvent.ACTION_MOVE:
-                    float newX = event.getRawX() + dX;
-                    float newY = event.getRawY() + dY;
-
-                    // Constrain X to keep the view within horizontal bounds
-                    newX = Math.max(0, Math.min(newX, parent.getWidth() - view.getWidth()));
-
-                    // Constrain Y to keep the view above the blue line (top of bottom tray)
-                    newY = Math.max(0, Math.min(newY, parent.getHeight() - view.getHeight()));
-
+                case android.view.MotionEvent.ACTION_DOWN:
+                    startX = event.getRawX(); startY = event.getRawY();
+                    dX = view.getX() - startX; dY = view.getY() - startY;
+                    view.bringToFront(); break;
+                case android.view.MotionEvent.ACTION_MOVE:
                     view.animate()
-                            .x(newX)
-                            .y(newY)
-                            .setDuration(0)
-                            .start();
-                    break;
-                case MotionEvent.ACTION_UP:
-                    if (Math.abs(startX - event.getRawX()) < CLICK_ACTION_THRESHOLD && 
-                        Math.abs(startY - event.getRawY()) < CLICK_ACTION_THRESHOLD) {
-                        view.performClick();
-                    }
+                        .x(Math.max(0, Math.min(event.getRawX() + dX, parent.getWidth() - view.getWidth())))
+                        .y(Math.max(0, Math.min(event.getRawY() + dY, parent.getHeight() - view.getHeight())))
+                        .setDuration(0).start(); break;
+                case android.view.MotionEvent.ACTION_UP:
+                    if (Math.abs(startX - event.getRawX()) < THRESHOLD &&
+                        Math.abs(startY - event.getRawY()) < THRESHOLD) view.performClick();
                     break;
                 default: return false;
             }

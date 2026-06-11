@@ -2,7 +2,6 @@ package com.example.escape_rooms.view;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -26,11 +25,13 @@ import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
 
-    // Unified Intent Keys
-    public static final String EXTRA_LEVEL = "com.example.escape_rooms.LEVEL";
-    public static final String EXTRA_TIMINGS = "com.example.escape_rooms.TIMINGS";
+    public static final String EXTRA_LEVEL         = "com.example.escape_rooms.LEVEL";
+    public static final String EXTRA_TIMINGS       = "com.example.escape_rooms.TIMINGS";
     public static final String EXTRA_CREATION_TYPE = "com.example.escape_rooms.CREATION_TYPE";
-    public static final String EXTRA_AI_GAME_DATA = "com.example.escape_rooms.AI_GAME_DATA";
+    public static final String EXTRA_AI_GAME_DATA  = "com.example.escape_rooms.AI_GAME_DATA";
+    public static final String EXTRA_ROOM_ID       = "com.example.escape_rooms.ROOM_ID";
+    public static final String EXTRA_QUESTION_ID   = "com.example.escape_rooms.QUESTION_ID";
+    public static final String EXTRA_PICTURE_ID    = "com.example.escape_rooms.PICTURE_ID";
 
     private RecyclerView questionsRecyclerView;
     private QuestionsAdapter questionsAdapter;
@@ -57,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         HashMap<Integer, Long> timings = (HashMap<Integer, Long>) intent.getSerializableExtra(EXTRA_TIMINGS);
         String creationType = intent.getStringExtra(EXTRA_CREATION_TYPE);
         int level = intent.getIntExtra(EXTRA_LEVEL, 1);
+        int roomId = intent.getIntExtra(EXTRA_ROOM_ID, 0);
 
         if (getString(R.string.creation_option_ai).equals(creationType)) {
             QuizData quizData = (QuizData) intent.getSerializableExtra(EXTRA_AI_GAME_DATA);
@@ -65,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
             viewModel.initLevel(level, timings);
         }
 
-        observeViewModel();
+        observeViewModel(roomId);
 
         btnSubmitAnswers.setOnClickListener(v -> {
             if (questionsAdapter != null) {
@@ -74,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void observeViewModel() {
+    private void observeViewModel(int roomId) {
         viewModel.getCurrentQuestions().observe(this, questions -> {
             questionsAdapter = new QuestionsAdapter(
                     this,
@@ -87,19 +89,10 @@ public class MainActivity extends AppCompatActivity {
         viewModel.getToastMessage().observe(this, message -> {
             if (message == null) return;
             audioManager.playErrorSound();
-            
             int resId = 0;
-            if ("msg_answer_all".equals(message)) {
-                resId = R.string.msg_answer_all;
-            } else if ("msg_incorrect".equals(message)) {
-                resId = R.string.msg_incorrect;
-            }
-            
-            if (resId != 0) {
-                showCustomToast(getString(resId), false);
-            } else {
-                showCustomToast(message, false);
-            }
+            if ("msg_answer_all".equals(message))  resId = R.string.msg_answer_all;
+            else if ("msg_incorrect".equals(message)) resId = R.string.msg_incorrect;
+            showCustomToast(resId != 0 ? getString(resId) : message, false);
         });
 
         viewModel.getNavigationEvent().observe(this, event -> {
@@ -109,15 +102,17 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra(EXTRA_LEVEL, event.nextLevel);
                 intent.putExtra(EXTRA_TIMINGS, event.timings);
                 intent.putExtra(EXTRA_CREATION_TYPE, getIntent().getStringExtra(EXTRA_CREATION_TYPE));
-                if (event.aiData != null) {
-                    intent.putExtra(EXTRA_AI_GAME_DATA, (Serializable) event.aiData);
-                }
+                intent.putExtra(EXTRA_ROOM_ID, roomId);
+                intent.putExtra(EXTRA_QUESTION_ID, event.questionId); // pass question id
+                if (event.aiData != null) intent.putExtra(EXTRA_AI_GAME_DATA, (Serializable) event.aiData);
                 startActivity(intent);
-                finish(); 
+                finish();
             } else if (event.target == GameViewModel.NavigationTarget.RESULTS) {
                 audioManager.playSuccessSound();
                 Intent intent = new Intent(this, PlayerResultsActivity.class);
                 intent.putExtra(EXTRA_TIMINGS, event.timings);
+                intent.putExtra(EXTRA_ROOM_ID, roomId);
+                intent.putExtra(EXTRA_QUESTION_ID, event.questionId);
                 startActivity(intent);
                 finish();
             }
@@ -125,18 +120,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showCustomToast(String message, boolean isSuccess) {
-        LayoutInflater inflater = getLayoutInflater();
-        // Modern practice: provide root for layout params but don't attach
-        View layout = inflater.inflate(R.layout.layout_custom_toast, null, false);
-
+        View layout = getLayoutInflater().inflate(R.layout.layout_custom_toast, null, false);
         TextView text = layout.findViewById(R.id.toast_text);
         ImageView icon = layout.findViewById(R.id.toast_icon);
-        
         if (text != null) text.setText(message);
-        if (icon != null) {
-            icon.setImageResource(isSuccess ? R.drawable.ic_lock_open : R.drawable.ic_lock_closed);
-        }
-
+        if (icon != null) icon.setImageResource(isSuccess ? R.drawable.ic_lock_open : R.drawable.ic_lock_closed);
         Toast toast = new Toast(getApplicationContext());
         toast.setDuration(Toast.LENGTH_SHORT);
         toast.setView(layout);

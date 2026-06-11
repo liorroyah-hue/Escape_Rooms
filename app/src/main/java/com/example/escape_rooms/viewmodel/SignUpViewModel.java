@@ -1,18 +1,26 @@
 package com.example.escape_rooms.viewmodel;
 
+import android.app.Application;
+import android.content.Context;
+import android.content.SharedPreferences;
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
 import com.example.escape_rooms.model.User;
 import com.example.escape_rooms.repository.UserRepository;
 
-public class SignUpViewModel extends ViewModel {
+public class SignUpViewModel extends AndroidViewModel {
     private final UserRepository userRepository = new UserRepository();
     
     private final MutableLiveData<Boolean> signUpResult = new MutableLiveData<>();
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
+
+    public SignUpViewModel(@NonNull Application application) {
+        super(application);
+    }
 
     public LiveData<Boolean> getSignUpResult() { return signUpResult; }
     public LiveData<String> getErrorMessage() { return errorMessage; }
@@ -24,7 +32,6 @@ public class SignUpViewModel extends ViewModel {
             return;
         }
 
-        // Password validation: only numbers, 4-12 digits long
         if (!password.matches("^[0-9]{4,12}$")) {
             errorMessage.setValue("Password must be 4-12 digits (numbers only)");
             return;
@@ -32,7 +39,6 @@ public class SignUpViewModel extends ViewModel {
 
         isLoading.setValue(true);
 
-        // First, check if the username is already taken
         userRepository.isUsernameTaken(username, new UserRepository.UsersCallback<Boolean>() {
             @Override
             public void onSuccess(Boolean isTaken) {
@@ -40,7 +46,6 @@ public class SignUpViewModel extends ViewModel {
                     isLoading.postValue(false);
                     errorMessage.postValue("Registration failed: Username is already taken.");
                 } else {
-                    // Username is available, proceed with sign up
                     performActualSignUp(username, password);
                 }
             }
@@ -59,6 +64,10 @@ public class SignUpViewModel extends ViewModel {
         userRepository.addUser(newUser, new UserRepository.UsersCallback<User>() {
             @Override
             public void onSuccess(User result) {
+                // Save the newly created user's ID and username to SharedPreferences
+                if (result != null) {
+                    saveUserToPrefs(result);
+                }
                 isLoading.postValue(false);
                 signUpResult.postValue(true);
             }
@@ -69,5 +78,13 @@ public class SignUpViewModel extends ViewModel {
                 errorMessage.postValue("Registration failed: " + e.getMessage());
             }
         });
+    }
+
+    private void saveUserToPrefs(User user) {
+        SharedPreferences prefs = getApplication().getSharedPreferences("EscapeRoomPrefs", Context.MODE_PRIVATE);
+        prefs.edit()
+             .putLong("current_user_id", user.getId() != null ? user.getId().longValue() : -1)
+             .putString("current_username", user.getUsername())
+             .apply();
     }
 }

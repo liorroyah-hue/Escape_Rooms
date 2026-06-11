@@ -3,7 +3,8 @@ package com.example.escape_rooms.model;
 import com.google.gson.annotations.SerializedName;
 
 public class FindItemTask {
-    @SerializedName("id")
+
+    @SerializedName("id_picture")
     private int id;
 
     @SerializedName("image_name")
@@ -18,7 +19,6 @@ public class FindItemTask {
     @SerializedName("y_cord")
     private int yCord;
 
-    // Getters
     public int getId() { return id; }
     public String getImageName() { return imageName; }
     public String getPromptText() { return promptText; }

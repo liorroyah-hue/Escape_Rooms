@@ -4,49 +4,33 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 public class Question {
+
+    @SerializedName("question_id")
     private int id;
+
     private int level;
-    
-    @SerializedName("questions for object")
+
+    @SerializedName("questions text")
     private String question;
-    
+
     @SerializedName("answer for the questions")
     private String correctAnswer;
-    
+
     @SerializedName("options for the questions")
     private List<String> answers;
 
-    public int getId() {
-        return id;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    public String getQuestion() { return question; }
+    public void setQuestion(String question) { this.question = question; }
 
-    public String getQuestion() {
-        return question;
-    }
+    public String getCorrectAnswer() { return correctAnswer; }
+    public void setCorrectAnswer(String correctAnswer) { this.correctAnswer = correctAnswer; }
 
-    public void setQuestion(String question) {
-        this.question=question;
-    }
-
-    public String getCorrectAnswer() {
-        return correctAnswer;
-    }
-
-    public void setCorrectAnswer(String correctAnswer) {
-        this.correctAnswer = correctAnswer;
-    }
-
-
-
-
-    public List<String> getAnswers() {
-        return answers;
-    }
-
-    public void setLevel(int level) { this.level = level; }
+    public List<String> getAnswers() { return answers; }
     public void setAnswers(List<String> answers) { this.answers = answers; }
+
+    public int getLevel() { return level; }
+    public void setLevel(int level) { this.level = level; }
 }

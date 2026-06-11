@@ -40,16 +40,18 @@ public class FindTheItemActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fing_the_item);
 
-        invisibleButton = findViewById(R.id.invisibleButton);
-        findItemImage = findViewById(R.id.findItemImage);
-        textForImage = findViewById(R.id.textForImage);
-        loadingProgress = findViewById(R.id.loadingProgress);
+        invisibleButton  = findViewById(R.id.invisibleButton);
+        findItemImage    = findViewById(R.id.findItemImage);
+        textForImage     = findViewById(R.id.textForImage);
+        loadingProgress  = findViewById(R.id.loadingProgress);
 
-        Intent intent = getIntent();
-        int nextLevel = intent.getIntExtra(MainActivity.EXTRA_LEVEL, 1);
+        Intent intent    = getIntent();
+        int nextLevel    = intent.getIntExtra(MainActivity.EXTRA_LEVEL, 1);
         String creationType = intent.getStringExtra(MainActivity.EXTRA_CREATION_TYPE);
-        Serializable aiData = intent.getSerializableExtra(MainActivity.EXTRA_AI_GAME_DATA);
+        Serializable aiData  = intent.getSerializableExtra(MainActivity.EXTRA_AI_GAME_DATA);
         Serializable timings = intent.getSerializableExtra(MainActivity.EXTRA_TIMINGS);
+        int roomId       = intent.getIntExtra(MainActivity.EXTRA_ROOM_ID, 0);
+        int questionId   = intent.getIntExtra(MainActivity.EXTRA_QUESTION_ID, 0);
 
         if (loadingProgress != null) loadingProgress.setVisibility(View.VISIBLE);
 
@@ -58,16 +60,13 @@ public class FindTheItemActivity extends AppCompatActivity {
             public void onSuccess(FindItemTask task) {
                 if (isFinishing() || isDestroyed()) return;
 
+                int pictureId = task.getId(); // id_picture from find_item_tasks
+
                 String imageUrl = task.getImageName();
-                if (imageUrl.startsWith("http")) {
-                    // ה-URL כבר מלא, אל תשנה כלום
-                } else {
+                if (!imageUrl.startsWith("http")) {
                     imageUrl = "https://" + PROJECT_ID +
                             ".supabase.co/storage/v1/object/public/find-item-images/" + imageUrl;
                 }
-
-                Log.d("FindTheItem", "Final URL: " + imageUrl);
-                Log.d("FindTheItem", "Attempting to load URL: " + imageUrl);
 
                 final String finalUrl = imageUrl;
                 final int xCord = task.getXCord();
@@ -83,14 +82,16 @@ public class FindTheItemActivity extends AppCompatActivity {
                             .diskCacheStrategy(DiskCacheStrategy.ALL)
                             .listener(new RequestListener<Drawable>() {
                                 @Override
-                                public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                public boolean onLoadFailed(@Nullable GlideException e, Object model,
+                                                            Target<Drawable> target, boolean isFirstResource) {
                                     Log.e("FindTheItem", "Glide Load Failed", e);
                                     if (loadingProgress != null) loadingProgress.setVisibility(View.GONE);
                                     return false;
                                 }
-
                                 @Override
-                                public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                public boolean onResourceReady(Drawable resource, Object model,
+                                                               Target<Drawable> target, DataSource dataSource,
+                                                               boolean isFirstResource) {
                                     if (loadingProgress != null) loadingProgress.setVisibility(View.GONE);
                                     return false;
                                 }
@@ -99,6 +100,27 @@ public class FindTheItemActivity extends AppCompatActivity {
                             .into(findItemImage);
 
                     MoveButtonToCorrectPlace(invisibleButton, xCord, yCord);
+
+                    // Set click listener here so it captures pictureId
+                    invisibleButton.setOnClickListener(v -> {
+                        GameAudioManager.getInstance(FindTheItemActivity.this).playSuccessSound();
+                        if (nextLevel > GameViewModel.MAX_LEVELS) {
+                            Intent resultsIntent = new Intent(FindTheItemActivity.this, PlayerResultsActivity.class);
+                            resultsIntent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
+                            resultsIntent.putExtra(MainActivity.EXTRA_ROOM_ID, roomId);
+                            resultsIntent.putExtra(MainActivity.EXTRA_QUESTION_ID, questionId);
+                            resultsIntent.putExtra(MainActivity.EXTRA_PICTURE_ID, pictureId);
+                            startActivity(resultsIntent);
+                        } else {
+                            Intent corridorIntent = new Intent(FindTheItemActivity.this, DrawerActivity.class);
+                            corridorIntent.putExtra(MainActivity.EXTRA_LEVEL, nextLevel);
+                            corridorIntent.putExtra(MainActivity.EXTRA_CREATION_TYPE, creationType);
+                            if (aiData != null) corridorIntent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, aiData);
+                            if (timings != null) corridorIntent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
+                            startActivity(corridorIntent);
+                        }
+                        finish();
+                    });
                 });
             }
 
@@ -111,40 +133,17 @@ public class FindTheItemActivity extends AppCompatActivity {
                 });
             }
         });
-
-        invisibleButton.setOnClickListener(v -> {
-            GameAudioManager.getInstance(this).playSuccessSound();
-            if (nextLevel > GameViewModel.MAX_LEVELS) {
-                Intent resultsIntent = new Intent(FindTheItemActivity.this, PlayerResultsActivity.class);
-                resultsIntent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
-                startActivity(resultsIntent);
-            } else {
-                Intent corridorIntent = new Intent(FindTheItemActivity.this, DrawerActivity.class);
-                corridorIntent.putExtra(MainActivity.EXTRA_LEVEL, nextLevel);
-                corridorIntent.putExtra(MainActivity.EXTRA_CREATION_TYPE, creationType);
-                if (aiData != null) corridorIntent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, aiData);
-                if (timings != null) corridorIntent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
-                startActivity(corridorIntent);
-            }
-            finish();
-        });
     }
 
     public void MoveButtonToCorrectPlace(Button button, int x_dp, int y_dp) {
         findItemImage.post(() -> {
             float density = getResources().getDisplayMetrics().density;
-
             int[] imageLocation = new int[2];
             findItemImage.getLocationOnScreen(imageLocation);
-
             int[] buttonLocation = new int[2];
             button.getLocationOnScreen(buttonLocation);
-
-            float offsetX = (imageLocation[0] - buttonLocation[0]) + (x_dp * density);
-            float offsetY = (imageLocation[1] - buttonLocation[1]) + (y_dp * density);
-
-            button.setTranslationX(offsetX);
-            button.setTranslationY(offsetY);
+            button.setTranslationX((imageLocation[0] - buttonLocation[0]) + (x_dp * density));
+            button.setTranslationY((imageLocation[1] - buttonLocation[1]) + (y_dp * density));
         });
     }
 }
