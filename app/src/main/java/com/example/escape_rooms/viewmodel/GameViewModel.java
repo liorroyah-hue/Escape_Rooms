@@ -26,6 +26,7 @@ public class GameViewModel extends AndroidViewModel {
     private final MutableLiveData<NavigationEvent> navigationEvent = new MutableLiveData<>();
 
     private int currentLevel = 1;
+    private int currentRoomId = 0;
     private long startTime;
     private HashMap<Integer, Long> levelTimings = new HashMap<>();
     private QuizData fullAiQuizData;
@@ -42,8 +43,9 @@ public class GameViewModel extends AndroidViewModel {
     public LiveData<String> getToastMessage() { return toastMessage; }
     public LiveData<NavigationEvent> getNavigationEvent() { return navigationEvent; }
 
-    public void initLevel(int level, HashMap<Integer, Long> timings) {
+    public void initLevel(int level, HashMap<Integer, Long> timings, int roomId) {
         this.currentLevel = level;
+        this.currentRoomId = roomId;
         if (timings != null) this.levelTimings = timings;
         loadLevel();
     }
@@ -57,7 +59,7 @@ public class GameViewModel extends AndroidViewModel {
 
     private void loadLevel() {
         startTime = System.currentTimeMillis();
-        repository.get2RandomQuestions(new QuestionRepository.QuestionsCallback() {
+        repository.get2RandomQuestions(currentRoomId, new QuestionRepository.QuestionsCallback() {
             @Override
             public void onSuccess(List<Question> questions) {
                 if (questions == null || questions.isEmpty()) {

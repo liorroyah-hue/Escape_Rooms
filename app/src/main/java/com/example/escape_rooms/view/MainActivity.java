@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
             QuizData quizData = (QuizData) intent.getSerializableExtra(EXTRA_AI_GAME_DATA);
             viewModel.initAiGame(quizData, level, timings);
         } else {
-            viewModel.initLevel(level, timings);
+            viewModel.initLevel(level, timings, roomId);
         }
 
         observeViewModel(roomId);

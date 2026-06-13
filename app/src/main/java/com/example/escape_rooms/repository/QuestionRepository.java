@@ -104,11 +104,11 @@ public class QuestionRepository extends BaseRepository {
     }
 
     /**
-     * Fetches all questions, shuffles them, and returns 2 random ones.
-     * No dependency on the level column.
+     * Fetches questions for the given room, shuffles them, and returns 2 random ones.
+     * Questions are tied to a specific room via room_id.
      */
-    public void get2RandomQuestions(QuestionsCallback callback) {
-        String url = SUPABASE_URL + "/rest/v1/questions?select=*";
+    public void get2RandomQuestions(int roomId, QuestionsCallback callback) {
+        String url = SUPABASE_URL + "/rest/v1/questions?room_id=eq." + roomId + "&select=*";
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("apikey", SUPABASE_KEY)
@@ -125,7 +125,7 @@ public class QuestionRepository extends BaseRepository {
                         if (all != null && !all.isEmpty()) {
                             Collections.shuffle(all);
                             callback.onSuccess(all.subList(0, Math.min(2, all.size())));
-                        } else { callback.onError(new Exception("No questions found")); }
+                        } else { callback.onError(new Exception("No questions found for room " + roomId)); }
                     } else { callback.onError(new Exception("Fetch Error: " + resp.code())); }
                 }
             }
