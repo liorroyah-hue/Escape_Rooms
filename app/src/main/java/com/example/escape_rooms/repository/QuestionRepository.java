@@ -6,6 +6,8 @@ import com.example.escape_rooms.model.FindItemTask;
 import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import okhttp3.Call;
@@ -30,15 +32,14 @@ public class QuestionRepository extends BaseRepository {
         @com.google.gson.annotations.SerializedName("background")
         public String background;
         @com.google.gson.annotations.SerializedName("array_of_clickable_objects")
-        public String clickableObjectsRaw; // stored as plain string in Supabase
+        public String clickableObjectsRaw;
 
-        /** Parses the raw string "[img1.png, img2.png, ...]" into a list. */
         public List<String> getClickableObjects() {
-            if (clickableObjectsRaw == null || clickableObjectsRaw.isEmpty()) return new java.util.ArrayList<>();
+            if (clickableObjectsRaw == null || clickableObjectsRaw.isEmpty()) return new ArrayList<>();
             String cleaned = clickableObjectsRaw.trim()
                     .replaceAll("^[\\[{]", "")
                     .replaceAll("[\\]}]$", "");
-            List<String> result = new java.util.ArrayList<>();
+            List<String> result = new ArrayList<>();
             for (String part : cleaned.split(",")) {
                 String name = part.trim()
                         .replaceAll("^\"|\"$", "")
@@ -54,21 +55,16 @@ public class QuestionRepository extends BaseRepository {
         void onError(Exception e);
     }
 
-    /** Picks a random room from the Escape_Room table. */
     public void getRandomRoom(RoomCallback callback) {
         String url = SUPABASE_URL + "/rest/v1/Escape_Room?select=*";
-
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("apikey", SUPABASE_KEY)
                 .addHeader("Accept", "application/json")
                 .build();
-
         client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) { callback.onError(e); }
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+            @Override public void onFailure(@NonNull Call call, @NonNull IOException e) { callback.onError(e); }
+            @Override public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 try (Response resp = response) {
                     if (resp.isSuccessful()) {
                         String json = resp.body().string();
@@ -76,30 +72,23 @@ public class QuestionRepository extends BaseRepository {
                         List<RoomData> rooms = gson.fromJson(json, listType);
                         if (rooms != null && !rooms.isEmpty()) {
                             callback.onSuccess(rooms.get(random.nextInt(rooms.size())));
-                        } else {
-                            callback.onError(new Exception("No rooms found"));
-                        }
+                        } else { callback.onError(new Exception("No rooms found")); }
                     } else { callback.onError(new Exception("Fetch Error: " + resp.code())); }
                 }
             }
         });
     }
 
-    /** Loads a specific room by ID from the Escape_Room table. */
     public void getRoomById(int roomId, RoomCallback callback) {
         String url = SUPABASE_URL + "/rest/v1/Escape_Room?room_id=eq." + roomId + "&select=*";
-
         Request request = new Request.Builder()
                 .url(url)
                 .addHeader("apikey", SUPABASE_KEY)
                 .addHeader("Accept", "application/json")
                 .build();
-
         client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) { callback.onError(e); }
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+            @Override public void onFailure(@NonNull Call call, @NonNull IOException e) { callback.onError(e); }
+            @Override public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 try (Response resp = response) {
                     if (resp.isSuccessful()) {
                         String json = resp.body().string();
@@ -107,29 +96,36 @@ public class QuestionRepository extends BaseRepository {
                         List<RoomData> rooms = gson.fromJson(json, listType);
                         if (rooms != null && !rooms.isEmpty()) {
                             callback.onSuccess(rooms.get(0));
-                        } else {
-                            callback.onError(new Exception("Room not found: " + roomId));
-                        }
+                        } else { callback.onError(new Exception("Room not found: " + roomId)); }
                     } else { callback.onError(new Exception("Fetch Error: " + resp.code())); }
                 }
             }
         });
     }
 
-    public void getQuestionsForLevel(int level, QuestionsCallback callback) {
-        String url = SUPABASE_URL + "/rest/v1/questions?level=eq." + level + "&select=*&limit=2";
-        Request request = new Request.Builder().url(url).addHeader("apikey", SUPABASE_KEY).addHeader("Accept", "application/json").build();
+    /**
+     * Fetches all questions, shuffles them, and returns 2 random ones.
+     * No dependency on the level column.
+     */
+    public void get2RandomQuestions(QuestionsCallback callback) {
+        String url = SUPABASE_URL + "/rest/v1/questions?select=*";
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("apikey", SUPABASE_KEY)
+                .addHeader("Accept", "application/json")
+                .build();
         client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) { callback.onError(e); }
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+            @Override public void onFailure(@NonNull Call call, @NonNull IOException e) { callback.onError(e); }
+            @Override public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 try (Response resp = response) {
                     if (resp.isSuccessful()) {
                         String json = resp.body().string();
                         Type listType = new TypeToken<List<Question>>() {}.getType();
-                        List<Question> questions = gson.fromJson(json, listType);
-                        callback.onSuccess(questions);
+                        List<Question> all = gson.fromJson(json, listType);
+                        if (all != null && !all.isEmpty()) {
+                            Collections.shuffle(all);
+                            callback.onSuccess(all.subList(0, Math.min(2, all.size())));
+                        } else { callback.onError(new Exception("No questions found")); }
                     } else { callback.onError(new Exception("Fetch Error: " + resp.code())); }
                 }
             }
@@ -137,13 +133,15 @@ public class QuestionRepository extends BaseRepository {
     }
 
     public void getRandomFindItemTask(FindItemCallback callback) {
-        String url = SUPABASE_URL + "/rest/v1/find_item_tasks?select=*&limit=10";
-        Request request = new Request.Builder().url(url).addHeader("apikey", SUPABASE_KEY).addHeader("Accept", "application/json").build();
+        String url = SUPABASE_URL + "/rest/v1/find_item_tasks?select=*";
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("apikey", SUPABASE_KEY)
+                .addHeader("Accept", "application/json")
+                .build();
         client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) { callback.onError(e); }
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+            @Override public void onFailure(@NonNull Call call, @NonNull IOException e) { callback.onError(e); }
+            @Override public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 try (Response resp = response) {
                     if (resp.isSuccessful()) {
                         String json = resp.body().string();

@@ -57,7 +57,7 @@ public class GameViewModel extends AndroidViewModel {
 
     private void loadLevel() {
         startTime = System.currentTimeMillis();
-        repository.getQuestionsForLevel(currentLevel, new QuestionRepository.QuestionsCallback() {
+        repository.get2RandomQuestions(new QuestionRepository.QuestionsCallback() {
             @Override
             public void onSuccess(List<Question> questions) {
                 if (questions == null || questions.isEmpty()) {
