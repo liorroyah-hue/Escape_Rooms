@@ -15,15 +15,22 @@ import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * מנהל את לוגיקת בחירת סוג המשחק.
+ * אחראי על יצירת שאלות AI דרך Gemini.
+ */
 public class ChoosingGameViewModel extends AndroidViewModel {
     private static final String TAG = "ChoosingGameViewModel";
-    private final GeminiService geminiService = new GeminiService();
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private final Gson gson = new Gson();
 
-    private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false);
-    private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
-    private final MutableLiveData<QuizData> navigateToGame = new MutableLiveData<>();
+    private final GeminiService geminiService = new GeminiService(); // שירות Gemini AI
+    // Thread נפרד לפעולות רשת — לא חוסם את ה-UI Thread
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final Gson gson = new Gson(); // לפרסור JSON
+
+    // LiveData — ה-View מאזין לשינויים
+    private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>(false); // מצב טעינה
+    private final MutableLiveData<String> errorMessage = new MutableLiveData<>();    // הודעת שגיאה
+    private final MutableLiveData<QuizData> navigateToGame = new MutableLiveData<>(); // אות ניווט עם נתוני AI
 
     public ChoosingGameViewModel(@NonNull Application application) {
         super(application);
@@ -33,17 +40,21 @@ public class ChoosingGameViewModel extends AndroidViewModel {
     public LiveData<String> getErrorMessage() { return errorMessage; }
     public LiveData<QuizData> getNavigateToGame() { return navigateToGame; }
 
+    /**
+     * מפעיל את Gemini AI ליצירת שאלות לפי נושא.
+     * @param subject הנושא שנבחר (גיאוגרפיה, היסטוריה, וכו')
+     */
     public void generateAiGame(String subject) {
-        isLoading.setValue(true);
-        executor.execute(() -> {
+        isLoading.setValue(true); // מציג אנימציית טעינה
+        executor.execute(() -> { // מריץ על Thread נפרד
             try {
-                // Request 10 questions (2 per level for 5 levels)
+                // מבקש 10 שאלות — 2 לכל אחת מ-5 הרמות
                 String jsonResponse = geminiService.generateQandA(subject, 10);
-                QuizData quizData = gson.fromJson(jsonResponse, QuizData.class);
+                QuizData quizData = gson.fromJson(jsonResponse, QuizData.class); // ממיר JSON ל-QuizData
 
                 if (quizData != null && quizData.getQuestions() != null && !quizData.getQuestions().isEmpty()) {
-                    isLoading.postValue(false);
-                    navigateToGame.postValue(quizData);
+                    isLoading.postValue(false);       // מסתיר טעינה
+                    navigateToGame.postValue(quizData); // מאותת ל-View לנווט עם נתוני AI
                 } else {
                     isLoading.postValue(false);
                     errorMessage.postValue("ה-AI החזיר תשובה ריקה. נסה שוב.");
@@ -59,6 +70,6 @@ public class ChoosingGameViewModel extends AndroidViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
-        executor.shutdown();
+        executor.shutdown(); // כשה-ViewModel נהרס — מכבה את ה-Thread למניעת דליפות
     }
 }

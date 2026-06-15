@@ -19,25 +19,32 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.escape_rooms.R;
 import com.example.escape_rooms.viewmodel.ChoosingGameViewModel;
 
+/**
+ * מסך בחירת סוג משחק — AI (שאלות מ-Gemini) או DB (שאלות מ-Supabase).
+ * כולל בחירת נושא לשאלות AI ואנימציית התקדמות.
+ */
 public class ChoosingGameVariantActivity extends AppCompatActivity {
-    private RadioGroup radioGroupGameSubject;
-    private RadioGroup radioGroupGameSource;
-    private View cardSelection;
-    private String selectedCategory, selectedCreationType;
+    private RadioGroup radioGroupGameSubject; // בחירת נושא (גיאוגרפיה, היסטוריה...)
+    private RadioGroup radioGroupGameSource;  // בחירת מקור (AI או DB)
+    private View cardSelection;              // כרטיס בחירת נושא — מוסתר במצב DB
+    private String selectedCategory, selectedCreationType; // ערכים שנבחרו
     private Button startGameButton;
     private ChoosingGameViewModel viewModel;
-    private View progressFrame;
-    private View[] segments;
+    private View progressFrame;              // מסגרת אנימציית ההתקדמות
+    private View[] segments;                 // 10 פסי ההתקדמות
 
+    // Handler לתזמון אנימציות על ה-UI Thread
     private final Handler progressHandler = new Handler(Looper.getMainLooper());
-    private int currentSegmentCount = 0;
-    private boolean isNavigating = false;
+    private int currentSegmentCount = 0; // כמה פסים מוצגים כרגע
+    private boolean isNavigating = false; // מונע ניווט כפול
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_choosing_game_varient);
+
+        // Padding לפי גבולות המסך
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -46,30 +53,32 @@ public class ChoosingGameVariantActivity extends AppCompatActivity {
 
         viewModel = new ViewModelProvider(this).get(ChoosingGameViewModel.class);
 
+        // קישור אלמנטי UI
         startGameButton = findViewById(R.id.startGameButton);
         radioGroupGameSubject = findViewById(R.id.radio_group_game_subject);
         radioGroupGameSource = findViewById(R.id.radio_group_game_source);
         cardSelection = findViewById(R.id.cardSelection);
         progressFrame = findViewById(R.id.progress_frame);
 
-        initializeSegments();
+        initializeSegments(); // מאתחל את 10 פסי ההתקדמות
 
-        // Default to AI mode (matches the radio button checked by default in the layout)
+        // ברירת מחדל — AI (כפי שמסומן ב-layout)
         selectedCreationType = getString(R.string.creation_option_ai);
 
         observeViewModel();
 
+        // מאזין לשינוי מקור השאלות
         radioGroupGameSource.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.radio_source_db) {
                 selectedCreationType = getString(R.string.creation_option_existing);
-                // The DB-backed game does not filter by category, so hide the category card.
-                cardSelection.setVisibility(View.GONE);
+                cardSelection.setVisibility(View.GONE); // DB לא צריך בחירת נושא
             } else {
                 selectedCreationType = getString(R.string.creation_option_ai);
-                cardSelection.setVisibility(View.VISIBLE);
+                cardSelection.setVisibility(View.VISIBLE); // AI צריך בחירת נושא
             }
         });
 
+        // מאזין לבחירת נושא
         radioGroupGameSubject.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.radio_geography) selectedCategory = getString(R.string.category_geography);
             else if (checkedId == R.id.radio_history) selectedCategory = getString(R.string.category_history);
@@ -78,22 +87,26 @@ public class ChoosingGameVariantActivity extends AppCompatActivity {
             else if (checkedId == R.id.radio_science) selectedCategory = getString(R.string.category_science);
         });
 
+        // לחיצה על "התחל משחק"
         startGameButton.setOnClickListener(v -> {
             String aiOption = getString(R.string.creation_option_ai);
             if (aiOption.equals(selectedCreationType)) {
+                // מצב AI — חייב לבחור נושא
                 if (selectedCategory == null) {
                     Toast.makeText(this, R.string.select_category_prompt, Toast.LENGTH_SHORT).show();
                     return;
                 }
-                viewModel.generateAiGame(selectedCategory);
+                viewModel.generateAiGame(selectedCategory); // מפעיל Gemini
             } else {
-                // Database-backed game: questions come from Supabase via QuestionRepository.
-                // No AI call is needed; navigate directly into the room flow.
+                // מצב DB — עובר ישירות לחדר ללא AI
                 navigateToDrawer();
             }
         });
     }
 
+    /**
+     * מאתחל מערך של 10 פסי התקדמות ומאפס אותם
+     */
     private void initializeSegments() {
         segments = new View[10];
         segments[0] = findViewById(R.id.segment1);
@@ -109,56 +122,82 @@ public class ChoosingGameVariantActivity extends AppCompatActivity {
         resetProgressUI();
     }
 
+    /**
+     * מאפס את האנימציה — מסתיר את כל הפסים
+     */
     private void resetProgressUI() {
         currentSegmentCount = 0;
-        for (View s : segments) s.setAlpha(0f);
+        for (View s : segments) s.setAlpha(0f); // כל הפסים שקופים
     }
 
+    /**
+     * מפעיל אנימציית התקדמות — פס אחד כל 2 שניות
+     */
     private void startDiscreteProgress(boolean autoNavigate) {
-        progressHandler.removeCallbacksAndMessages(null);
+        progressHandler.removeCallbacksAndMessages(null); // מבטל תזמונים קודמים
         resetProgressUI();
-        progressFrame.setVisibility(View.VISIBLE);
-        setControlsEnabled(false);
+        progressFrame.setVisibility(View.VISIBLE); // מציג את מסגרת ההתקדמות
+        setControlsEnabled(false); // משבית כפתורים בזמן טעינה
         isNavigating = false;
         incrementProgress(autoNavigate);
     }
 
+    /**
+     * מוסיף פס אחד כל 2 שניות ומנווט בסיום אם autoNavigate=true
+     */
     private void incrementProgress(boolean autoNavigate) {
         if (currentSegmentCount < 10) {
             currentSegmentCount++;
+            // מציג פסים עד לספירה הנוכחית
             for (int i = 0; i < segments.length; i++) segments[i].setAlpha(i < currentSegmentCount ? 1.0f : 0f);
 
-            if (!autoNavigate && currentSegmentCount == 9) return;
+            if (!autoNavigate && currentSegmentCount == 9) return; // עוצר לפני האחרון אם לא autoNavigate
 
             if (currentSegmentCount < 10) {
+                // ממשיך אחרי 2 שניות
                 progressHandler.postDelayed(() -> incrementProgress(autoNavigate), 2000);
             } else if (autoNavigate) {
+                // כל הפסים מלאים — ממתין 0.5 שניה ומנווט
                 progressHandler.postDelayed(this::navigateToDrawer, 500);
             }
         }
     }
 
+    /**
+     * משבית/מאפשר פקדי ה-UI
+     */
     private void setControlsEnabled(boolean enabled) {
         startGameButton.setEnabled(enabled);
         radioGroupGameSubject.setEnabled(enabled);
-        for (int i = 0; i < radioGroupGameSubject.getChildCount(); i++) radioGroupGameSubject.getChildAt(i).setEnabled(enabled);
+        // משבית/מאפשר כל כפתור הרדיו בנפרד
+        for (int i = 0; i < radioGroupGameSubject.getChildCount(); i++)
+            radioGroupGameSubject.getChildAt(i).setEnabled(enabled);
     }
 
+    /**
+     * מנווט ל-DrawerActivity עם level=1 (תחילת משחק).
+     * isNavigating מונע ניווט כפול.
+     */
     private void navigateToDrawer() {
-        if (isNavigating) return;
+        if (isNavigating) return; // מונע כפילות
         isNavigating = true;
         Intent intent = new Intent(this, DrawerActivity.class);
         intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, selectedCreationType);
-        intent.putExtra(MainActivity.EXTRA_LEVEL, 1);
+        intent.putExtra(MainActivity.EXTRA_LEVEL, 1); // תמיד מתחיל ברמה 1
         startActivity(intent);
-        finish();
+        finish(); // סוגר את המסך הנוכחי
     }
 
+    /**
+     * מאזין לשינויים ב-ViewModel
+     */
     private void observeViewModel() {
+        // AI מתחיל לייצר שאלות — מפעיל אנימציה
         viewModel.getIsLoading().observe(this, isLoading -> {
             if (isLoading != null && isLoading) startDiscreteProgress(false);
         });
 
+        // שגיאת AI — מציג הודעה ומאפשר ניסיון חוזר
         viewModel.getErrorMessage().observe(this, error -> {
             if (error != null) {
                 progressHandler.removeCallbacksAndMessages(null);
@@ -168,15 +207,17 @@ public class ChoosingGameVariantActivity extends AppCompatActivity {
             }
         });
 
+        // AI סיים — ממלא את כל הפסים ומנווט לחדר
         viewModel.getNavigateToGame().observe(this, quizData -> {
             if (quizData != null) {
                 progressHandler.removeCallbacksAndMessages(null);
-                for (View s : segments) s.setAlpha(1.0f);
+                for (View s : segments) s.setAlpha(1.0f); // כל הפסים מלאים
 
+                // אחרי 0.6 שניות — עובר ל-DrawerActivity עם נתוני AI
                 progressFrame.postDelayed(() -> {
                     Intent intent = new Intent(this, DrawerActivity.class);
                     intent.putExtra(MainActivity.EXTRA_CREATION_TYPE, getString(R.string.creation_option_ai));
-                    intent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, quizData);
+                    intent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, quizData); // שאלות AI
                     intent.putExtra(MainActivity.EXTRA_LEVEL, 1);
                     startActivity(intent);
                     finish();
@@ -187,7 +228,7 @@ public class ChoosingGameVariantActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        progressHandler.removeCallbacksAndMessages(null);
+        progressHandler.removeCallbacksAndMessages(null); // מנקה תזמונים — מונע דליפות זיכרון
         super.onDestroy();
     }
 }

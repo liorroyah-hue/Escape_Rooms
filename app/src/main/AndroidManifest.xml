@@ -14,14 +14,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Escape_Rooms">
         <activity
-            android:name=".view.Room_Example"
-            android:exported="false"
-            android:theme="@style/Theme.Escape_Rooms" />
-        <activity
-            android:name=".view.Room_example"
-            android:exported="false"
-            android:theme="@style/Theme.Escape_Rooms" />
-        <activity
             android:name=".view.DrawerActivity"
             android:exported="false" />
         <activity
@@ -41,9 +33,6 @@
             android:exported="false" />
         <activity
             android:name=".view.MainActivity"
-            android:exported="false" />
-        <activity
-            android:name=".view.CorridorActivity"
             android:exported="false" />
         <activity
             android:name=".view.PlayerResultsActivity"

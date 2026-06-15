@@ -23,18 +23,22 @@ import com.example.escape_rooms.viewmodel.GameViewModel;
 import java.io.Serializable;
 import java.util.HashMap;
 
+/**
+ * מסך השאלות — מציג 2 שאלות עם אפשרויות תשובה, בודק נכונות, ומנווט הלאה.
+ */
 public class MainActivity extends AppCompatActivity {
 
-    public static final String EXTRA_LEVEL         = "com.example.escape_rooms.LEVEL";
-    public static final String EXTRA_TIMINGS       = "com.example.escape_rooms.TIMINGS";
-    public static final String EXTRA_CREATION_TYPE = "com.example.escape_rooms.CREATION_TYPE";
-    public static final String EXTRA_AI_GAME_DATA  = "com.example.escape_rooms.AI_GAME_DATA";
-    public static final String EXTRA_ROOM_ID       = "com.example.escape_rooms.ROOM_ID";
-    public static final String EXTRA_QUESTION_ID   = "com.example.escape_rooms.QUESTION_ID";
-    public static final String EXTRA_PICTURE_ID    = "com.example.escape_rooms.PICTURE_ID";
+    // קבועים להעברת מידע בין Activities דרך Intent
+    public static final String EXTRA_LEVEL         = "com.example.escape_rooms.LEVEL";        // רמה נוכחית
+    public static final String EXTRA_TIMINGS       = "com.example.escape_rooms.TIMINGS";      // תזמוני רמות
+    public static final String EXTRA_CREATION_TYPE = "com.example.escape_rooms.CREATION_TYPE"; // AI או DB
+    public static final String EXTRA_AI_GAME_DATA  = "com.example.escape_rooms.AI_GAME_DATA";  // שאלות AI
+    public static final String EXTRA_ROOM_ID       = "com.example.escape_rooms.ROOM_ID";       // ID החדר
+    public static final String EXTRA_QUESTION_ID   = "com.example.escape_rooms.QUESTION_ID";   // ID השאלה
+    public static final String EXTRA_PICTURE_ID    = "com.example.escape_rooms.PICTURE_ID";    // ID התמונה
 
-    private RecyclerView questionsRecyclerView;
-    private QuestionsAdapter questionsAdapter;
+    private RecyclerView questionsRecyclerView; // רשימת השאלות
+    private QuestionsAdapter questionsAdapter;  // מנהל תצוגת השאלות
     private GameViewModel viewModel;
     private GameAudioManager audioManager;
 
@@ -44,31 +48,35 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         audioManager = GameAudioManager.getInstance(this);
-        audioManager.startAmbientMusic();
+        audioManager.startAmbientMusic(); // מפעיל מוזיקת רקע
 
+        // יוצר ViewModel עם Factory — מזריק את QuestionRepository
         GameViewModel.Factory factory = new GameViewModel.Factory(getApplication(), QuestionRepository.getInstance());
         viewModel = new ViewModelProvider(this, factory).get(GameViewModel.class);
 
         questionsRecyclerView = findViewById(R.id.questions_recycler_view);
         Button btnSubmitAnswers = findViewById(R.id.btn_submit_answers);
-        questionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        questionsRecyclerView.setLayoutManager(new LinearLayoutManager(this)); // רשימה אנכית
 
+        // קריאת נתונים מה-Intent
         Intent intent = getIntent();
         @SuppressWarnings("unchecked")
         HashMap<Integer, Long> timings = (HashMap<Integer, Long>) intent.getSerializableExtra(EXTRA_TIMINGS);
         String creationType = intent.getStringExtra(EXTRA_CREATION_TYPE);
         int level = intent.getIntExtra(EXTRA_LEVEL, 1);
-        int roomId = intent.getIntExtra(EXTRA_ROOM_ID, 0);
+        int roomId = intent.getIntExtra(EXTRA_ROOM_ID, 0); // ID החדר לסינון שאלות
 
+        // מאתחל לפי סוג המשחק
         if (getString(R.string.creation_option_ai).equals(creationType)) {
             QuizData quizData = (QuizData) intent.getSerializableExtra(EXTRA_AI_GAME_DATA);
-            viewModel.initAiGame(quizData, level, timings);
+            viewModel.initAiGame(quizData, level, timings); // שאלות מ-Gemini
         } else {
-            viewModel.initLevel(level, timings, roomId);
+            viewModel.initLevel(level, timings, roomId); // שאלות מ-Supabase לפי חדר
         }
 
-        observeViewModel(roomId);
+        observeViewModel(roomId); // מתחיל להאזין לשינויים
 
+        // לחיצה על "שלח תשובות" — שולח ל-ViewModel לבדיקה
         btnSubmitAnswers.setOnClickListener(v -> {
             if (questionsAdapter != null) {
                 viewModel.verifyAndSubmit(questionsAdapter.getSelectedAnswers());
@@ -76,34 +84,40 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * מאזין לשינויים ב-ViewModel ומעדכן UI/מנווט בהתאם.
+     */
     private void observeViewModel(int roomId) {
+        // שאלות חדשות הגיעו — יוצר Adapter ומציג
         viewModel.getCurrentQuestions().observe(this, questions -> {
             questionsAdapter = new QuestionsAdapter(
                     this,
-                    questions.getQuestionsList(),
-                    questions.getQuestionsToAnswers()
+                    questions.getQuestionsList(),        // רשימת השאלות
+                    questions.getQuestionsToAnswers()    // אפשרויות לכל שאלה
             );
             questionsRecyclerView.setAdapter(questionsAdapter);
         });
 
+        // הודעת שגיאה/הנחיה — מציג Toast עם צליל שגיאה
         viewModel.getToastMessage().observe(this, message -> {
             if (message == null) return;
             audioManager.playErrorSound();
             int resId = 0;
-            if ("msg_answer_all".equals(message))  resId = R.string.msg_answer_all;
-            else if ("msg_incorrect".equals(message)) resId = R.string.msg_incorrect;
+            if ("msg_answer_all".equals(message))     resId = R.string.msg_answer_all; // "יש לענות על כל השאלות"
+            else if ("msg_incorrect".equals(message)) resId = R.string.msg_incorrect;  // "תשובה שגויה"
             showCustomToast(resId != 0 ? getString(resId) : message, false);
         });
 
+        // אירוע ניווט — תשובות נכונות
         viewModel.getNavigationEvent().observe(this, event -> {
             if (event.target == GameViewModel.NavigationTarget.FIND_ITEM) {
-                audioManager.playSuccessSound();
+                audioManager.playSuccessSound(); // צליל הצלחה
                 Intent intent = new Intent(this, FindTheItemActivity.class);
-                intent.putExtra(EXTRA_LEVEL, event.nextLevel);
-                intent.putExtra(EXTRA_TIMINGS, event.timings);
+                intent.putExtra(EXTRA_LEVEL, event.nextLevel);       // הרמה הבאה
+                intent.putExtra(EXTRA_TIMINGS, event.timings);       // תזמונים מצטברים
                 intent.putExtra(EXTRA_CREATION_TYPE, getIntent().getStringExtra(EXTRA_CREATION_TYPE));
-                intent.putExtra(EXTRA_ROOM_ID, roomId);
-                intent.putExtra(EXTRA_QUESTION_ID, event.questionId); // pass question id
+                intent.putExtra(EXTRA_ROOM_ID, roomId);              // לשמירה ב-game_results
+                intent.putExtra(EXTRA_QUESTION_ID, event.questionId); // לשמירה ב-game_results
                 if (event.aiData != null) intent.putExtra(EXTRA_AI_GAME_DATA, (Serializable) event.aiData);
                 startActivity(intent);
                 finish();
@@ -119,11 +133,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * מציג Toast מותאם אישית עם אייקון נעילה פתוח/סגור.
+     */
     private void showCustomToast(String message, boolean isSuccess) {
         View layout = getLayoutInflater().inflate(R.layout.layout_custom_toast, null, false);
         TextView text = layout.findViewById(R.id.toast_text);
         ImageView icon = layout.findViewById(R.id.toast_icon);
         if (text != null) text.setText(message);
+        // אייקון שונה לפי הצלחה/כישלון
         if (icon != null) icon.setImageResource(isSuccess ? R.drawable.ic_lock_open : R.drawable.ic_lock_closed);
         Toast toast = new Toast(getApplicationContext());
         toast.setDuration(Toast.LENGTH_SHORT);

@@ -17,11 +17,14 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.escape_rooms.R;
 import com.example.escape_rooms.viewmodel.SignUpViewModel;
 
+/**
+ * מסך ההרשמה — יוצר חשבון משתמש חדש.
+ */
 public class SignUpActivity extends AppCompatActivity {
 
     private EditText usernameEditText, passwordEditText;
     private Button signUpButton;
-    private ProgressBar progressBar;
+    private ProgressBar progressBar; // מוצג בזמן שמירה לשרת
     private SignUpViewModel viewModel;
 
     @Override
@@ -45,6 +48,7 @@ public class SignUpActivity extends AppCompatActivity {
 
         observeViewModel();
 
+        // לחיצה על כפתור הרשמה — מסיר רווחים ושולח ל-ViewModel
         signUpButton.setOnClickListener(v -> {
             String username = usernameEditText.getText().toString().trim();
             String password = passwordEditText.getText().toString().trim();
@@ -53,18 +57,21 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     private void observeViewModel() {
+        // מצב טעינה — מציג/מסתיר ProgressBar ומשבית/מאפשר כפתור
         viewModel.getIsLoading().observe(this, isLoading -> {
             progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-            signUpButton.setEnabled(!isLoading);
+            signUpButton.setEnabled(!isLoading); // לא ניתן ללחוץ שוב בזמן שמירה
         });
 
+        // הרשמה הצליחה — Toast ו-חזרה למסך כניסה
         viewModel.getSignUpResult().observe(this, success -> {
             if (success) {
                 Toast.makeText(this, "Registration Successful! You can now log in.", Toast.LENGTH_LONG).show();
-                finish(); // Go back to Login screen
+                finish(); // חוזר ל-LoginActivity
             }
         });
 
+        // שגיאה — מציג Toast
         viewModel.getErrorMessage().observe(this, error -> {
             Toast.makeText(this, error, Toast.LENGTH_LONG).show();
         });

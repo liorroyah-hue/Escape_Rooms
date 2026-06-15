@@ -13,6 +13,10 @@ import com.example.escape_rooms.R;
 import com.example.escape_rooms.repository.services.GameAudioManager;
 import com.example.escape_rooms.viewmodel.RatingViewModel;
 
+/**
+ * מסך הדירוג — השחקן נותן ציון 1-5 כוכבים לחוויית המשחק.
+ * הציון נשמר ל-Supabase ועובר ללוח התוצאות.
+ */
 public class RatingActivity extends AppCompatActivity {
 
     @Override
@@ -20,25 +24,26 @@ public class RatingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rating);
 
-        // Stop absolutely everything upon entering this screen
+        // עוצר את כל המוזיקה והאפקטים — המשחק הסתיים
         GameAudioManager.getInstance(this).stopAllSounds();
 
-        RatingBar ratingBar = findViewById(R.id.ratingBar);
+        RatingBar ratingBar = findViewById(R.id.ratingBar); // פס הדירוג (1-5 כוכבים)
         Button btnSubmit = findViewById(R.id.btn_submit_rating);
 
         RatingViewModel viewModel = new ViewModelProvider(this).get(RatingViewModel.class);
 
+        // לחיצה על "שלח דירוג"
         btnSubmit.setOnClickListener(v -> {
-            float rating = ratingBar.getRating();
+            float rating = ratingBar.getRating(); // קריאת הציון הנבחר
             if (rating > 0) {
-                viewModel.submitRating(rating);
+                viewModel.submitRating(rating); // שולח ל-Supabase
                 Toast.makeText(this, getString(R.string.msg_rating_saved, (int)rating), Toast.LENGTH_SHORT).show();
-                
-                // Explicitly navigate to the LeaderboardActivity in the same package
+                // עובר ללוח התוצאות
                 Intent intent = new Intent(this, LeaderboardActivity.class);
                 startActivity(intent);
-                finish();
+                finish(); // סוגר מסך דירוג
             } else {
+                // לא נבחר דירוג — מציג הנחיה
                 Toast.makeText(this, "Please select a rating", Toast.LENGTH_SHORT).show();
             }
         });
