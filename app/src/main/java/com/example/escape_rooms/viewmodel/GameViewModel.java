@@ -1,6 +1,8 @@
 package com.example.escape_rooms.viewmodel;
 
 import android.app.Application;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -12,80 +14,156 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.escape_rooms.model.Question;
 import com.example.escape_rooms.model.Questions;
 import com.example.escape_rooms.model.QuizData;
+import com.example.escape_rooms.repository.GameRepository;
 import com.example.escape_rooms.repository.QuestionRepository;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-/**
- * מנהל את לוגיקת המשחק — טעינת שאלות, בדיקת תשובות,
- * מדידת זמן, וניווט בין מסכים.
- * AndroidViewModel — שורד סיבובי מסך.
- */
 public class GameViewModel extends AndroidViewModel {
+    private final QuestionRepository repository;
+    private final GameRepository gameRepository = new GameRepository();
 
-    private final QuestionRepository repository; // מקור הנתונים — שאלות וחדרים
+    private final MutableLiveData<Questions> currentQuestions = new MutableLiveData<>();
+    private final MutableLiveData<String> toastMessage = new MutableLiveData<>();
+    private final MutableLiveData<NavigationEvent> navigationEvent = new MutableLiveData<>();
 
-    // LiveData — ה-View מאזין לשינויים ומתעדכן אוטומטית
-    private final MutableLiveData<Questions> currentQuestions = new MutableLiveData<>(); // שאלות נוכחיות
-    private final MutableLiveData<String> toastMessage = new MutableLiveData<>();        // הודעות למשתמש
-    private final MutableLiveData<NavigationEvent> navigationEvent = new MutableLiveData<>(); // אירועי ניווט
+    private int currentLevel = 1;
+    private int currentRoomId = 0;
+    private long startTime;
+    private HashMap<Integer, Long> levelTimings = new HashMap<>();
+    private QuizData fullAiQuizData;
+    private int lastQuestionId = 0;
+    private int lastPictureId = 0;
 
-    private int currentLevel = 1;      // הרמה הנוכחית (1-5)
-    private int currentRoomId = 0;     // ID החדר הנוכחי — לסינון שאלות לפי חדר
-    private long startTime;            // זמן תחילת הרמה — למדידת משך הזמן
-    private HashMap<Integer, Long> levelTimings = new HashMap<>(); // זמן לכל רמה שהושלמה
-    private QuizData fullAiQuizData;   // שאלות AI לכל הרמות
-    private int lastQuestionId = 0;    // ID השאלה הראשונה שנענתה — נשמר ב-game_results
+    // Set של IDs של שאלות שכבר הוצגו בכל 5 הרמות — נשמר ב-SharedPreferences
+    private final Set<Integer> usedQuestionIds = new HashSet<>();
 
-    public static final int MAX_LEVELS = 5; // מספר הרמות הכולל במשחק
+    /** טוען את רשימת השאלות המשומשות מה-SharedPreferences */
+    private void loadUsedQuestions() {
+        SharedPreferences prefs = getApplication()
+                .getSharedPreferences("EscapeRoomPrefs", Context.MODE_PRIVATE);
+        Set<String> stored = prefs.getStringSet("used_question_ids", new HashSet<>());
+        usedQuestionIds.clear();
+        for (String id : stored) {
+            try { usedQuestionIds.add(Integer.parseInt(id)); } catch (Exception ignored) {}
+        }
+    }
+
+    /** שומר את רשימת השאלות המשומשות ל-SharedPreferences */
+    private void saveUsedQuestions() {
+        Set<String> toStore = new HashSet<>();
+        for (int id : usedQuestionIds) toStore.add(String.valueOf(id));
+        getApplication().getSharedPreferences("EscapeRoomPrefs", Context.MODE_PRIVATE)
+                .edit().putStringSet("used_question_ids", toStore).apply();
+    }
+
+    /** מוחק את רשימת השאלות המשומשות — נקרא בתחילת משחק חדש */
+    private void clearUsedQuestions() {
+        usedQuestionIds.clear();
+        getApplication().getSharedPreferences("EscapeRoomPrefs", Context.MODE_PRIVATE)
+                .edit().remove("used_question_ids").apply();
+    }
+
+    public static final int MAX_LEVELS = 5;
 
     public GameViewModel(@NonNull Application application, @NonNull QuestionRepository questionRepository) {
         super(application);
         this.repository = questionRepository;
     }
 
-    // getters ל-LiveData — ה-View מאזין דרך אלה
     public LiveData<Questions> getCurrentQuestions() { return currentQuestions; }
     public LiveData<String> getToastMessage() { return toastMessage; }
     public LiveData<NavigationEvent> getNavigationEvent() { return navigationEvent; }
 
-    /**
-     * מאתחל רמה רגילה מהמסד נתונים.
-     * @param roomId — ID החדר הנוכחי לסינון שאלות מתאימות
-     */
     public void initLevel(int level, HashMap<Integer, Long> timings, int roomId) {
         this.currentLevel = level;
-        this.currentRoomId = roomId; // שומר את החדר לשימוש בטעינת שאלות
-        if (timings != null) this.levelTimings = timings; // שומר תזמונים קודמים
-        loadLevel(); // טוען שאלות מהDB
+        this.currentRoomId = roomId;
+        if (timings != null) this.levelTimings = timings;
+        if (level == 1) {
+            clearUsedQuestions(); // משחק חדש — מאפס שאלות שהוצגו
+        } else {
+            loadUsedQuestions(); // טוען מ-SharedPreferences את מה שהוצג ברמות הקודמות
+        }
+        loadLevel();
     }
 
-    /**
-     * מאתחל רמה עם שאלות שנוצרו ע"י AI.
-     */
     public void initAiGame(QuizData quizData, int level, HashMap<Integer, Long> timings) {
-        this.fullAiQuizData = quizData; // שאלות לכל הרמות
+        this.fullAiQuizData = quizData;
         this.currentLevel = level;
         if (timings != null) this.levelTimings = timings;
-        loadAiLevel(); // טוען שאלות מהAI data
+        loadAiLevel();
     }
 
     /**
-     * שולף 2 שאלות אקראיות מה-DB לפי roomId ומתחיל מדידת זמן.
+     * נקרא מ-FindTheItemActivity כשהשחקן מצא את הפריט.
+     * שומר את picture_id ומפעיל שמירת תוצאת הרמה ל-Supabase.
      */
+    /**
+     * נקרא מ-FindTheItemActivity כדי לעדכן את ה-ViewModel
+     * עם הקשר הרמה שהסתיימה — roomId ו-questionId —
+     * לפני ש-onPictureFound נקרא ושומר ל-Supabase.
+     */
+    public void setLevelContext(int level, int roomId, int questionId) {
+        this.currentLevel = level;
+        this.currentRoomId = roomId;
+        this.lastQuestionId = questionId;
+        loadUsedQuestions(); // טוען שאלות משומשות כדי שה-Set יהיה עדכני
+    }
+
+    public void onPictureFound(int pictureId) {
+        this.lastPictureId = pictureId;
+        saveLevelResult();
+    }
+
+    /**
+     * שומר תוצאת הרמה הנוכחית ל-Supabase.
+     * נקרא אחרי שהשחקן מצא את הפריט — כלומר סיים את הרמה במלואה.
+     */
+    private void saveLevelResult() {
+        SharedPreferences prefs = getApplication()
+                .getSharedPreferences("EscapeRoomPrefs", Context.MODE_PRIVATE);
+        long userId = prefs.getLong("current_user_id", -1);
+        if (userId == -1) return; // לא מחובר — לא שומר
+
+        Long levelTime = levelTimings.get(currentLevel);
+        if (levelTime == null) return; // אין זמן לרמה — לא שומר
+
+        gameRepository.saveLevelResult(
+                userId,
+                currentLevel,   // מספר הרמה (1-5)
+                levelTime,      // הזמן של הרמה הספציפית
+                currentRoomId,  // החדר של הרמה
+                lastQuestionId, // השאלה של הרמה
+                lastPictureId,  // הפריט שנמצא בסוף הרמה
+                new GameRepository.GameResultCallback() {
+                    @Override public void onSuccess() {
+                        Log.d("GameViewModel", "Level " + currentLevel + " saved to Supabase");
+                    }
+                    @Override public void onError(Exception e) {
+                        Log.e("GameViewModel", "Failed to save level " + currentLevel, e);
+                    }
+                }
+        );
+    }
+
     private void loadLevel() {
-        startTime = System.currentTimeMillis(); // מתחיל מדידת זמן
-        repository.get2RandomQuestions(currentRoomId, new QuestionRepository.QuestionsCallback() {
+        startTime = System.currentTimeMillis();
+        repository.get2RandomQuestions(currentRoomId, usedQuestionIds, new QuestionRepository.QuestionsCallback() {
             @Override
             public void onSuccess(List<Question> questions) {
                 if (questions == null || questions.isEmpty()) {
                     toastMessage.postValue("No questions found for level " + currentLevel);
                 } else {
-                    lastQuestionId = questions.get(0).getId(); // שומר ID של השאלה הראשונה
-                    currentQuestions.postValue(new Questions(questions)); // מעדכן את ה-UI
+                    lastQuestionId = questions.get(0).getId();
+                    // מוסיף את ה-IDs של השאלות שהוצגו ושומר ל-SharedPreferences
+                    for (Question q : questions) usedQuestionIds.add(q.getId());
+                    saveUsedQuestions();
+                    currentQuestions.postValue(new Questions(questions));
                 }
             }
             @Override
@@ -96,67 +174,13 @@ public class GameViewModel extends AndroidViewModel {
         });
     }
 
-    /**
-     * מחלץ 2 שאלות AI לפי מספר הרמה הנוכחית.
-     * 2 שאלות לרמה × 5 רמות = 10 שאלות סה"כ.
-     *
-     * ┌─────────────────────────────────────────────────────────────┐
-     * │                    מה הפונקציה עושה                         │
-     * ├─────────────────────────────────────────────────────────────┤
-     * │  Gemini יצר 10 שאלות מראש לכל המשחק.                       │
-     * │  הפונקציה חותכת "פרוסה" מהרשימה לפי הרמה הנוכחית:         │
-     * │  רמה 1 → שאלות 0-1, רמה 2 → שאלות 2-3, וכו'.              │
-     * │                                                             │
-     * │  הקושי: חייבים לחתוך 3 מערכים במקביל ולשמור אותם          │
-     * │  מסונכרנים — questions, answers, correctAnswers.            │
-     * │  אינדקס 0 ב-questions חייב לתאים לאינדקס 0 ב-answers       │
-     * │  ולאינדקס 0 ב-correctAnswers.                               │
-     * └─────────────────────────────────────────────────────────────┘
-     *
-     * חישוב האינדקסים:
-     *
-     *   questionsPerLevel = 2
-     *   startIndex = (currentLevel - 1) * 2
-     *   endIndex   = startIndex + 2
-     *
-     *   רמה 1: startIndex = (1-1)*2 = 0,  endIndex = 2  → שאלות [0,1]
-     *   רמה 2: startIndex = (2-1)*2 = 2,  endIndex = 4  → שאלות [2,3]
-     *   רמה 3: startIndex = (3-1)*2 = 4,  endIndex = 6  → שאלות [4,5]
-     *   רמה 4: startIndex = (4-1)*2 = 6,  endIndex = 8  → שאלות [6,7]
-     *   רמה 5: startIndex = (5-1)*2 = 8,  endIndex = 10 → שאלות [8,9]
-     *
-     * מבנה fullAiQuizData (כפי שמגיע מ-Gemini):
-     *
-     *   questions:      ["שאלה0","שאלה1","שאלה2","שאלה3",...,"שאלה9"]
-     *   answers:        [["א","ב","ג","ד"],["א","ב","ג","ד"],...] ← 10 מערכים
-     *   correctAnswers: ["ב","ד","א","ג",...,"ב"]
-     *
-     * לרמה 2 (startIndex=2, endIndex=4):
-     *
-     *   questions.subList(2,4)      → ["שאלה2","שאלה3"]
-     *   answers.subList(2,4)        → [["א","ב","ג","ד"],["א","ב","ג","ד"]]
-     *   correctAnswers.subList(2,4) → ["א","ג"]
-     *
-     * למה new ArrayList<>(subList(...)) ולא subList ישירות?
-     *   subList מחזיר "תצוגה" של הרשימה המקורית — לא עותק.
-     *   אם fullAiQuizData ישתנה בהמשך, ה-subList ישתנה גם הוא.
-     *   new ArrayList<>() יוצר עותק עצמאי ובטוח.
-     *
-     * למה Math.min(startIndex + questionsPerLevel, size)?
-     *   הגנה מפני מצב שיש פחות שאלות ממה שמצופה.
-     *   למשל אם Gemini החזיר 9 שאלות במקום 10,
-     *   ברמה 5 endIndex יהיה 10 אבל size=9 → ייצא מגבולות.
-     *   Math.min מבטיח שלא נצא מהגבולות.
-     */
     private void loadAiLevel() {
         if (fullAiQuizData == null || fullAiQuizData.getQuestions() == null) return;
         startTime = System.currentTimeMillis();
         int questionsPerLevel = 2;
-        int startIndex = (currentLevel - 1) * questionsPerLevel; // אינדקס התחלה לרמה זו
-        int endIndex = Math.min(startIndex + questionsPerLevel, fullAiQuizData.getQuestions().size()); // לא יוצא מגבולות
-
+        int startIndex = (currentLevel - 1) * questionsPerLevel;
+        int endIndex = Math.min(startIndex + questionsPerLevel, fullAiQuizData.getQuestions().size());
         if (startIndex < endIndex) {
-            // יוצר תת-קבוצה של שאלות לרמה הנוכחית
             QuizData levelSubset = new QuizData();
             levelSubset.setQuestions(new ArrayList<>(fullAiQuizData.getQuestions().subList(startIndex, endIndex)));
             levelSubset.setAnswers(new ArrayList<>(fullAiQuizData.getAnswers().subList(startIndex, endIndex)));
@@ -167,59 +191,42 @@ public class GameViewModel extends AndroidViewModel {
         }
     }
 
-    /**
-     * בודק את תשובות השחקן.
-     * אם הכל נכון — מחשב זמן ומנווט הלאה.
-     * אם לא — שולח הודעת שגיאה.
-     */
     public void verifyAndSubmit(Map<String, String> selectedAnswers) {
         Questions data = currentQuestions.getValue();
         if (data == null || data.getQuestionsList().isEmpty()) return;
 
-        // בודק שהשחקן ענה על כל השאלות
         if (selectedAnswers.size() != data.getQuestionsList().size()) {
-            toastMessage.setValue("msg_answer_all"); // הודעה: יש לענות על כל השאלות
+            toastMessage.setValue("msg_answer_all");
             return;
         }
 
-        // בודק כל תשובה מול התשובה הנכונה
         boolean allCorrect = true;
         for (Map.Entry<String, String> entry : data.getCorrectAnswers().entrySet()) {
             if (!entry.getValue().equals(selectedAnswers.get(entry.getKey()))) {
                 allCorrect = false;
-                break; // מספיק למצוא שגיאה אחת
+                break;
             }
         }
 
         if (allCorrect) {
-            long duration = System.currentTimeMillis() - startTime; // חישוב זמן הרמה
-            levelTimings.put(currentLevel, duration); // שמירת זמן הרמה
+            long duration = System.currentTimeMillis() - startTime;
+            levelTimings.put(currentLevel, duration);
             int nextLevel = currentLevel + 1;
-            // שולח אירוע ניווט ל-FindTheItemActivity
             navigationEvent.setValue(new NavigationEvent(
                     NavigationTarget.FIND_ITEM, nextLevel, levelTimings, fullAiQuizData, lastQuestionId));
         } else {
-            toastMessage.setValue("msg_incorrect"); // הודעה: תשובה שגויה
+            toastMessage.setValue("msg_incorrect");
         }
     }
 
-    /**
-     * יעדי ניווט אפשריים מה-ViewModel
-     */
-    public enum NavigationTarget {
-        FIND_ITEM,  // עבור ל-FindTheItemActivity
-        RESULTS     // עבור ל-PlayerResultsActivity
-    }
+    public enum NavigationTarget { FIND_ITEM, RESULTS }
 
-    /**
-     * אובייקט המכיל את כל המידע הנדרש לניווט למסך הבא.
-     */
     public static class NavigationEvent {
-        public final NavigationTarget target;        // לאן לנווט
-        public final int nextLevel;                  // הרמה הבאה
-        public final HashMap<Integer, Long> timings; // תזמוני כל הרמות
-        public final QuizData aiData;                // נתוני AI (אם במצב AI)
-        public final int questionId;                 // ID השאלה — לשמירה ב-game_results
+        public final NavigationTarget target;
+        public final int nextLevel;
+        public final HashMap<Integer, Long> timings;
+        public final QuizData aiData;
+        public final int questionId;
 
         public NavigationEvent(NavigationTarget target, int nextLevel,
                                HashMap<Integer, Long> timings, QuizData aiData, int questionId) {
@@ -231,10 +238,6 @@ public class GameViewModel extends AndroidViewModel {
         }
     }
 
-    /**
-     * Factory — מאפשר ל-ViewModel לקבל QuestionRepository דרך הזרקת תלויות.
-     * נדרש כי ViewModel רגיל לא יכול לקבל פרמטרים בנאי.
-     */
     public static class Factory extends ViewModelProvider.NewInstanceFactory {
         private final Application application;
         private final QuestionRepository questionRepository;

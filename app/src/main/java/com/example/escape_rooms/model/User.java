@@ -3,12 +3,13 @@ package com.example.escape_rooms.model;
 import com.google.gson.annotations.SerializedName;
 
 public class User {
-    @SerializedName("user id")
-    private Integer id; 
-    
+
+    @SerializedName("user_id")  // תוקן: היה "user id" עם רווח, Supabase משתמש ב-user_id עם קו תחתון
+    private Integer id;
+
     @SerializedName("username")
     private String username;
-    
+
     @SerializedName("password")
     private String password;
 
@@ -19,11 +20,11 @@ public class User {
         this.password = password;
     }
 
-    // Constructor for registration (without ID)
+    // Constructor for registration (without ID — Supabase מייצר את ה-ID אוטומטית)
     public User(String username, String password) {
         this.username = username;
         this.password = password;
-        this.id = null; // Ensure ID is null so it's omitted from JSON
+        this.id = null;
     }
 
     public Integer getId() { return id; }

@@ -16,59 +16,47 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-/**
- * מנהל שמירת תוצאות משחק ושליפת לוח התוצאות מ-Supabase.
- */
 public class GameRepository extends BaseRepository {
 
-    /**
-     * ממשק קריאת חזרה לשמירת תוצאה — הצלחה או שגיאה בלי נתונים
-     */
     public interface GameResultCallback {
         void onSuccess();
         void onError(Exception e);
     }
 
-    /**
-     * ממשק קריאת חזרה ללוח התוצאות — מחזיר רשימת GameResult
-     */
     public interface LeaderboardCallback {
         void onSuccess(List<GameResult> results);
         void onError(Exception e);
     }
 
-    /**
-     * מייצג שורה אחת מטבלת game_results — נתוני תוצאה של שחקן
-     */
     public static class GameResult {
-        public long user_id;       // מזהה השחקן
-        public String username;    // שם המשתמש (נטען מטבלת User דרך JOIN)
-        public long total_time_ms; // זמן כולל במילישניות
-        public int levels_completed; // מספר רמות שהושלמו
+        public long user_id;
+        public String username;
+        public long total_time_ms; // סכום כל 5 הרמות
+        public int levels_completed;
     }
 
     /**
-     * שומר תוצאת משחק ל-game_results ב-Supabase.
-     * כולל room_id, question_id, id_picture לקישור הטבלאות.
+     * שומר תוצאה לרמה בודדת ב-game_results.
+     * נקרא בסוף כל רמה עם הזמן הספציפי של אותה רמה
+     * + ה-IDs של החדר, השאלה, והתמונה שהיו באותה רמה.
      */
-    public void saveGameResult(long userId, long totalTimeMillis, int levelsCompleted,
-                                int roomId, int questionId, int idPicture,
-                                GameResultCallback callback) {
+    public void saveLevelResult(long userId, int level, long levelTimeMs,
+                                 int roomId, int questionId, int pictureId,
+                                 GameResultCallback callback) {
         String url = SUPABASE_URL + "/rest/v1/game_results";
 
-        // בנית אובייקט JSON לשליחה
         Map<String, Object> data = new HashMap<>();
-        data.put("user_id", userId);           // מזהה השחקן
-        data.put("total_time_ms", totalTimeMillis); // זמן כולל
-        data.put("levels_completed", levelsCompleted); // רמות שהושלמו
-        if (roomId > 0)     data.put("room_id", roomId);       // מזהה החדר — רק אם תקין
-        if (questionId > 0) data.put("question_id", questionId); // מזהה השאלה — רק אם תקין
-        if (idPicture > 0)  data.put("id_picture", idPicture);   // מזהה התמונה — רק אם תקין
+        data.put("user_id", userId);
+        data.put("total_time_ms", levelTimeMs);   // זמן הרמה הספציפית
+        data.put("levels_completed", level);       // מספר הרמה (1-5)
+        if (roomId > 0)     data.put("room_id", roomId);
+        if (questionId > 0) data.put("question_id", questionId);
+        if (pictureId > 0)  data.put("id_picture", pictureId);
 
         RequestBody body = RequestBody.create(gson.toJson(data), MediaType.parse("application/json"));
         Request request = new Request.Builder()
                 .url(url)
-                .post(body) // POST — יצירת שורה חדשה
+                .post(body)
                 .addHeader("apikey", SUPABASE_KEY)
                 .addHeader("Authorization", "Bearer " + SUPABASE_KEY)
                 .addHeader("Content-Type", "application/json")
@@ -79,6 +67,7 @@ public class GameRepository extends BaseRepository {
             @Override public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 try (Response resp = response) {
                     if (resp.isSuccessful()) {
+                        Log.d("GameRepo", "Level " + level + " saved for user " + userId);
                         callback.onSuccess();
                     } else {
                         Log.e("GameRepo", "Save Error: " + resp.code() + " " + resp.body().string());
@@ -91,68 +80,15 @@ public class GameRepository extends BaseRepository {
 
     /**
      * שולף את לוח התוצאות מ-Supabase.
-     * מחזיר Top 10 שחקנים — כל שחקן מופיע פעם אחת עם הזמן הטוב שלו.
-     *
-     * ┌─────────────────────────────────────────────────────────────┐
-     * │                    מה הפונקציה עושה                         │
-     * ├─────────────────────────────────────────────────────────────┤
-     * │  1. שולחת שאילתה ל-Supabase עם JOIN לטבלת User.            │
-     * │     הנתונים מגיעים ממוינים לפי זמן עולה.                   │
-     * │                                                             │
-     * │  2. הנתונים מגיעים כ-List<Map<String,Object>> ולא          │
-     * │     כ-List<GameResult> — כי ה-JOIN יוצר מבנה מקונן         │
-     * │     ש-Gson לא יכול להמיר ישירות לאובייקט.                  │
-     * │     לכן צריך לחלץ כל שדה ידנית עם cast.                    │
-     * │                                                             │
-     * │  3. לוגיקת כפילויות: כל שחקן מופיע פעם אחת בלבד.          │
-     * │     הטריק: LinkedHashMap עם user_id כמפתח.                 │
-     * │     מכיוון שהנתונים ממוינים לפי זמן עולה —                 │
-     * │     הפעם הראשונה שרואים שחקן היא הזמן הטוב שלו.            │
-     * │     אם רואים אותו שוב — מדלגים (continue).                 │
-     * └─────────────────────────────────────────────────────────────┘
-     *
-     * מבנה JSON שמגיע מ-Supabase (כולל ה-JOIN):
-     *
-     *   [
-     *     {
-     *       "user_id": 1,
-     *       "total_time_ms": 12000,
-     *       "levels_completed": 5,
-     *       "User": {                  ← אובייקט מקונן מה-JOIN
-     *         "username": "yoni"
-     *       }
-     *     },
-     *     ...
-     *   ]
-     *
-     * לכן:
-     *   map.get("user_id")          → Number (לא long ישירות!) → צריך .longValue()
-     *   map.get("User")             → Map<String,Object> מקונן
-     *   ((Map)map.get("User"))
-     *       .get("username")        → String שם המשתמש
-     *
-     * זרימת לוגיקת הכפילויות:
-     *
-     *   נתונים ממוינים: [יוני:12000, דנה:15000, יוני:18000, רון:20000]
-     *        ↓
-     *   לולאה:
-     *     יוני:12000  → לא ב-map → מוסיף      { יוני:12000 }
-     *     דנה:15000   → לא ב-map → מוסיף      { יוני:12000, דנה:15000 }
-     *     יוני:18000  → כבר ב-map → continue! { יוני:12000, דנה:15000 }
-     *     רון:20000   → לא ב-map → מוסיף      { יוני:12000, דנה:15000, רון:20000 }
-     *        ↓
-     *   תוצאה: כל שחקן פעם אחת עם הזמן הטוב שלו ✓
-     *
-     * למה LinkedHashMap ולא HashMap רגיל?
-     *   HashMap רגיל לא מבטיח סדר — השחקנים יכולים לצאת בסדר אקראי.
-     *   LinkedHashMap שומר את סדר ההכנסה — אז המקום ה-1 תמיד יהיה
-     *   הראשון שהוכנס (הכי מהיר), המקום ה-2 השני, וכך הלאה.
+     * מחשב סכום זמנים של כל 5 הרמות לכל שחקן.
+     * מציג רק שחקנים שהשלימו את כל 5 הרמות — סכום הוא הזמן האמיתי של המשחק.
+     * כל שחקן מופיע פעם אחת עם הסכום הטוב ביותר שלו.
      */
     public void getTopScores(LeaderboardCallback callback) {
-        // JOIN עם טבלת User לשם המשתמש — מסודר לפי זמן עולה (הכי מהיר ראשון)
+        // שולף את כל השורות — נחשב סכום לכל שחקן בקוד
         String url = SUPABASE_URL + "/rest/v1/game_results"
                 + "?select=user_id,total_time_ms,levels_completed,User(username)"
-                + "&order=total_time_ms.asc";
+                + "&order=user_id.asc,levels_completed.asc";
 
         Request request = new Request.Builder()
                 .url(url)
@@ -172,31 +108,53 @@ public class GameRepository extends BaseRepository {
                         Type listType = new TypeToken<List<Map<String, Object>>>() {}.getType();
                         List<Map<String, Object>> rawData = gson.fromJson(json, listType);
 
-                        // LinkedHashMap — שומר סדר הכנסה, מפתח = user_id
-                        Map<Long, GameResult> bestPerUser = new java.util.LinkedHashMap<>();
+                        // מבנה נתונים: user_id → { username, רשימת זמנים לפי רמה }
+                        // Map<userId, Map<level, timeMs>>
+                        Map<Long, Map<Integer, Long>> userLevelTimes = new java.util.LinkedHashMap<>();
+                        Map<Long, String> usernames = new HashMap<>();
 
-                        for (Map<String, Object> map : rawData) {
-                            long uid = ((Number) map.get("user_id")).longValue();
+                        for (Map<String, Object> row : rawData) {
+                            long uid   = ((Number) row.get("user_id")).longValue();
+                            long time  = ((Number) row.get("total_time_ms")).longValue();
+                            int  level = ((Number) row.get("levels_completed")).intValue();
 
-                            // אם השחקן כבר מופיע — מדלגים (כי הנתונים מסודרים לפי זמן עולה, הראשון הוא הטוב ביותר)
-                            if (bestPerUser.containsKey(uid)) continue;
+                            // שם המשתמש מה-JOIN
+                            Map<String, Object> userMap = (Map<String, Object>) row.get("User");
+                            String username = (userMap != null) ? (String) userMap.get("username") : "Unknown";
+                            usernames.put(uid, username);
 
-                            GameResult gr = new GameResult();
-                            gr.user_id = uid;
-                            gr.total_time_ms = ((Number) map.get("total_time_ms")).longValue();
-                            gr.levels_completed = ((Number) map.get("levels_completed")).intValue();
-
-                            // שליפת שם המשתמש מה-JOIN עם טבלת User
-                            Map<String, Object> userMap = (Map<String, Object>) map.get("User");
-                            gr.username = (userMap != null) ? (String) userMap.get("username") : "Unknown Player";
-
-                            bestPerUser.put(uid, gr);
-
-                            // עצירה אחרי 10 שחקנים — Top 10 בלבד
-                            if (bestPerUser.size() == 10) break;
+                            // שומר את הזמן של הרמה הזו לשחקן הזה
+                            userLevelTimes.computeIfAbsent(uid, k -> new HashMap<>()).put(level, time);
                         }
 
-                        callback.onSuccess(new ArrayList<>(bestPerUser.values()));
+                        // מחשב סכום זמנים רק לשחקנים שהשלימו את כל 5 הרמות
+                        Map<Long, Long> totalPerUser = new HashMap<>();
+                        for (Map.Entry<Long, Map<Integer, Long>> entry : userLevelTimes.entrySet()) {
+                            Map<Integer, Long> levels = entry.getValue();
+                            if (levels.size() >= 5) { // רק מי שעשה 5 רמות
+                                long sum = 0;
+                                for (long t : levels.values()) sum += t;
+                                totalPerUser.put(entry.getKey(), sum);
+                            }
+                        }
+
+                        // ממיין לפי סכום עולה — הכי מהיר ראשון
+                        List<Map.Entry<Long, Long>> sorted = new ArrayList<>(totalPerUser.entrySet());
+                        sorted.sort((a, b) -> Long.compare(a.getValue(), b.getValue()));
+
+                        // בונה רשימת תוצאות — Top 10
+                        List<GameResult> results = new ArrayList<>();
+                        for (int i = 0; i < Math.min(10, sorted.size()); i++) {
+                            long uid = sorted.get(i).getKey();
+                            GameResult gr = new GameResult();
+                            gr.user_id = uid;
+                            gr.total_time_ms = sorted.get(i).getValue(); // סכום 5 הרמות
+                            gr.levels_completed = 5;
+                            gr.username = usernames.getOrDefault(uid, "Unknown");
+                            results.add(gr);
+                        }
+
+                        callback.onSuccess(results);
                     } else {
                         callback.onError(new Exception("Error " + resp.code()));
                     }

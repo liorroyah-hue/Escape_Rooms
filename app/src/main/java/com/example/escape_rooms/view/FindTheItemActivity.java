@@ -1,6 +1,8 @@
 package com.example.escape_rooms.view;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,56 +23,68 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
 import com.example.escape_rooms.R;
 import com.example.escape_rooms.model.FindItemTask;
+import com.example.escape_rooms.repository.GameRepository;
 import com.example.escape_rooms.repository.QuestionRepository;
 import com.example.escape_rooms.repository.services.GameAudioManager;
 import com.example.escape_rooms.viewmodel.GameViewModel;
 
 import java.io.Serializable;
+import java.util.HashMap;
 
-/**
- * מסך "מצא את הפריט" — מציג תמונה עם פריט חבוי.
- * השחקן צריך ללחוץ על הפריט הנכון בתמונה.
- */
 public class FindTheItemActivity extends AppCompatActivity {
-    private Button invisibleButton; // כפתור שקוף הממוקם בדיוק על הפריט החבוי
-    private ImageView findItemImage; // תמונת הרקע עם הפריט החבוי
-    private TextView textForImage;   // הנחיה — "מצא את ה..."
-    private ProgressBar loadingProgress; // מוצג בזמן טעינת התמונה
+    private Button invisibleButton;
+    private ImageView findItemImage;
+    private TextView textForImage;
+    private ProgressBar loadingProgress;
 
-    // מזהה פרויקט Supabase לבניית URL תמונות
+    private static final String TAG = "FindTheItemActivity";
     private static final String PROJECT_ID = "wjwbshqrvbgdtqanztqz";
+    private final GameRepository gameRepository = new GameRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fing_the_item);
 
-        // קישור אלמנטי UI
         invisibleButton  = findViewById(R.id.invisibleButton);
         findItemImage    = findViewById(R.id.findItemImage);
         textForImage     = findViewById(R.id.textForImage);
         loadingProgress  = findViewById(R.id.loadingProgress);
 
-        // קריאת נתונים מה-Intent
-        Intent intent    = getIntent();
-        int nextLevel    = intent.getIntExtra(MainActivity.EXTRA_LEVEL, 1);           // הרמה הבאה
-        String creationType = intent.getStringExtra(MainActivity.EXTRA_CREATION_TYPE); // AI או DB
-        Serializable aiData  = intent.getSerializableExtra(MainActivity.EXTRA_AI_GAME_DATA); // נתוני AI
-        Serializable timings = intent.getSerializableExtra(MainActivity.EXTRA_TIMINGS);      // תזמונים
-        int roomId       = intent.getIntExtra(MainActivity.EXTRA_ROOM_ID, 0);         // לשמירה ב-game_results
-        int questionId   = intent.getIntExtra(MainActivity.EXTRA_QUESTION_ID, 0);     // לשמירה ב-game_results
+        // קריאת כל הנתונים מה-Intent
+        Intent intent       = getIntent();
+        int nextLevel       = intent.getIntExtra(MainActivity.EXTRA_LEVEL, 1);
+        int completedLevel  = nextLevel - 1; // הרמה שהסתיימה זה עתה
+        String creationType = intent.getStringExtra(MainActivity.EXTRA_CREATION_TYPE);
+        Serializable aiData = intent.getSerializableExtra(MainActivity.EXTRA_AI_GAME_DATA);
+        @SuppressWarnings("unchecked")
+        HashMap<Integer, Long> timings = (HashMap<Integer, Long>)
+                intent.getSerializableExtra(MainActivity.EXTRA_TIMINGS);
+        int roomId     = intent.getIntExtra(MainActivity.EXTRA_ROOM_ID, 0);
+        int questionId = intent.getIntExtra(MainActivity.EXTRA_QUESTION_ID, 0);
 
-        if (loadingProgress != null) loadingProgress.setVisibility(View.VISIBLE); // מציג טעינה
+        // זמן הרמה שהסתיימה — נמדד ב-GameViewModel ועבר כחלק מה-timings
+        Long levelTime = (timings != null) ? timings.get(completedLevel) : null;
 
-        // שולף משימה אקראית מ-Supabase
+        // מזהה המשתמש מה-SharedPreferences
+        SharedPreferences prefs = getSharedPreferences("EscapeRoomPrefs", Context.MODE_PRIVATE);
+        long userId = prefs.getLong("current_user_id", -1);
+
+        Log.d(TAG, "Level " + completedLevel + " completed:"
+                + " userId=" + userId
+                + " roomId=" + roomId
+                + " questionId=" + questionId
+                + " levelTime=" + levelTime);
+
+        if (loadingProgress != null) loadingProgress.setVisibility(View.VISIBLE);
+
         QuestionRepository.getInstance().getRandomFindItemTask(new QuestionRepository.FindItemCallback() {
             @Override
             public void onSuccess(FindItemTask task) {
-                if (isFinishing() || isDestroyed()) return; // Activity כבר נסגרה
+                if (isFinishing() || isDestroyed()) return;
 
-                int pictureId = task.getId(); // id_picture — ישמר ב-game_results
+                int pictureId = task.getId(); // id_picture מטבלת find_item_tasks
 
-                // בניית URL מלא לתמונה אם צריך
                 String imageUrl = task.getImageName();
                 if (!imageUrl.startsWith("http")) {
                     imageUrl = "https://" + PROJECT_ID +
@@ -78,23 +92,21 @@ public class FindTheItemActivity extends AppCompatActivity {
                 }
 
                 final String finalUrl = imageUrl;
-                final int xCord = task.getXCord(); // קואורדינטת X של הפריט
-                final int yCord = task.getYCord(); // קואורדינטת Y של הפריט
+                final int xCord = task.getXCord();
+                final int yCord = task.getYCord();
 
                 runOnUiThread(() -> {
-                    textForImage.setText(task.getPromptText()); // מציג הנחיה
+                    textForImage.setText(task.getPromptText());
 
-                    // טוען תמונה עם Glide
                     Glide.with(FindTheItemActivity.this)
                             .load(finalUrl)
-                            .thumbnail(0.1f) // תמונה מוקטנת תחילה בזמן טעינה
-                            .error(android.R.drawable.stat_notify_error) // אייקון שגיאה אם נכשל
-                            .diskCacheStrategy(DiskCacheStrategy.ALL) // שמירה בקאש לטעינות מהירות
+                            .thumbnail(0.1f)
+                            .error(android.R.drawable.stat_notify_error)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
                             .listener(new RequestListener<Drawable>() {
                                 @Override
                                 public boolean onLoadFailed(@Nullable GlideException e, Object model,
                                                             Target<Drawable> target, boolean isFirstResource) {
-                                    Log.e("FindTheItem", "Glide Load Failed", e);
                                     if (loadingProgress != null) loadingProgress.setVisibility(View.GONE);
                                     return false;
                                 }
@@ -102,47 +114,69 @@ public class FindTheItemActivity extends AppCompatActivity {
                                 public boolean onResourceReady(Drawable resource, Object model,
                                                                Target<Drawable> target, DataSource dataSource,
                                                                boolean isFirstResource) {
-                                    // התמונה נטענה — מסתיר ProgressBar
                                     if (loadingProgress != null) loadingProgress.setVisibility(View.GONE);
                                     return false;
                                 }
                             })
-                            .centerCrop() // חותך את התמונה כך שתמלא את ה-ImageView
+                            .centerCrop()
                             .into(findItemImage);
 
-                    // ממקם את הכפתור השקוף בדיוק על הפריט לפי הקואורדינטות מה-DB
                     MoveButtonToCorrectPlace(invisibleButton, xCord, yCord);
 
-                    // מגדיר לחיצה על הכפתור השקוף
-                    // pictureId נלכד כאן ב-closure כדי לעבור הלאה
                     invisibleButton.setOnClickListener(v -> {
                         GameAudioManager.getInstance(FindTheItemActivity.this).playSuccessSound();
 
+                        // שמירה ישירה ל-Supabase — כאן יש לנו את כל הנתונים
+                        if (userId != -1 && levelTime != null && completedLevel > 0) {
+                            Log.d(TAG, "Saving level " + completedLevel + " to Supabase:"
+                                    + " time=" + levelTime
+                                    + " roomId=" + roomId
+                                    + " questionId=" + questionId
+                                    + " pictureId=" + pictureId);
+
+                            gameRepository.saveLevelResult(
+                                    userId,
+                                    completedLevel,
+                                    levelTime,
+                                    roomId,
+                                    questionId,
+                                    pictureId,
+                                    new GameRepository.GameResultCallback() {
+                                        @Override public void onSuccess() {
+                                            Log.d(TAG, "✅ Level " + completedLevel + " saved successfully");
+                                        }
+                                        @Override public void onError(Exception e) {
+                                            Log.e(TAG, "❌ Failed to save level " + completedLevel, e);
+                                        }
+                                    }
+                            );
+                        } else {
+                            Log.e(TAG, "SKIPPED save: userId=" + userId
+                                    + " levelTime=" + levelTime
+                                    + " completedLevel=" + completedLevel);
+                        }
+
                         if (nextLevel > GameViewModel.MAX_LEVELS) {
-                            // סיום המשחק — עובר לתוצאות עם כל ה-IDs
                             Intent resultsIntent = new Intent(FindTheItemActivity.this, PlayerResultsActivity.class);
                             resultsIntent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
-                            resultsIntent.putExtra(MainActivity.EXTRA_ROOM_ID, roomId);
-                            resultsIntent.putExtra(MainActivity.EXTRA_QUESTION_ID, questionId);
-                            resultsIntent.putExtra(MainActivity.EXTRA_PICTURE_ID, pictureId); // id_picture
                             startActivity(resultsIntent);
                         } else {
-                            // ממשיך לרמה הבאה — חוזר ל-DrawerActivity
                             Intent corridorIntent = new Intent(FindTheItemActivity.this, DrawerActivity.class);
                             corridorIntent.putExtra(MainActivity.EXTRA_LEVEL, nextLevel);
                             corridorIntent.putExtra(MainActivity.EXTRA_CREATION_TYPE, creationType);
+                            corridorIntent.putExtra(MainActivity.EXTRA_ROOM_ID, roomId);
                             if (aiData != null) corridorIntent.putExtra(MainActivity.EXTRA_AI_GAME_DATA, aiData);
                             if (timings != null) corridorIntent.putExtra(MainActivity.EXTRA_TIMINGS, timings);
                             startActivity(corridorIntent);
                         }
-                        finish(); // סוגר את המסך הנוכחי
+                        finish();
                     });
                 });
             }
 
             @Override
             public void onError(Exception e) {
-                Log.e("FindTheItem", "Repository Error", e);
+                Log.e(TAG, "Repository Error", e);
                 runOnUiThread(() -> {
                     if (loadingProgress != null) loadingProgress.setVisibility(View.GONE);
                     Toast.makeText(FindTheItemActivity.this, "Database Connection Error", Toast.LENGTH_SHORT).show();
@@ -151,23 +185,13 @@ public class FindTheItemActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * ממקם את הכפתור השקוף בדיוק על הפריט בתמונה.
-     * ממתין שה-ImageView יסיים לצייר לפני חישוב המיקומים.
-     */
     public void MoveButtonToCorrectPlace(Button button, int x_dp, int y_dp) {
-        findItemImage.post(() -> { // post = ממתין לסיום ציור ה-layout
-            float density = getResources().getDisplayMetrics().density; // יחס dp לפיקסלים
-
-            // מיקום ה-ImageView על המסך
+        findItemImage.post(() -> {
+            float density = getResources().getDisplayMetrics().density;
             int[] imageLocation = new int[2];
             findItemImage.getLocationOnScreen(imageLocation);
-
-            // מיקום הכפתור על המסך
             int[] buttonLocation = new int[2];
             button.getLocationOnScreen(buttonLocation);
-
-            // מחשב את הזזת הכפתור: מיקום התמונה + קואורדינטות הפריט
             button.setTranslationX((imageLocation[0] - buttonLocation[0]) + (x_dp * density));
             button.setTranslationY((imageLocation[1] - buttonLocation[1]) + (y_dp * density));
         });
