@@ -20,7 +20,7 @@ import java.util.Random;
 public class GameAudioManager {
     private static GameAudioManager instance; // עותק יחיד
     private MediaPlayer ambientPlayer;  // נגן מוזיקת הרקע
-    private MediaPlayer effectPlayer;   // נגן צלילי אפקטים
+    private MediaPlayer actionSoundPlayer;   //  נגן צלילי אפקטים כאשר השחקן צודק או טועה
     private final Context context;      // קונטקסט האפליקציה לטעינת קבצי שמע
     private final Handler handler = new Handler(Looper.getMainLooper()); // מאפשר פעולות מתוזמנות על Thread הראשי
     private final Vibrator vibrator;    // מנהל הרטט
@@ -71,7 +71,7 @@ public class GameAudioManager {
      */
     private void playAmbient() {
         // לא מנגן אם מוזיקה כבויה או אם אפקט מתנגן עכשיו
-        if (!isAmbientEnabled || (effectPlayer != null && effectPlayer.isPlaying())) return;
+        if (!isAmbientEnabled || (actionSoundPlayer != null && actionSoundPlayer.isPlaying())) return;
 
         // משחרר נגן קודם מהזיכרון
         if (ambientPlayer != null) {
@@ -132,12 +132,12 @@ public class GameAudioManager {
         }
 
         // עצירה ושחרור נגן האפקטים
-        if (effectPlayer != null) {
+        if (actionSoundPlayer != null) {
             try {
-                if (effectPlayer.isPlaying()) effectPlayer.stop();
-                effectPlayer.release();
+                if (actionSoundPlayer.isPlaying()) actionSoundPlayer.stop();
+                actionSoundPlayer.release();
             } catch (Exception ignored) {}
-            effectPlayer = null;
+            actionSoundPlayer = null;
         }
     }
 
@@ -250,21 +250,21 @@ public class GameAudioManager {
     private void playDynamicSound(int resId, MediaPlayer.OnCompletionListener customListener) {
         try {
             // משחרר נגן קודם אם קיים
-            if (effectPlayer != null) {
+            if (actionSoundPlayer != null) {
                 try {
-                    if (effectPlayer.isPlaying()) effectPlayer.stop();
-                    effectPlayer.release();
+                    if (actionSoundPlayer.isPlaying()) actionSoundPlayer.stop();
+                    actionSoundPlayer.release();
                 } catch (Exception ignored) {}
             }
 
-            effectPlayer = MediaPlayer.create(context, resId);
-            if (effectPlayer != null) {
-                effectPlayer.setOnCompletionListener(mediaPlayer -> {
+            actionSoundPlayer = MediaPlayer.create(context, resId);
+            if (actionSoundPlayer != null) {
+                actionSoundPlayer.setOnCompletionListener(mediaPlayer -> {
                     mediaPlayer.release(); // משחרר זיכרון בסיום
-                    if (effectPlayer == mediaPlayer) effectPlayer = null;
+                    if (actionSoundPlayer == mediaPlayer) actionSoundPlayer = null;
                     if (customListener != null) customListener.onCompletion(mediaPlayer); // קורא ל-callback
                 });
-                effectPlayer.start();
+                actionSoundPlayer.start();
             } else if (customListener != null) {
                 customListener.onCompletion(null); // נגן לא נוצר — קורא ל-callback בכל זאת
             }

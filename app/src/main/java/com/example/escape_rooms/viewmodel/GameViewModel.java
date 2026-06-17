@@ -128,10 +128,11 @@ public class GameViewModel extends AndroidViewModel {
         SharedPreferences prefs = getApplication()
                 .getSharedPreferences("EscapeRoomPrefs", Context.MODE_PRIVATE);
         long userId = prefs.getLong("current_user_id", -1);
-        if (userId == -1) return; // לא מחובר — לא שומר
+
+        if (userId == -1) return;
 
         Long levelTime = levelTimings.get(currentLevel);
-        if (levelTime == null) return; // אין זמן לרמה — לא שומר
+        if (levelTime == null) return;
 
         gameRepository.saveLevelResult(
                 userId,

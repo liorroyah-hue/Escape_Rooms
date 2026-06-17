@@ -35,11 +35,16 @@ public class SignUpActivity extends AppCompatActivity {
 
         viewModel = new ViewModelProvider(this).get(SignUpViewModel.class);
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main),
+                new androidx.core.view.OnApplyWindowInsetsListener() {
+                    // מאזין לשינויים בגבולות המסך — מוסיף padding כדי שתוכן לא יתחבא מאחורי שורת הסטטוס והניווט
+                    @Override
+                    public WindowInsetsCompat onApplyWindowInsets(View v, WindowInsetsCompat insets) {
+                        Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                        v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                        return insets;
+                    }
+                });
 
         usernameEditText = findViewById(R.id.inputUsername);
         passwordEditText = findViewById(R.id.inputPassword);

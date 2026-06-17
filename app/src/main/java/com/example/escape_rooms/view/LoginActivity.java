@@ -36,11 +36,16 @@ public class LoginActivity extends AppCompatActivity {
         loginViewModel = new ViewModelProvider(this).get(LoginViewModel.class);
 
         // מגדיר padding לפי גובה שורת הסטטוס/ניווט של המכשיר
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main),
+                new androidx.core.view.OnApplyWindowInsetsListener() {
+                    // מאזין לשינויים בגבולות המסך — מוסיף padding כדי שתוכן לא יתחבא מאחורי שורת הסטטוס והניווט
+                    @Override
+                    public WindowInsetsCompat onApplyWindowInsets(View v, WindowInsetsCompat insets) {
+                        Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                        v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                        return insets;
+                    }
+                });
 
         // קישור אלמנטי UI
         usernameEditText = findViewById(R.id.inputUsername);
